@@ -8,6 +8,6 @@ install:
 	dune install
 
 dump:
-	./_build/default/tests/test.bc -dump_ast tests/lint/stupid.py
+	./_build/default/bin/main_codegen.exe -parse_grammar tests/arithmetic/grammar.json
 
 .PHONY: all clean install test dump
