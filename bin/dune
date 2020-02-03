@@ -1,0 +1,19 @@
+(executables
+ (names main_codegen)
+ (libraries 
+    bigarray
+    threads          ;; needed for json-wheel (Condition?)
+    json-wheel       ;; Json_io, Json_type
+
+    commons
+    ocaml_tree_sitter
+ )
+ ; for ocamldebug
+ (modes byte)
+)
+
+(install
+ (package ocaml_tree_sitter)
+ (section bin)
+ (files (main_codegen.exe as ocaml-tree-sitter))
+)

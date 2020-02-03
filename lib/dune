@@ -1,0 +1,8 @@
+(library
+ (public_name ocaml_tree_sitter)
+ (wrapped false)
+ (libraries
+   json-wheel
+   commons
+ )
+)
