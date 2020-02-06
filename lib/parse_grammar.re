@@ -12,6 +12,7 @@
  * file license.txt for more details.
  */
 open Common;
+module J = Json_type;
 
 /*****************************************************************************/
 /* Entrypoint */

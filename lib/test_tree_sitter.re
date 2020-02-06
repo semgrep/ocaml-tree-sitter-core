@@ -11,12 +11,33 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * file license.txt for more details.
  */
-open Common;
+
 
 /*****************************************************************************/
 /* Subsystem testing */
 /*****************************************************************************/
-let test_parse = _file => raise(Todo);
+let test_parse = file => {
+  let _ast = Parse_grammar.parse(file);
+  }
+
+let test_normalize = file => {
+  let ast = Parse_grammar.parse(file);
+  let _nast = Normalize_grammar.normalize(ast);
+}
+
+let test_codegen_types = file => {
+  let ast = Parse_grammar.parse(file);
+  let nast = Normalize_grammar.normalize(ast);
+  print_string (Codegen_types.codegen(nast));
+  print_string ("\n");
+}
+
+let test_codegen_jsonreader = file => {
+  let ast = Parse_grammar.parse(file);
+  let nast = Normalize_grammar.normalize(ast);
+  print_string (Codegen_json_reader.codegen(nast));
+  print_string("\n")
+}
 
 /*****************************************************************************/
 /* Main entry for Arg */
@@ -24,4 +45,7 @@ let test_parse = _file => raise(Todo);
 
 let actions = () => [
   ("-parse_grammar", "   <file>", Common.mk_action_1_arg(test_parse)),
+  ("-normalize_grammar", "   <file>", Common.mk_action_1_arg(test_normalize)),
+  ("-codegen_types", "   <file>", Common.mk_action_1_arg(test_codegen_types)),
+  ("-codegen_jsonreader", "   <file>", Common.mk_action_1_arg(test_codegen_jsonreader)),
 ];
