@@ -1,6 +1,7 @@
 (library
  (public_name ocaml_tree_sitter)
  (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving.ord))
  (libraries
    json-wheel
    commons
