@@ -17,7 +17,9 @@
 /* Subsystem testing */
 /*****************************************************************************/
 let test_parse = file => {
-  let _ast = Parse_grammar.parse(file);
+  let ast = Parse_grammar.parse(file);
+  let s = Ast_grammar.show_grammar(ast);
+  print_string(s)
   }
 
 let test_normalize = file => {
