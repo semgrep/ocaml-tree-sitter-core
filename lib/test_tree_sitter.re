@@ -31,6 +31,60 @@ let test_normalize = file => {
   print_string(s);
 }
 
+let _test_normalization = (ex1, expected_1) => {
+  let ex1_normalized = Normalize_grammar.normalize(ex1);
+  if (ex1_normalized == expected_1) {
+    print_string("PASSED\n");
+  } else {
+    print_string("Expected ========= \n")
+    print_string(B.show_grammar(expected_1) ++ "\n");
+    print_string("ACTUAL =========\n")
+    print_string(B.show_grammar(ex1_normalized) ++ "\n");
+  }
+}
+
+let test_normalization_2 = _ => {
+  /*
+              SEQ
+             / | \
+      CHOICE TOKEN SYMBOL(A)
+       /  \
+  SYMBOL(B) TOKEN
+  */
+  let grammar = (
+    "ex2_grammar",
+    [(
+      "ex2_rule",
+      A.SEQ([
+        A.CHOICE([A.SYMBOL("B"), A.TOKEN]),
+        A.TOKEN,
+        A.SYMBOL("A")
+      ])
+    )]
+  );
+  let expected = (
+    "ex2_grammar",
+    [
+      (
+        "ex2_rule",
+        B.SIMPLE(B.SEQ([
+          B.SYMBOL("intermediate1"),
+          B.TOKEN,
+          B.SYMBOL("A")
+        ]))
+      ),
+      (
+        "intermediate1",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("B")),
+          B.ATOM(B.TOKEN),
+        ])
+      )
+    ]
+  );
+  _test_normalization(grammar, expected);
+}
+
 let test_normalization_1 = _ => {
   /*
         CHOICE
@@ -39,7 +93,7 @@ let test_normalization_1 = _ => {
             /    |
           SYMBOL(B)  SYMBOL(C)
   */
-  let ex1 = (
+  let grammar = (
     "ex1_grammar",
     [(
       "ex1_rule",
@@ -49,7 +103,7 @@ let test_normalization_1 = _ => {
       ])
     )]
   );
-  let expected_1 = (
+  let expected = (
     "ex1_grammar",
     [
       (
@@ -67,15 +121,12 @@ let test_normalization_1 = _ => {
       )
     ]
   );
-  let ex1_normalized = Normalize_grammar.normalize(ex1);
-  if (ex1_normalized == expected_1) {
-    print_string("PASSED");
-  } else {
-    print_string("Expected ========= \n")
-    print_string(B.show_grammar(expected_1) ++ "\n");
-    print_string("ACTUAL =========\n")
-    print_string(B.show_grammar(ex1_normalized) ++ "\n");
-  }
+  _test_normalization(grammar, expected);
+}
+
+let test_normalization = _ => {
+  test_normalization_1();
+  test_normalization_2();
 }
 
 let test_codegen_types = file => {
@@ -99,7 +150,7 @@ let test_codegen_jsonreader = file => {
 let actions = () => [
   ("-parse_grammar", "   <file>", Common.mk_action_1_arg(test_parse)),
   ("-normalize_grammar", "   <file>", Common.mk_action_1_arg(test_normalize)),
-  ("-test_normalization", "   <file>", Common.mk_action_1_arg(test_normalization_1)),
+  ("-test_normalization", "   <file>", Common.mk_action_1_arg(test_normalization)),
   ("-codegen_types", "   <file>", Common.mk_action_1_arg(test_codegen_types)),
   ("-codegen_jsonreader", "   <file>", Common.mk_action_1_arg(test_codegen_jsonreader)),
 ];
