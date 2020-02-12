@@ -19,12 +19,14 @@
 let test_parse = file => {
   let ast = Parse_grammar.parse(file);
   let s = Ast_grammar.show_grammar(ast);
-  print_string(s)
-  }
+  print_string(s);
+}
 
 let test_normalize = file => {
   let ast = Parse_grammar.parse(file);
-  let _nast = Normalize_grammar.normalize(ast);
+  let nast = Normalize_grammar.normalize(ast);
+  let s = Ast_grammar_normalized.show_grammar(nast);
+  print_string(s);
 }
 
 let test_codegen_types = file => {
