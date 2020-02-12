@@ -1,10 +1,10 @@
 module A = Ast_grammar;
 module B = Ast_grammar_normalized;
 
+let counter = ref(0);
 let gensym = () => {
-  /* TODO make it static variable */
-  let static_ident_counter = 1;
-  "intermediate" ++ string_of_int(static_ident_counter)
+  incr(counter);
+  "intermediate" ++ string_of_int(counter^);
 }
 
 let rec normalize_to_atom = body => {

@@ -68,13 +68,13 @@ let test_normalization_2 = _ => {
       (
         "ex2_rule",
         B.SIMPLE(B.SEQ([
-          B.SYMBOL("intermediate1"),
+          B.SYMBOL("intermediate2"),
           B.TOKEN,
           B.SYMBOL("A")
         ]))
       ),
       (
-        "intermediate1",
+        "intermediate2",
         B.CHOICE([
           B.ATOM(B.SYMBOL("B")),
           B.ATOM(B.TOKEN),
