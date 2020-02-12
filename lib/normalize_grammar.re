@@ -1,78 +1,62 @@
-open Common;
+module A = Ast_grammar;
+module B = Ast_grammar_normalized;
 
-let normalize_to_simple = body => {
+let gensym = () => {
+  /* TODO make it static variable */
+  let static_ident_counter = 1;
+  "intermediate" ++ string_of_int(static_ident_counter)
+}
+
+let rec normalize_to_atom = body => {
   switch (body) {
-  | Ast_grammar.TOKEN =>
-    Ast_grammar_normalized.ATOM(
-      Ast_grammar_normalized.TOKEN
-    );
-  | Ast_grammar.SYMBOL(name)=>
-    Ast_grammar_normalized.ATOM(
-      Ast_grammar_normalized.SYMBOL(name)
-    );
-  /* Ignore rest */
+  | A.TOKEN => (B.TOKEN, [])
+  | A.SYMBOL(name)=> (B.SYMBOL(name), [])
+  /* Create intermediate symbol */
   | _ => {
-    print_string("Inside normalize_to_simple\n");
-    raise(Todo);
-  }
-  }
-}
-
-let normalize_to_atom = body => {
-  switch (body) {
-  | Ast_grammar.TOKEN =>
-    Ast_grammar_normalized.TOKEN
-  | Ast_grammar.SYMBOL(name)=>
-    Ast_grammar_normalized.SYMBOL(name)
-  /* Ignore rest */
-  | _ => {
-    print_string("Inside normalize_to_atom\n");
-    raise(Todo);
-  }
-  }
-}
-
-let normalize_body = (rule_body) => {
-  switch(rule_body) {
-  | Ast_grammar.TOKEN =>
-    Ast_grammar_normalized.SIMPLE(
-      Ast_grammar_normalized.ATOM(
-        Ast_grammar_normalized.TOKEN
-      )
-    );
-  | Ast_grammar.SYMBOL(name) =>
-    Ast_grammar_normalized.SIMPLE(
-      Ast_grammar_normalized.ATOM(
-        Ast_grammar_normalized.SYMBOL(name)
-      )
-    );
-  | Ast_grammar.SEQ(bodies) =>
-    Ast_grammar_normalized.SIMPLE(
-      Ast_grammar_normalized.SEQ(
-        List.map(normalize_to_atom, bodies)
-      )
-    );
-  | Ast_grammar.CHOICE(bodies) =>
-    Ast_grammar_normalized.CHOICE(
-      List.map(normalize_to_simple, bodies)
-    );
-  | _ =>
-    Ast_grammar_normalized.SIMPLE(
-      Ast_grammar_normalized.ATOM(
-        Ast_grammar_normalized.TOKEN
-      )
-    );
-  }
-}
-
-let normalize_rule = ((name, rule_body)) => (name, normalize_body(rule_body));
-
-let normalize_rules = xs => List.map(normalize_rule, xs);
-
-let normalize = ast => {
-  switch(ast) {
-  | (name, rules) => {
-      (name, normalize_rules(rules));
+    let fresh_ident = gensym();
+    (B.SYMBOL(fresh_ident), [(fresh_ident, fst(normalize_body(body)))]);
     }
   }
 }
+and normalize_body = (rule_body) => {
+  switch(rule_body) {
+  | A.TOKEN =>
+    (
+      B.SIMPLE(B.ATOM(B.TOKEN)),
+      []
+    );
+  | A.SYMBOL(name) =>
+    (
+      B.SIMPLE(B.ATOM(B.SYMBOL(name))),
+      []
+    );
+  | A.SEQ(bodies) => {
+      let xs = List.map(normalize_to_atom, bodies);
+      let atoms = List.map(fst, xs);
+      let intermediates = List.flatten(List.map(snd, xs));
+      (B.SIMPLE(B.SEQ(atoms)), intermediates)
+    };
+  | A.CHOICE(bodies) => {
+      let xs = List.map(normalize_to_atom, bodies);
+      let atoms = List.map(fst, xs);
+      let simples = List.map((atom) => B.ATOM(atom), atoms);
+      let intermediates = List.flatten(List.map(snd, xs));
+      (B.CHOICE(simples), intermediates)
+  }
+  | _ =>
+    (
+      B.SIMPLE(B.ATOM(B.TOKEN)),
+      []
+    );
+  }
+}
+
+let normalize_rule = ((name, rule_body)) => {
+  let (this_body, intermediates) = normalize_body(rule_body);
+  let extra_rules = intermediates;
+  [(name, this_body), ...extra_rules]
+};
+
+let normalize_rules = xs => List.flatten(List.map(normalize_rule, xs));
+
+let normalize = ((name: string, rules)) => (name, normalize_rules(rules));
