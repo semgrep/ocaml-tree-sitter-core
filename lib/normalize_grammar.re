@@ -9,7 +9,11 @@ let gensym = () => {
 
 let rec normalize_to_simple = (body: A.rule_body): (B.simple, list(A.rule)) => {
   switch (body) {
+<<<<<<< HEAD
   | A.TOKEN | A.IMMEDIATE_TOKEN | A.BLANK | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) => {
+=======
+  | A.TOKEN | A.SYMBOL(_) => {
+>>>>>>> c34f70b... rebase fixes
     let (atom, rest) = normalize_to_atom(body);
     (B.ATOM(atom), rest)
   }
