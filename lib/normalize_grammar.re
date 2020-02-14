@@ -57,8 +57,21 @@ and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
       let xs = List.map(normalize_to_simple, bodies);
       let simples = List.map(fst, xs);
       let intermediates = List.flatten(List.map(snd, xs));
-      (B.CHOICE(simples), intermediates)
-    };
+      /* if exactly one intermediate that is BLANK
+         create option node instead of CHOICE
+      */
+      if (List.length(intermediates) == 1) {
+        let (_, first) = List.nth(intermediates, 0);
+        switch(first) {
+          | A.BLANK => {
+            (B.OPTION(List.nth(simples, 0)), [])
+          };
+          | _ => (B.CHOICE(simples), intermediates)
+        }
+      } else {
+        (B.CHOICE(simples), intermediates)
+      }
+  };
   | A.REPEAT(body) => {
       let (simple, rest) = normalize_to_simple(body);
       (B.REPEAT(simple), rest)
