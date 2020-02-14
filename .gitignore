@@ -27,6 +27,3 @@ setup.log
 
 # Local OPAM switch
 _opam/
-
-# ReasonML compilation creates node_modules
-node_modules/
