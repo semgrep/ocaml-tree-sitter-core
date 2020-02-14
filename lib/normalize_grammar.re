@@ -54,24 +54,25 @@ and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
       (B.SIMPLE(B.SEQ(atoms)), intermediates)
     };
   | A.CHOICE(bodies) => {
+    switch (List.rev(bodies)) {
+    | [A.BLANK] => failwith("Impossible, a single BLANK in a CHOICE")
+    | [A.BLANK, other_body] => {
+      let (simple, rest) = normalize_to_simple(other_body);
+      (B.OPTION(simple), rest)
+    }
+    | [A.BLANK, ...other_bodies] => {
+      /* this will create a gensymed ATOM(SYMBOL) for this CHOICE */
+      let (simple, rest) = normalize_to_simple(A.CHOICE(other_bodies));
+      (B.OPTION(simple), rest)
+    }
+    | _ => {
       let xs = List.map(normalize_to_simple, bodies);
       let simples = List.map(fst, xs);
       let intermediates = List.flatten(List.map(snd, xs));
-      /* if exactly one intermediate that is BLANK
-         create option node instead of CHOICE
-      */
-      if (List.length(intermediates) == 1) {
-        let (_, first) = List.nth(intermediates, 0);
-        switch(first) {
-          | A.BLANK => {
-            (B.OPTION(List.nth(simples, 0)), [])
-          };
-          | _ => (B.CHOICE(simples), intermediates)
-        }
-      } else {
-        (B.CHOICE(simples), intermediates)
-      }
-  };
+      (B.CHOICE(simples), intermediates)
+    }
+    }
+  }
   | A.REPEAT(body) => {
       let (simple, rest) = normalize_to_simple(body);
       (B.REPEAT(simple), rest)
