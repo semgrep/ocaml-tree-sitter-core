@@ -37,7 +37,7 @@ and normalize_to_atom = (body: A.rule_body): (B.atom, list(A.rule)) => {
 }
 and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
   switch(rule_body) {
-  | A.TOKEN | A.SYMBOL(_) | A.SEQ(_) => {
+  | A.IMMEDIATE_TOKEN | A.BLANK | A.TOKEN | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) | A.PATTERN(_) | A.SEQ(_) => {
       let (simple, rest) = normalize_to_simple(rule_body);
       (B.SIMPLE(simple), rest);
     }
