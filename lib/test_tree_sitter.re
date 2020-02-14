@@ -43,6 +43,47 @@ let _test_normalization = (ex1, expected_1) => {
   }
 }
 
+let test_repeat = _ => {
+  /*      REPEAT
+           /
+        CHOICE
+         /  \
+       SYMBOL TOKEN
+  */
+  let grammar = (
+    "repeat_grammar",
+    [(
+      "aprogram",
+      A.REPEAT(
+        A.CHOICE([
+          A.SYMBOL("A"),
+          A.TOKEN,
+        ]),
+      )
+    )]
+  );
+  let expected = (
+    "repeat_grammar",
+    [
+      (
+        "aprogram",
+        B.REPEAT(
+          B.ATOM(B.SYMBOL("intermediate1"))
+        )
+      ),
+      (
+        "intermediate1",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("A")),
+          B.ATOM(B.TOKEN),
+        ])
+      )
+    ]
+  );
+  _test_normalization(grammar, expected);
+
+}
+
 let test_normalization_4 = _ => {
   /*
                CHOICE
@@ -242,6 +283,7 @@ let test_normalization = _ => {
   test_normalization_2();
   test_normalization_3();
   test_normalization_4();
+  test_repeat();
 }
 
 let test_codegen_types = file => {
