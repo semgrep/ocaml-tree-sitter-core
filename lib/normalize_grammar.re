@@ -55,10 +55,11 @@ and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
       let intermediates = List.flatten(List.map(snd, xs));
       (B.CHOICE(simples), intermediates)
     };
-  | _ => (
-      B.SIMPLE(B.ATOM(B.TOKEN)),
-      []
-    );
+  | A.REPEAT(body) => {
+      let (simple, rest) = normalize_to_simple(body);
+      (B.REPEAT(simple), rest)
+    }
+  | _ => failwith("TODO");
   };
 }
 and normalize_rule = ((name, rule_body): A.rule): (list(B.rule)) => {
