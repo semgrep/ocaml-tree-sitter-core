@@ -10,7 +10,18 @@ let gensym = () => {
 let rec normalize_to_simple = body => {
   switch (body) {
   | A.TOKEN => (B.ATOM(B.TOKEN), [])
-  | A.SYMBOL(name)=> (B.ATOM(B.SYMBOL(name)), [])
+  | A.SYMBOL(name) => (B.ATOM(B.SYMBOL(name)), [])
+  | A.SEQ(bodies) => {
+    let xs = List.map(normalize_to_atom, bodies);
+    let atoms = List.map(fst, xs);
+    let intermediates = List.flatten(List.map(snd, xs));
+    if (List.length(intermediates) == 0) {
+      (B.SEQ(atoms), [])
+    } else {
+      let fresh_ident = gensym();
+      (B.ATOM(B.SYMBOL(fresh_ident)), [(fresh_ident, body)]);
+    }
+  }
   /* Create intermediate symbol */
   | _ => {
     let fresh_ident = gensym();

@@ -42,6 +42,54 @@ let _test_normalization = (ex1, expected_1) => {
     print_string(B.show_grammar(ex1_normalized) ++ "\n");
   }
 }
+
+let test_normalization_4 = _ => {
+  /*
+               CHOICE
+              / |   \   \
+        SEQ  SYMBOL(A) SYMBOL(B) SEQ
+        /\                       /\
+    SYMBOL(C) SYMBOL(D)   SYMBOL(E) SYMBOL(F)
+  */
+  let grammar = (
+    "ex4",
+    [(
+      "arith_expression",
+      A.CHOICE([
+        A.SEQ([
+          A.SYMBOL("C"),
+          A.SYMBOL("D"),
+        ]),
+        A.SYMBOL("A"),
+        A.SYMBOL("B"),
+        A.SEQ([
+          A.SYMBOL("E"),
+          A.SYMBOL("F"),
+        ])
+      ])
+    )]
+  );
+  let expected = (
+    "ex4",
+    [(
+      "arith_expression",
+      B.CHOICE([
+        B.SEQ([
+          B.SYMBOL("C"),
+          B.SYMBOL("D")
+        ]),
+        B.ATOM(B.SYMBOL("A")),
+        B.ATOM(B.SYMBOL("B")),
+        B.SEQ([
+          B.SYMBOL("E"),
+          B.SYMBOL("F")
+        ])
+      ])
+    )]
+  );
+  _test_normalization(grammar, expected);
+}
+
 let test_normalization_3 = _ => {
   /*
              CHOICE
@@ -193,6 +241,7 @@ let test_normalization = _ => {
   test_normalization_1();
   test_normalization_2();
   test_normalization_3();
+  test_normalization_4();
 }
 
 let test_codegen_types = file => {
