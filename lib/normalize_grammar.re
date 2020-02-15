@@ -9,12 +9,8 @@ let gensym = () => {
 
 let rec normalize_to_simple = (body: A.rule_body): (B.simple, list(A.rule)) => {
   switch (body) {
-  | A.TOKEN => {
-    let (atom, rest) = normalize_to_atom(A.TOKEN);
-    (B.ATOM(atom), rest)
-  }
-  | A.SYMBOL(name) => {
-    let (atom, rest) = normalize_to_atom(A.SYMBOL(name));
+  | A.TOKEN | A.IMMEDIATE_TOKEN | A.BLANK | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) => {
+    let (atom, rest) = normalize_to_atom(body);
     (B.ATOM(atom), rest)
   }
   | A.SEQ(bodies) => {
@@ -32,10 +28,8 @@ let rec normalize_to_simple = (body: A.rule_body): (B.simple, list(A.rule)) => {
 }
 and normalize_to_atom = (body: A.rule_body): (B.atom, list(A.rule)) => {
   switch (body) {
-  | A.TOKEN => (B.TOKEN, [])
-  | A.SYMBOL(name) => (B.SYMBOL(name), [])
-  | A.STRING(name) => (B.SYMBOL(name), [])
-  | A.PATTERN(name) => (B.SYMBOL(name), [])
+  | A.TOKEN | A.IMMEDIATE_TOKEN | A.BLANK => (B.TOKEN, [])
+  | A.SYMBOL(name) | A.STRING(name) | A.PATTERN(name)=> (B.SYMBOL(name), [])
   /* Create intermediate symbol */
   | _ => {
     let fresh_ident = gensym();
@@ -45,17 +39,26 @@ and normalize_to_atom = (body: A.rule_body): (B.atom, list(A.rule)) => {
 }
 and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
   switch(rule_body) {
-  | A.IMMEDIATE_TOKEN | A.BLANK | A.TOKEN | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) | A.SEQ(_) => {
+  | A.IMMEDIATE_TOKEN | A.BLANK | A.TOKEN | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) => {
       let (simple, rest) = normalize_to_simple(rule_body);
       (B.SIMPLE(simple), rest);
     }
+  | A.SEQ(bodies) => {
+      let xs = List.map(normalize_to_atom, bodies);
+      let atoms = List.map(fst, xs);
+      let intermediates = List.flatten(List.map(snd, xs));
+      (B.SIMPLE(B.SEQ(atoms)), intermediates)
+    };
   | A.CHOICE(bodies) => {
       let xs = List.map(normalize_to_simple, bodies);
       let simples = List.map(fst, xs);
       let intermediates = List.flatten(List.map(snd, xs));
       (B.CHOICE(simples), intermediates)
     };
-  | _ => failwith("TODO");
+  | _ => (
+      B.SIMPLE(B.ATOM(B.TOKEN)),
+      []
+    );
   };
 }
 and normalize_rule = ((name, rule_body): A.rule): (list(B.rule)) => {
