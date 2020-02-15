@@ -49,7 +49,7 @@ let test_normalization_4 = _ => {
               / |   \   \
         SEQ  SYMBOL(A) SYMBOL(B) SEQ
         /\                       /\
-    SYMBOL(C) SYMBOL(D)   SYMBOL(E) SYMBOL(F)
+    SYMBOL(C) STRING(D)   SYMBOL(E) STRING(F)
   */
   let grammar = (
     "ex4",
@@ -58,13 +58,13 @@ let test_normalization_4 = _ => {
       A.CHOICE([
         A.SEQ([
           A.SYMBOL("C"),
-          A.SYMBOL("D"),
+          A.STRING("D"),
         ]),
         A.SYMBOL("A"),
         A.SYMBOL("B"),
         A.SEQ([
           A.SYMBOL("E"),
-          A.SYMBOL("F"),
+          A.STRING("F"),
         ])
       ])
     )]
