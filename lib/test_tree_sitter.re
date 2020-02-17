@@ -43,6 +43,186 @@ let _test_normalization = (ex1, expected_1) => {
   }
 }
 
+let test_option = _ => {
+  /*     CHOICE
+         /  \
+       SYMBOL BLANK
+  */
+  let grammar = (
+    "option_grammar",
+    [(
+      "an_option",
+      A.CHOICE([
+        A.SYMBOL("A"),
+        A.BLANK,
+      ]),
+    )]
+  );
+  let expected = (
+    "option_grammar",
+    [
+      (
+        "an_option",
+        B.OPTION(B.ATOM(B.SYMBOL("A"))),
+      ),
+    ]
+  );
+  _test_normalization(grammar, expected);
+}
+
+let test_repeat = _ => {
+  /*      REPEAT
+           /
+        CHOICE
+         /  \
+       SYMBOL TOKEN
+  */
+  let grammar = (
+    "repeat_grammar",
+    [(
+      "aprogram",
+      A.REPEAT(
+        A.CHOICE([
+          A.SYMBOL("A"),
+          A.TOKEN,
+        ]),
+      )
+    )]
+  );
+  let expected = (
+    "repeat_grammar",
+    [
+      (
+        "aprogram",
+        B.REPEAT(
+          B.ATOM(B.SYMBOL("intermediate1"))
+        )
+      ),
+      (
+        "intermediate1",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("A")),
+          B.ATOM(B.TOKEN),
+        ])
+      )
+    ]
+  );
+  _test_normalization(grammar, expected);
+}
+
+let test_normalization_4 = _ => {
+  /*
+               CHOICE
+              / |   \   \
+        SEQ  SYMBOL(A) SYMBOL(B) SEQ
+        /\                       /\
+    SYMBOL(C) STRING(D)   SYMBOL(E) STRING(F)
+  */
+  let grammar = (
+    "ex4",
+    [(
+      "arith_expression",
+      A.CHOICE([
+        A.SEQ([
+          A.SYMBOL("C"),
+          A.STRING("D"),
+        ]),
+        A.SYMBOL("A"),
+        A.SYMBOL("B"),
+        A.SEQ([
+          A.SYMBOL("E"),
+          A.STRING("F"),
+        ])
+      ])
+    )]
+  );
+  let expected = (
+    "ex4",
+    [(
+      "arith_expression",
+      B.CHOICE([
+        B.SEQ([
+          B.SYMBOL("C"),
+          B.TOKEN
+        ]),
+        B.ATOM(B.SYMBOL("A")),
+        B.ATOM(B.SYMBOL("B")),
+        B.SEQ([
+          B.SYMBOL("E"),
+          B.TOKEN
+        ])
+      ])
+    )]
+  );
+  _test_normalization(grammar, expected);
+}
+
+let test_normalization_3 = _ => {
+  /*
+             CHOICE
+              / |
+        CHOICE TOKEN
+        /  \
+    CHOICE TOKEN
+      /  \
+  CHOICE  TOKEN
+    |
+  TOKEN
+  */
+  let grammar = (
+    "ex3_grammar",
+    [(
+      "ex3_rule",
+      A.CHOICE([
+        A.CHOICE([
+          A.CHOICE([
+            A.CHOICE([
+              A.TOKEN
+            ]),
+            A.TOKEN,
+          ]),
+          A.TOKEN
+        ]),
+        A.TOKEN,
+      ])
+    )]
+  );
+  let expected = (
+    "ex3_grammar",
+    [
+      (
+        "ex3_rule",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("intermediate1")),
+          B.ATOM(B.TOKEN),
+        ])
+      ),
+      (
+        "intermediate1",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("intermediate2")),
+          B.ATOM(B.TOKEN),
+        ])
+      ),
+      (
+        "intermediate2",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("intermediate3")),
+          B.ATOM(B.TOKEN),
+        ])
+      ),
+      (
+        "intermediate3",
+        B.CHOICE([
+          B.ATOM(B.TOKEN),
+        ])
+      ),
+    ]
+  );
+  _test_normalization(grammar, expected);
+
+}
+
 let test_normalization_2 = _ => {
   /*
               SEQ
@@ -68,13 +248,13 @@ let test_normalization_2 = _ => {
       (
         "ex2_rule",
         B.SIMPLE(B.SEQ([
-          B.SYMBOL("intermediate2"),
+          B.SYMBOL("intermediate1"),
           B.TOKEN,
           B.SYMBOL("A")
         ]))
       ),
       (
-        "intermediate2",
+        "intermediate1",
         B.CHOICE([
           B.ATOM(B.SYMBOL("B")),
           B.ATOM(B.TOKEN),
@@ -127,6 +307,10 @@ let test_normalization_1 = _ => {
 let test_normalization = _ => {
   test_normalization_1();
   test_normalization_2();
+  test_normalization_3();
+  test_normalization_4();
+  test_repeat();
+  test_option();
 }
 
 let test_codegen_types = file => {
