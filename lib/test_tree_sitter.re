@@ -143,13 +143,13 @@ let test_normalization_4 = _ => {
       B.CHOICE([
         B.SEQ([
           B.SYMBOL("C"),
-          B.SYMBOL("D")
+          B.TOKEN
         ]),
         B.ATOM(B.SYMBOL("A")),
         B.ATOM(B.SYMBOL("B")),
         B.SEQ([
           B.SYMBOL("E"),
-          B.SYMBOL("F")
+          B.TOKEN
         ])
       ])
     )]

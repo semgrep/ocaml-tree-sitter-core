@@ -9,11 +9,7 @@ let gensym = () => {
 
 let rec normalize_to_simple = (body: A.rule_body): (B.simple, list(A.rule)) => {
   switch (body) {
-<<<<<<< HEAD
   | A.TOKEN | A.IMMEDIATE_TOKEN | A.BLANK | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) => {
-=======
-  | A.TOKEN | A.SYMBOL(_) => {
->>>>>>> c34f70b... rebase fixes
     let (atom, rest) = normalize_to_atom(body);
     (B.ATOM(atom), rest)
   }
@@ -32,8 +28,8 @@ let rec normalize_to_simple = (body: A.rule_body): (B.simple, list(A.rule)) => {
 }
 and normalize_to_atom = (body: A.rule_body): (B.atom, list(A.rule)) => {
   switch (body) {
-  | A.TOKEN | A.IMMEDIATE_TOKEN | A.BLANK => (B.TOKEN, [])
-  | A.SYMBOL(name) | A.STRING(name) | A.PATTERN(name)=> (B.SYMBOL(name), [])
+  | A.TOKEN | A.STRING(_) | A.PATTERN(_) => (B.TOKEN, [])
+  | A.SYMBOL(name) => (B.SYMBOL(name), [])
   /* Create intermediate symbol */
   | _ => {
     let fresh_ident = gensym();
