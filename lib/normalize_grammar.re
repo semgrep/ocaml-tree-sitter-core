@@ -39,16 +39,10 @@ and normalize_to_atom = (body: A.rule_body): (B.atom, list(A.rule)) => {
 }
 and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
   switch(rule_body) {
-  | A.IMMEDIATE_TOKEN | A.BLANK | A.TOKEN | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) => {
+  | A.IMMEDIATE_TOKEN | A.BLANK | A.TOKEN | A.SYMBOL(_) | A.STRING(_) | A.PATTERN(_) | A.SEQ(_) => {
       let (simple, rest) = normalize_to_simple(rule_body);
       (B.SIMPLE(simple), rest);
     }
-  | A.SEQ(bodies) => {
-      let xs = List.map(normalize_to_atom, bodies);
-      let atoms = List.map(fst, xs);
-      let intermediates = List.flatten(List.map(snd, xs));
-      (B.SIMPLE(B.SEQ(atoms)), intermediates)
-    };
   | A.CHOICE(bodies) => {
     switch (List.rev(bodies)) {
     | [A.BLANK] => failwith("Impossible, a single BLANK in a CHOICE")
