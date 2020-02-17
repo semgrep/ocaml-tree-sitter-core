@@ -43,6 +43,73 @@ let _test_normalization = (ex1, expected_1) => {
   }
 }
 
+let test_option = _ => {
+  /*     CHOICE
+         /  \
+       SYMBOL BLANK
+  */
+  let grammar = (
+    "option_grammar",
+    [(
+      "an_option",
+      A.CHOICE([
+        A.SYMBOL("A"),
+        A.BLANK,
+      ]),
+    )]
+  );
+  let expected = (
+    "option_grammar",
+    [
+      (
+        "an_option",
+        B.OPTION(B.ATOM(B.SYMBOL("A"))),
+      ),
+    ]
+  );
+  _test_normalization(grammar, expected);
+}
+
+let test_repeat = _ => {
+  /*      REPEAT
+           /
+        CHOICE
+         /  \
+       SYMBOL TOKEN
+  */
+  let grammar = (
+    "repeat_grammar",
+    [(
+      "aprogram",
+      A.REPEAT(
+        A.CHOICE([
+          A.SYMBOL("A"),
+          A.TOKEN,
+        ]),
+      )
+    )]
+  );
+  let expected = (
+    "repeat_grammar",
+    [
+      (
+        "aprogram",
+        B.REPEAT(
+          B.ATOM(B.SYMBOL("intermediate1"))
+        )
+      ),
+      (
+        "intermediate1",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("A")),
+          B.ATOM(B.TOKEN),
+        ])
+      )
+    ]
+  );
+  _test_normalization(grammar, expected);
+}
+
 let test_normalization_4 = _ => {
   /*
                CHOICE
@@ -76,13 +143,13 @@ let test_normalization_4 = _ => {
       B.CHOICE([
         B.SEQ([
           B.SYMBOL("C"),
-          B.SYMBOL("D")
+          B.TOKEN
         ]),
         B.ATOM(B.SYMBOL("A")),
         B.ATOM(B.SYMBOL("B")),
         B.SEQ([
           B.SYMBOL("E"),
-          B.SYMBOL("F")
+          B.TOKEN
         ])
       ])
     )]
@@ -242,6 +309,8 @@ let test_normalization = _ => {
   test_normalization_2();
   test_normalization_3();
   test_normalization_4();
+  test_repeat();
+  test_option();
 }
 
 let test_codegen_types = file => {

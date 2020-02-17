@@ -28,8 +28,8 @@ let rec normalize_to_simple = (body: A.rule_body): (B.simple, list(A.rule)) => {
 }
 and normalize_to_atom = (body: A.rule_body): (B.atom, list(A.rule)) => {
   switch (body) {
-  | A.TOKEN | A.IMMEDIATE_TOKEN | A.BLANK => (B.TOKEN, [])
-  | A.SYMBOL(name) | A.STRING(name) | A.PATTERN(name)=> (B.SYMBOL(name), [])
+  | A.TOKEN | A.STRING(_) | A.PATTERN(_) => (B.TOKEN, [])
+  | A.SYMBOL(name) => (B.SYMBOL(name), [])
   /* Create intermediate symbol */
   | _ => {
     let fresh_ident = gensym();
@@ -50,15 +50,30 @@ and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
       (B.SIMPLE(B.SEQ(atoms)), intermediates)
     };
   | A.CHOICE(bodies) => {
+    switch (List.rev(bodies)) {
+    | [A.BLANK] => failwith("Impossible, a single BLANK in a CHOICE")
+    | [A.BLANK, other_body] => {
+      let (simple, rest) = normalize_to_simple(other_body);
+      (B.OPTION(simple), rest)
+    }
+    | [A.BLANK, ...other_bodies] => {
+      /* this will create a gensymed ATOM(SYMBOL) for this CHOICE */
+      let (simple, rest) = normalize_to_simple(A.CHOICE(other_bodies));
+      (B.OPTION(simple), rest)
+    }
+    | _ => {
       let xs = List.map(normalize_to_simple, bodies);
       let simples = List.map(fst, xs);
       let intermediates = List.flatten(List.map(snd, xs));
       (B.CHOICE(simples), intermediates)
-    };
-  | _ => (
-      B.SIMPLE(B.ATOM(B.TOKEN)),
-      []
-    );
+    }
+    }
+  }
+  | A.REPEAT(body) => {
+      let (simple, rest) = normalize_to_simple(body);
+      (B.REPEAT(simple), rest)
+    }
+  | _ => failwith("TODO");
   };
 }
 and normalize_rule = ((name, rule_body): A.rule): (list(B.rule)) => {
