@@ -31,6 +31,19 @@ let test_normalize = file => {
   print_string(s);
 }
 
+let _test_code = (nast, expected_str) => {
+  let generated_code =  Codegen_types.codegen(nast);
+  if (generated_code == expected_str) {
+    print_string("PASSED codegen\n");
+  } else {
+    print_string("Expected ========= \n")
+    print_string(expected_str ++ "\n");
+    print_string("ACTUAL =========\n")
+    print_string(generated_code ++ "\n");
+  }
+
+}
+
 let _test_normalization = (ex1, expected_1) => {
   let ex1_normalized = Normalize_grammar.normalize(ex1);
   if (ex1_normalized == expected_1) {
@@ -313,6 +326,35 @@ let test_normalization = _ => {
   test_option();
 }
 
+let test_codegen_1 = _ => {
+  /* TODO: make static */
+  let nast = (
+    "ex1_grammar",
+    [
+      (
+        "ex1_rule",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("A")),B.ATOM(B.SYMBOL("intermediate1"))
+        ])
+      ),
+      (
+        "intermediate1",
+        B.CHOICE([
+          B.ATOM(B.SYMBOL("B")),
+          B.ATOM(B.SYMBOL("C")),
+        ])
+      )
+    ]
+  );
+  let expected = "type intermediate1 = B(string) | C(string);\n" ++
+    "type ex1_rule = A(string) | intermediate1(string);";
+  _test_code(nast, expected);
+}
+
+let test_codegen = _ => {
+  test_codegen_1();
+}
+
 let test_codegen_types = file => {
   let ast = Parse_grammar.parse(file);
   let nast = Normalize_grammar.normalize(ast);
@@ -334,7 +376,8 @@ let test_codegen_jsonreader = file => {
 let actions = () => [
   ("-parse_grammar", "   <file>", Common.mk_action_1_arg(test_parse)),
   ("-normalize_grammar", "   <file>", Common.mk_action_1_arg(test_normalize)),
-  ("-test_normalization", "   <file>", Common.mk_action_1_arg(test_normalization)),
+  ("-test_normalization", "   <file>", Common.mk_action_0_arg(test_normalization)),
+  ("-test_codegen", "   <file>", Common.mk_action_0_arg(test_codegen)),
   ("-codegen_types", "   <file>", Common.mk_action_1_arg(test_codegen_types)),
   ("-codegen_jsonreader", "   <file>", Common.mk_action_1_arg(test_codegen_jsonreader)),
 ];
