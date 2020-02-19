@@ -63,11 +63,16 @@ and normalize_body = (rule_body: A.rule_body): (B.rule_body, list(A.rule)) => {
     }
     }
   }
-  | A.REPEAT(body) => {
+  | A.ALIAS(body, _) => {
+    /* TODO: properly process the LHS */
+      let (simple, rest) = normalize_to_simple(body);
+      (B.SIMPLE(simple), rest);
+
+  }
+  | A.REPEAT(body) | A.REPEAT1(body) => {
       let (simple, rest) = normalize_to_simple(body);
       (B.REPEAT(simple), rest)
     }
-  | _ => failwith("TODO");
   };
 }
 and normalize_rule = ((name, rule_body): A.rule): (list(B.rule)) => {
