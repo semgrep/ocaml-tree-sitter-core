@@ -6,10 +6,17 @@ let gen_intermediate_type = () => {
   "Intermediate_type" ++ string_of_int(counter^);
 }
 
+let wrap_ident= (ident:string) : string => {
+   if (ident == "true" || ident == "false") {
+      ident ++ "_bool"
+   } else {
+      ident
+   }
+}
 let codegen_atom = (atom: B.atom): string => {
    switch(atom) {
    | B.TOKEN => "string" /* tokens are string */
-   | B.SYMBOL(name) => name
+   | B.SYMBOL(name) => wrap_ident(name)
    }
 }
 
@@ -33,7 +40,14 @@ let codegen_rule_body = (rule_body: B.rule_body): string => {
       /* codegen: A(...) | B(...) */
       let rhs = List.map(codegen_simple, simples);
       let im_types = List.map(
-         (im_type: string) => gen_intermediate_type() ++ "(" ++ im_type ++ ")",
+         (im_type: string) => {
+            if (im_type == "true" || im_type == "false") {
+               /* add extra quote for boolean */
+               gen_intermediate_type() ++ "(" ++ wrap_ident(im_type) ++ ")"
+            } else {
+               gen_intermediate_type() ++ "(" ++ im_type ++ ")"
+            }
+         },
          rhs
       );
       String.concat(" | ", im_types);
@@ -53,7 +67,7 @@ let codegen_rule_body = (rule_body: B.rule_body): string => {
 
 let codegen_rules = (xs: list(B.rule)): (list(string)) => {
    List.map(((name, body): B.rule) => {
-      name ++ " = " ++ codegen_rule_body(body)
+      wrap_ident(name) ++ " = " ++ codegen_rule_body(body)
    }, xs)
 }
 
