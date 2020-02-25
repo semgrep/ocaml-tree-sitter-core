@@ -7,22 +7,33 @@ import sys
 from typing import Any, Dict, List, Optional
 from json import JSONDecodeError
 
+LOCAL_TREE_SITTER_PATH = f"./node_modules/.bin/tree-sitter"
+
 def wrap_call(cmd: List[str], **kwargs)->None:
   return subprocess.call(cmd, **{"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL, **kwargs})
 
 def print_warning(msg):
   print(msg, file=sys.stderr)
-def _check_and_install_tree_sitter()-> None:
+
+def _check_and_install_tree_sitter(dir_path)-> None:
   """
-    Checks tree-sitter-installation
+    Checks tree-sitter-installation inside dir_path.
+    Ensures that tree-sitter and tree-sitter-cli are installed locally in node_modules
   """
+  print_warning(f"Checking tree-sitter installation")
+  if not os.path.exists(os.path.join(dir_path, "node_modules/tree-sitter-cli")):
+    print_warning(f"No tree-sitter package found. Attempting `npm i tree-sitter` in {dir_path}")
+    exit_installation = subprocess.call(["npm", "i", "tree-sitter"], cwd=dir_path)
+    if exit_installation != 0:
+      print_warning(f"Could not install tree-sitter. Try manually with `npm i tree-sitter` inside {dir_path}")
+      sys.exit(exit_installation)
   print_warning(f"Checking tree-sitter-cli installation")
-  exit_code = wrap_call(["npm", "list", "tree-sitter-cli"])
-  exit_code_g = wrap_call(["npm", "list", "-g", "tree-sitter-cli"])
-  if exit_code != 0 and exit_code_g != 0:
-    print_warning(f"No tree-sitter-cli found. Attempting `npm i tree-sitter-cli`")
-    exit_installation = wrap_call(["npm", "i", "tree-sitter-cli"])
-    sys.exit(exit_installation)
+  if not os.path.exists(os.path.join(dir_path, "node_modules/tree-sitter-cli")):
+    print_warning(f"No tree-sitter-cli package found. Attempting `npm i tree-sitter-cli` in {dir_path}")
+    exit_installation = subprocess.call(["npm", "i", "tree-sitter-cli"], cwd=dir_path)
+    if exit_installation != 0:
+      print_warning(f"Could not install tree-sitter-cli. Try manually with `npm i tree-sitter-cli` inside {dir_path}")
+      sys.exit(exit_installation)
 
 def _check_node_installation()-> None:
   """
@@ -44,13 +55,13 @@ def _generate_json(grammar_file: str) -> Optional[str]:
 
   print_warning(f"Generating grammar.json from {grammar_file}")
   dir_path = os.path.dirname(grammar_file)
-  exit_code = wrap_call(["tree-sitter", "generate"], cwd=dir_path)
+  exit_code = wrap_call([LOCAL_TREE_SITTER_PATH, "generate"], cwd=dir_path)
   if exit_code != 0:
     print("Could not generate grammar.json. Try running `tree-sitter generate` manually!")
     sys.exit(1)
   return os.path.join(dir_path, "grammar.json")
 
-def parse_grammar(grammar_file: str) -> Optional[Dict[str, Any]]:
+def parse_grammar(grammar_file: str, dir_path: str) -> Optional[Dict[str, Any]]:
   """
     Parses grammar.json in tree-sitter definitions. Generates
     this file if necessary from grammar.js
@@ -59,8 +70,8 @@ def parse_grammar(grammar_file: str) -> Optional[Dict[str, Any]]:
     try:
       grammar = json.load(f)
     except JSONDecodeError as _:
-      print_warning(f"Invalid grammar.json file speccified. Generating ...")
-      _check_and_install_tree_sitter()
+      print_warning(f"Invalid grammar.json file specified. Generating ...")
+      _check_and_install_tree_sitter(dir_path)
       json_file = _generate_json(grammar_file)
       if json_file:
         with open(json_file, 'r') as generate_j:
@@ -100,6 +111,10 @@ def install_specified_language(dir_path: str) -> None:
   """
     Init, install, and link given npm package inside dir_path
   """
+  print_warning("Installing and linking given language package locally.")
+  # hack so that main entry point is always index.js
+  wrap_call(["touch", "index.js"], cwd=dir_path)
+
   wrap_call(["npm", "init", "-y"], cwd=dir_path)
   wrap_call(["npm", "install"], cwd=dir_path)
   exit_code =wrap_call(["npm", "link"], cwd=dir_path)
@@ -108,6 +123,7 @@ def install_specified_language(dir_path: str) -> None:
     sys.exit(1)
 
 def dump_cst(fname:str, dir_path: str, input_file: str) -> None:
+  print(f"Writing CST for {input_file}")
   if dir_path in input_file:
     input_file = os.path.relpath(input_file, dir_path)
   exit_code = subprocess.call(["node", fname, input_file], cwd=dir_path)
@@ -116,11 +132,11 @@ def main(grammar_file: str, input_file: str)-> None:
   # install/check given grammar
   # run the generatad file
   _check_node_installation()
-  grammar = parse_grammar(grammar_file)
-  language_name = grammar.get("name")
   dir_path = os.path.dirname(grammar_file)
-  fname = generate_cst_json_dumper(language_name, dir_path)
   install_specified_language(dir_path)
+  grammar = parse_grammar(grammar_file, dir_path)
+  language_name = grammar.get("name")
+  fname = generate_cst_json_dumper(language_name, dir_path)
   dump_cst(fname, dir_path, input_file)
 
 if __name__ == "__main__":
