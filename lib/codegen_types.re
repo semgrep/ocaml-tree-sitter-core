@@ -15,7 +15,8 @@ let wrap_ident= (ident:string) : string => {
 }
 let codegen_atom = (atom: B.atom): string => {
    switch(atom) {
-   | B.TOKEN => "string" /* tokens are string */
+   | B.TOKEN(None) => "string" /* tokens are empty */
+   | B.TOKEN(Some(name)) => wrap_ident(name)
    | B.SYMBOL(name) => wrap_ident(name)
    }
 }
@@ -78,10 +79,10 @@ let codegen_rules = (rules: list(B.rule)): (list(string)) => {
             let b_type = B.show_rule_body(b_body);
             /* make sure leaves are at top */
             switch(a_body) {
-            | B.SIMPLE(B.ATOM(B.TOKEN)) => -1
+            | B.SIMPLE(B.ATOM(B.TOKEN(_))) => -1
             | _ => {
                switch(b_body) {
-               | B.SIMPLE(B.ATOM(B.TOKEN)) => 1
+               | B.SIMPLE(B.ATOM(B.TOKEN(_))) => 1
                | _ => String.compare(a_type, b_type)
                }
             }

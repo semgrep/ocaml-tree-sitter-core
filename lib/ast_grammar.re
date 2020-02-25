@@ -15,7 +15,7 @@ type rule_body =
  | SYMBOL(ident)
  | STRING(string)
  | PATTERN(string)
- | TOKEN /* no need to look under that */
+ | TOKEN
  | IMMEDIATE_TOKEN /* used in Ruby for keyword_parameter, IMMEDIATE_TOKEN(":") */
  | BLANK /* usually used in a CHOICE(...,BLANK) to encode optionality */
 ;
