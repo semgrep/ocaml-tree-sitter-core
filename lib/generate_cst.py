@@ -43,32 +43,27 @@ def _check_node_installation()-> None:
     print_warning(f"Please install NodeJS with `brew install node`")
     sys.exit(exit_code)
 
-def _generate_json(grammar_file: str) -> Optional[str]:
+def _generate_json(grammar_dir: str) -> Optional[str]:
   """
     Generates grammar.json from grammar.js files of tree-sitter
   """
-  if not grammar_file.endswith(".js"):
-    print_warning(f"Does not understand {grammar_file}. Giving up")
-    sys.exit(1)
-
-  print_warning(f"Generating grammar.json from {grammar_file}")
-  dir_path = os.path.dirname(grammar_file)
+  print_warning(f"Generating grammar.json from {grammar_dir}")
 
   # Sanity check with -V
-  subprocess.call([LOCAL_TREE_SITTER_PATH, "-V"], cwd=dir_path)
+  subprocess.call([LOCAL_TREE_SITTER_PATH, "-V"], cwd=grammar_dir)
 
-  exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "generate"], cwd=dir_path)
+  exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "generate"], cwd=grammar_dir)
   if exit_code != 0:
     print("Could not generate grammar.json. Try running `tree-sitter generate` manually!")
     sys.exit(1)
-  return os.path.join(dir_path, "grammar.json")
+  return os.path.join(grammar_dir, "grammar.json")
 
-def parse_grammar(grammar_path: str, dir_path: str) -> Optional[Dict[str, Any]]:
+def parse_grammar(grammar_path: str) -> Optional[Dict[str, Any]]:
   """
     Parses grammar.json in tree-sitter definitions. Generates
     this file if necessary from grammar.js
   """
-  _check_and_install_tree_sitter(dir_path)
+  _check_and_install_tree_sitter(grammar_path)
   json_file = _generate_json(grammar_path)
   with open(json_file, 'r') as generate_j:
     try:
@@ -142,25 +137,26 @@ def dump_cst_native(fname:str, dir_path: str, input_file: str) -> None:
     input_file = os.path.relpath(input_file, dir_path)
   exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "parse", input_file], cwd=dir_path)
 
-def main(grammar_file: str, input_file: str, is_native: bool)-> None:
-  # install/check given grammar
-  # run the generatad file
+def main(grammar_dir: str, input_file: str, is_native: bool)-> None:
+  """
+    Runs the given grammer to generate CST in s-expr or JSON format for a given file.
+    It installs necessary prerequisites through npm locally on the path
+  """
   _check_node_installation()
-  dir_path = os.path.dirname(grammar_file)
-  install_specified_language(dir_path)
-  grammar = parse_grammar(grammar_file, dir_path)
+  install_specified_language(grammar_dir)
+  grammar = parse_grammar(grammar_dir)
   language_name = grammar.get("name")
-  fname = generate_cst_json_dumper(language_name, dir_path)
+  fname = generate_cst_json_dumper(language_name, grammar_dir)
   if is_native:
-    dump_cst_native(fname, dir_path, input_file)
+    dump_cst_native(fname, grammar_dir, input_file)
   else:
-    dump_cst(fname, dir_path, input_file)
+    dump_cst(fname, grammar_dir, input_file)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Process some integers.')
-  parser.add_argument('grammar_file', type=str,
-                    help='grammar.json for which to generate the CST for')
+  parser.add_argument('grammar_dir', type=str,
+                    help='Directory containing grammar.js definition')
   parser.add_argument('--native', '-n', help='Print CST in native CST format (s-expr) of tree-sitter', action='store_true')
   parser.add_argument("input_file")
   args = parser.parse_args()
-  main(args.grammar_file, args.input_file, args.native)
+  main(args.grammar_dir, args.input_file, args.native)
