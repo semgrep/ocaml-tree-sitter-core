@@ -23,14 +23,14 @@ def _check_and_install_tree_sitter(dir_path)-> None:
   print_warning(f"Checking tree-sitter installation")
   if not os.path.exists(os.path.join(dir_path, "node_modules/tree-sitter-cli")):
     print_warning(f"No tree-sitter package found. Attempting `npm i tree-sitter` in {dir_path}")
-    exit_installation = subprocess.call(["npm", "i", "tree-sitter"], cwd=dir_path)
+    exit_installation = wrap_call(["npm", "i", "tree-sitter"], cwd=dir_path)
     if exit_installation != 0:
       print_warning(f"Could not install tree-sitter. Try manually with `npm i tree-sitter` inside {dir_path}")
       sys.exit(exit_installation)
   print_warning(f"Checking tree-sitter-cli installation")
   if not os.path.exists(os.path.join(dir_path, "node_modules/tree-sitter-cli")):
     print_warning(f"No tree-sitter-cli package found. Attempting `npm i tree-sitter-cli` in {dir_path}")
-    exit_installation = subprocess.call(["npm", "i", "tree-sitter-cli"], cwd=dir_path)
+    exit_installation = wrap_call(["npm", "i", "tree-sitter-cli"], cwd=dir_path)
     if exit_installation != 0:
       print_warning(f"Could not install tree-sitter-cli. Try manually with `npm i tree-sitter-cli` inside {dir_path}")
       sys.exit(exit_installation)
@@ -86,7 +86,7 @@ def generate_cst_json_dumper(language_name, dir_path):
   template = f"""#!/usr/bin/env node
 
 const Parser = require('tree-sitter');
-const {language_name} = require('.');
+const {language_name.capitalize()} = require('.');
 
 var args = process.argv.slice(2);
 
@@ -94,7 +94,7 @@ var fs = require("fs");
 const sourceCode = fs.readFileSync(args[0]).toString();
 
 const parser = new Parser();
-parser.setLanguage({language_name});
+parser.setLanguage({language_name.capitalize()});
 const tree = parser.parse(sourceCode);
 
 console.log(JSON.stringify(tree.rootNode, ["type", "children"], 2))
