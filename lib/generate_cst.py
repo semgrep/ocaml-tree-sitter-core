@@ -15,25 +15,23 @@ def wrap_call(cmd: List[str], **kwargs)->None:
 def print_warning(msg):
   print(msg, file=sys.stderr)
 
+def _install_dependency(name: str, dir_path: str) -> None:
+  print_warning(f"Checking {name} installation")
+  if not os.path.exists(os.path.join(dir_path, f"node_modules/{name}")):
+    print_warning(f"No {name} package found. Attempting `npm i {name}` in {dir_path}")
+    exit_installation = wrap_call(["npm", "i", name], cwd=dir_path)
+    if exit_installation != 0:
+      print_warning(f"Could not install tree-sitter. Try manually with `npm i {name}` inside {dir_path}")
+      sys.exit(exit_installation)
+
 def _check_and_install_tree_sitter(dir_path)-> None:
   """
     Checks tree-sitter-installation inside dir_path.
     Ensures that tree-sitter and tree-sitter-cli are installed locally in node_modules
   """
-  print_warning(f"Checking tree-sitter installation")
-  if not os.path.exists(os.path.join(dir_path, "node_modules/tree-sitter-cli")):
-    print_warning(f"No tree-sitter package found. Attempting `npm i tree-sitter` in {dir_path}")
-    exit_installation = wrap_call(["npm", "i", "tree-sitter"], cwd=dir_path)
-    if exit_installation != 0:
-      print_warning(f"Could not install tree-sitter. Try manually with `npm i tree-sitter` inside {dir_path}")
-      sys.exit(exit_installation)
-  print_warning(f"Checking tree-sitter-cli installation")
-  if not os.path.exists(os.path.join(dir_path, "node_modules/tree-sitter-cli")):
-    print_warning(f"No tree-sitter-cli package found. Attempting `npm i tree-sitter-cli` in {dir_path}")
-    exit_installation = wrap_call(["npm", "i", "tree-sitter-cli"], cwd=dir_path)
-    if exit_installation != 0:
-      print_warning(f"Could not install tree-sitter-cli. Try manually with `npm i tree-sitter-cli` inside {dir_path}")
-      sys.exit(exit_installation)
+  deps = ["nan", "tree-sitter", "tree-sitter-cli"]
+  for d in deps:
+    _install_dependency(d, dir_path)
 
 def _check_node_installation()-> None:
   """
@@ -55,27 +53,28 @@ def _generate_json(grammar_file: str) -> Optional[str]:
 
   print_warning(f"Generating grammar.json from {grammar_file}")
   dir_path = os.path.dirname(grammar_file)
-  exit_code = wrap_call([LOCAL_TREE_SITTER_PATH, "generate"], cwd=dir_path)
+
+  # Sanity check with -V
+  subprocess.call([LOCAL_TREE_SITTER_PATH, "-V"], cwd=dir_path)
+
+  exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "generate"], cwd=dir_path)
   if exit_code != 0:
     print("Could not generate grammar.json. Try running `tree-sitter generate` manually!")
     sys.exit(1)
   return os.path.join(dir_path, "grammar.json")
 
-def parse_grammar(grammar_file: str, dir_path: str) -> Optional[Dict[str, Any]]:
+def parse_grammar(grammar_path: str, dir_path: str) -> Optional[Dict[str, Any]]:
   """
     Parses grammar.json in tree-sitter definitions. Generates
     this file if necessary from grammar.js
   """
-  with open(grammar_file, 'r') as f:
+  _check_and_install_tree_sitter(dir_path)
+  json_file = _generate_json(grammar_path)
+  with open(json_file, 'r') as generate_j:
     try:
-      grammar = json.load(f)
+      grammar = json.load(generate_j)
     except JSONDecodeError as _:
-      print_warning(f"Invalid grammar.json file specified. Generating ...")
-      _check_and_install_tree_sitter(dir_path)
-      json_file = _generate_json(grammar_file)
-      if json_file:
-        with open(json_file, 'r') as generate_j:
-          grammar = json.load(generate_j)
+      print_warning(f"Invalid grammar.json file specified.")
   if not grammar:
     print_warning(f"Could not find grammar.json")
     sys.exit(1)
@@ -112,15 +111,24 @@ def install_specified_language(dir_path: str) -> None:
     Init, install, and link given npm package inside dir_path
   """
   print_warning("Installing and linking given language package locally.")
-  # hack so that main entry point is always index.js
-  wrap_call(["touch", "index.js"], cwd=dir_path)
 
   wrap_call(["npm", "init", "-y"], cwd=dir_path)
+
+  # hack to make sure the main entrypoint is index.js
+  package_json = {}
+  with open(os.path.join(dir_path, "package.json"), "r") as f:
+    package_json = json.load(f)
+    package_json["main"] = "index.js"
+  with open(os.path.join(dir_path, "package.json"), "w") as f:
+    json.dump(package_json, f)
+
   wrap_call(["npm", "install"], cwd=dir_path)
-  exit_code =wrap_call(["npm", "link"], cwd=dir_path)
+  exit_code = wrap_call(["npm", "link"], cwd=dir_path)
   if exit_code != 0:
     print_warning(f"Could not install language at {dir_path}. See README.md for instructions")
     sys.exit(1)
+
+
 
 def dump_cst(fname:str, dir_path: str, input_file: str) -> None:
   print(f"Writing CST for {input_file}")
@@ -128,7 +136,13 @@ def dump_cst(fname:str, dir_path: str, input_file: str) -> None:
     input_file = os.path.relpath(input_file, dir_path)
   exit_code = subprocess.call(["node", fname, input_file], cwd=dir_path)
 
-def main(grammar_file: str, input_file: str)-> None:
+def dump_cst_native(fname:str, dir_path: str, input_file: str) -> None:
+  print(f"Writing CST for {input_file}")
+  if dir_path in input_file:
+    input_file = os.path.relpath(input_file, dir_path)
+  exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "parse", input_file], cwd=dir_path)
+
+def main(grammar_file: str, input_file: str, is_native: bool)-> None:
   # install/check given grammar
   # run the generatad file
   _check_node_installation()
@@ -137,12 +151,16 @@ def main(grammar_file: str, input_file: str)-> None:
   grammar = parse_grammar(grammar_file, dir_path)
   language_name = grammar.get("name")
   fname = generate_cst_json_dumper(language_name, dir_path)
-  dump_cst(fname, dir_path, input_file)
+  if is_native:
+    dump_cst_native(fname, dir_path, input_file)
+  else:
+    dump_cst(fname, dir_path, input_file)
 
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Process some integers.')
   parser.add_argument('grammar_file', type=str,
                     help='grammar.json for which to generate the CST for')
+  parser.add_argument('--native', '-n', help='Print CST in native CST format (s-expr) of tree-sitter', action='store_true')
   parser.add_argument("input_file")
   args = parser.parse_args()
-  main(args.grammar_file, args.input_file)
+  main(args.grammar_file, args.input_file, args.native)
