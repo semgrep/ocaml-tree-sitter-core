@@ -90,7 +90,7 @@ const sourceCode = fs.readFileSync(args[0]).toString();
 const parser = new Parser();
 parser.setLanguage({language_name.capitalize()});
 const tree = parser.parse(sourceCode);
-
+# TODO: add the position elements to AST
 console.log(JSON.stringify(tree.rootNode, ["type", "children"], 2))
 """
   fname = f"{language_name}_cst_json_dump.js"
