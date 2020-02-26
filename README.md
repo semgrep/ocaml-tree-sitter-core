@@ -57,7 +57,7 @@ it can generate a parser for this grammar in C.
 Note that you do not need to understand or use tree-sitter for this project.
 We just use the same format for the grammar definition (grammar.json).
 
-## What we are looking for in your solution:
+## What we are looking for:
 
 * Comfort with the language of choice: e.g. json parsing and matching should be easily understood
 * Grasp of grammar, abstract datatypes, polymorphic types
