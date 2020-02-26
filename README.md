@@ -81,11 +81,13 @@ eval $(opam env)
 ```
 
 Once OPAM is installed, you need to install
-the OCaml frontend reason, and the build system dune:
+the OCaml frontend reason, and the build system dune, as well as
+the pfff library (just for its commons/ sub-library):
 
 ```bash
 opam install reason
 opam install dune
+opam install pfff
 ```
 
 Then you can compile the program with:
