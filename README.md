@@ -6,6 +6,15 @@ the definition of an Abstract Syntax tree (AST) for arithmetic expressions
 (see tests/arithmetic/ast_arithmetic.re for the expected output). This
 AST definition can be automatically derived from the grammar.
 
+The tests/arithmetic/grammar.json file does not use a traditional
+format to define a grammar (e.g., a BNF grammar using the yacc syntax).
+Instead, it uses a particuliar format (see the Context section below). 
+It is derived from tests/arithmetic/grammar.js which is easier to read 
+(but harder to analyze). 
+See http://tree-sitter.github.io/tree-sitter/creating-parsers#the-grammar-dsl 
+if you need to understand the format of grammar.js (which itself
+will help to understand the format of grammar.json).
+
 ## Main problem
 
 To test your code, run: 
@@ -47,6 +56,14 @@ it can generate a parser for this grammar in C.
 
 Note that you do not need to understand or use tree-sitter for this project.
 We just use the same format for the grammar definition (grammar.json).
+
+## What we are looking for in your solution:
+
+* Comfort with the language of choice: e.g. json parsing and matching should be easily understood
+* Grasp of grammar, abstract datatypes, polymorphic types
+* Test driven development
+* Communication of complex graph algorithms like recursive top-down walk
+* Good solution involves use of intermediate normalized AST definition
 
 
 ## Installation from source
