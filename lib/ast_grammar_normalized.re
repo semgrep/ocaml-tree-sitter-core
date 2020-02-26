@@ -9,7 +9,8 @@ type ident = string;
 [@deriving show { with_path : false} ]
 type atom =
  | SYMBOL(ident) /* codegen: ident */
- | TOKEN(option(ident))
+ | TOKEN
+ | STRING(string)
  ;
 
 [@deriving show { with_path : false} ]

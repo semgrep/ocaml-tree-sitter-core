@@ -28,8 +28,8 @@ let rec normalize_to_simple = (body: A.rule_body): (B.simple, list(A.rule)) => {
 }
 and normalize_to_atom = (body: A.rule_body): (B.atom, list(A.rule)) => {
   switch (body) {
-  | A.TOKEN |  A.IMMEDIATE_TOKEN | A.BLANK |A.PATTERN(_) => (B.TOKEN(None), [])
-  | A.STRING(name) =>  (B.TOKEN(Some(name)), [])
+  | A.TOKEN |  A.IMMEDIATE_TOKEN | A.BLANK |A.PATTERN(_) => (B.TOKEN, [])
+  | A.STRING(string) =>  (B.STRING(string), [])
   | A.SYMBOL(name) => (B.SYMBOL(name), [])
   /* Create intermediate symbol */
   | _ => {
