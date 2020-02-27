@@ -17,7 +17,7 @@ let wrap_ident= (ident:string) : string => {
 let codegen_atom = (atom: B.atom): string => {
    switch(atom) {
    | B.TOKEN => "token" /* tokens are empty */
-   | B.STRING(_) => "string"
+   | B.STRING(string) => "string" ++ " /* " ++ string ++ " */"
    | B.SYMBOL(name) => wrap_ident(name)
    }
 }

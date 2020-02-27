@@ -9,11 +9,11 @@ and intermediate1 =
 and expression = 
  | Intermediate_type3(variable)
  | Intermediate_type4(number)
- | Intermediate_type5((expression, string, expression))
- | Intermediate_type6((expression, string, expression))
- | Intermediate_type7((expression, string, expression))
- | Intermediate_type8((expression, string, expression))
- | Intermediate_type9((expression, string, expression))
-and assignment_statement = (variable, string, expression, string)
-and expression_statement = (expression, string)
+ | Intermediate_type5((expression, string /* + */, expression))
+ | Intermediate_type6((expression, string /* - */, expression))
+ | Intermediate_type7((expression, string /* * */, expression))
+ | Intermediate_type8((expression, string /* / */, expression))
+ | Intermediate_type9((expression, string /* ^ */, expression))
+and assignment_statement = (variable, string /* = */, expression, string /* ; */)
+and expression_statement = (expression, string /* ; */)
 and program = list(intermediate1);
