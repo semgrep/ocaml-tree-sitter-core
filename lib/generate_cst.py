@@ -50,7 +50,7 @@ def _generate_json(grammar_dir: str) -> Optional[str]:
   print_warning(f"Generating grammar.json from {grammar_dir}")
 
   # Sanity check with -V
-  subprocess.call([LOCAL_TREE_SITTER_PATH, "-V"], cwd=grammar_dir)
+  wrap_call([LOCAL_TREE_SITTER_PATH, "-V"], cwd=grammar_dir)
 
   exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "generate"], cwd=grammar_dir)
   if exit_code != 0:
@@ -126,13 +126,11 @@ def install_specified_language(dir_path: str) -> None:
 
 
 def dump_cst(fname:str, dir_path: str, input_file: str) -> None:
-  print(f"Writing CST for {input_file}")
   if dir_path in input_file:
     input_file = os.path.relpath(input_file, dir_path)
   exit_code = subprocess.call(["node", fname, input_file], cwd=dir_path)
 
 def dump_cst_native(fname:str, dir_path: str, input_file: str) -> None:
-  print(f"Writing CST for {input_file}")
   if dir_path in input_file:
     input_file = os.path.relpath(input_file, dir_path)
   exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "parse", input_file], cwd=dir_path)

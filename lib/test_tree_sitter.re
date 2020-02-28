@@ -14,6 +14,7 @@
 
 module A = Ast_grammar;
 module B = Ast_grammar_normalized;
+module CST = Ast_arithmetic;
 
 /*****************************************************************************/
 /* Subsystem testing */
@@ -388,12 +389,18 @@ let test_codegen_types = file => {
 let test_codegen_jsonreader = file => {
   let ast = Parse_grammar.parse(file);
   let nast = Normalize_grammar.normalize(ast);
-  let (_nast_str, _rules) = Codegen_types.codegen(nast);
-  /* print_string (String.concat("\n", List.map(fst, rules)));
-  print_string (String.concat("\n", List.map(B.show_rule_body, List.map(snd, rules))));
+  let (_, im_rules) = Codegen_types.codegen(nast);
+  print_string (String.concat("\n", List.map(fst, im_rules)));
+  print_string (String.concat("\n", List.map(B.show_rule_body,List.map(snd, im_rules))));
   print_string("\n");
-  print_string (nast_str);
-  print_string ("\n"); */
+  let codegen_str = Codegen_json_reader.codegen(nast, im_rules, "TODO");
+  print_string(codegen_str)
+  print_string("\n");
+}
+
+let test_end_to_end = file => {
+  let program = Arith_cst_json_reader.parse(file);
+  print_string(CST.show_program(program));
 }
 
 /*****************************************************************************/
@@ -407,4 +414,5 @@ let actions = () => [
   ("-test_codegen", "   <file>", Common.mk_action_0_arg(test_codegen)),
   ("-codegen_types", "   <file>", Common.mk_action_1_arg(test_codegen_types)),
   ("-codegen_jsonreader", "   <file>", Common.mk_action_1_arg(test_codegen_jsonreader)),
+  ("-test", "<file>", Common.mk_action_1_arg(test_end_to_end))
 ];
