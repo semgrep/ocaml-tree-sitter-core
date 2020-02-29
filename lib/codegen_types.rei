@@ -1,1 +1,1 @@
-let codegen: Ast_grammar_normalized.t => (string, list((string, Ast_grammar_normalized.rule_body)));
+let codegen: Ast_grammar_normalized.t => (string, list((string, Ast_grammar_normalized.simple)));
