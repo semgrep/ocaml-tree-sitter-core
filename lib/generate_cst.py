@@ -56,7 +56,7 @@ def _generate_json(grammar_dir: str) -> Optional[str]:
   if exit_code != 0:
     print("Could not generate grammar.json. Try running `tree-sitter generate` manually!")
     sys.exit(1)
-  return os.path.join(grammar_dir, "grammar.json")
+  return os.path.join(grammar_dir, "src", "grammar.json")
 
 def parse_grammar(grammar_path: str) -> Optional[Dict[str, Any]]:
   """
@@ -90,7 +90,7 @@ const sourceCode = fs.readFileSync(args[0]).toString();
 const parser = new Parser();
 parser.setLanguage({language_name.capitalize()});
 const tree = parser.parse(sourceCode);
-# TODO: add the position elements to AST
+// TODO: add the position elements to AST
 console.log(JSON.stringify(tree.rootNode, ["type", "children"], 2))
 """
   fname = f"{language_name}_cst_json_dump.js"
@@ -120,7 +120,7 @@ def install_specified_language(dir_path: str) -> None:
   wrap_call(["npm", "install"], cwd=dir_path)
   exit_code = wrap_call(["npm", "link"], cwd=dir_path)
   if exit_code != 0:
-    print_warning(f"Could not install language at {dir_path}. See README.md for instructions")
+    print_warning(f"Could not install language at {dir_path}. Run `npm init -y && npm install && npm link` manually.")
     sys.exit(1)
 
 

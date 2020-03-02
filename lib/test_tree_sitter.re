@@ -14,7 +14,6 @@
 
 module A = Ast_grammar;
 module B = Ast_grammar_normalized;
-module CST = Ast_arithmetic;
 
 /*****************************************************************************/
 /* Subsystem testing */
