@@ -28,6 +28,10 @@ setup.log
 # Local OPAM switch
 _opam/
 
+# Node at root
+node_modules
+package-lock.json
+
 # Node inside tests
 tests/**/node_modules
 tests/**/package.json
