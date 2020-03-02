@@ -1,5 +1,5 @@
 open Common;
-module B = Ast_grammar_normalized;
+module N = Ast_grammar_normalized;
 
 /* Helpers */
 let im_rules = ref([]);
@@ -8,7 +8,7 @@ let source_program = ref("");
 let entry_name = ref("");
 
 
-let rec map_to_im_rules = (simple: B.simple, rules: list((string, B.simple))): option(string) => {
+let rec map_to_im_rules = (simple: N.simple, rules: list((string, N.simple))): option(string) => {
    switch(rules) {
    | [] => None
    | [(name, im_rule), ...rest] => {
@@ -21,25 +21,25 @@ let rec map_to_im_rules = (simple: B.simple, rules: list((string, B.simple))): o
    }
 }
 
-let generate_atom_local_var = (_: B.atom): string => {
+let generate_atom_local_var = (_: N.atom): string => {
   incr(local_var_counter);
   "local_var" ++ string_of_int(local_var_counter^)
 }
 
 
 /* Generators */
-let generate_atom = (atom: B.atom): string => {
+let generate_atom = (atom: N.atom): string => {
    switch(atom) {
-   | B.SYMBOL(ident) =>  ident
-   | B.STRING(string) => string
+   | N.SYMBOL(ident) =>  ident
+   | N.STRING(string) => string
    | _ => failwith("Unhandle case in generated_atom_parsers")
    }
 }
 
-let set_entry_name = (rules: list(B.rule)) => {
-   List.map(((name:string, body: B.rule_body)) => {
+let set_entry_name = (rules: list(N.rule)) => {
+   List.map(((name:string, body: N.rule_body)) => {
       switch(body) {
-      | B.REPEAT(B.ATOM(atom)) => {
+      | N.REPEAT(N.ATOM(atom)) => {
          let atom_name = generate_atom(atom);
          if (name == source_program^) {
             entry_name := atom_name
@@ -51,39 +51,39 @@ let set_entry_name = (rules: list(B.rule)) => {
    }, rules);
 }
 
-let generate_atom_json_type_matchers = (atom: B.atom): string => {
+let generate_atom_json_type_matchers = (atom: N.atom): string => {
    switch(atom) {
-   | B.SYMBOL(_) =>
+   | N.SYMBOL(_) =>
       spf("
       J.Object([(\"type\", J.String(\"%s\")),
                (\"children\", %s)])",
       generate_atom(atom),
       generate_atom_local_var(atom))
-   | B.STRING(_) =>
+   | N.STRING(_) =>
       spf("
       J.Object([(\"type\", J.String(\"%s\")),
                (\"children\", _)])",
       generate_atom(atom))
-   | B.TOKEN => failwith("Unhandle case in generated_atom_parsers")
+   | N.TOKEN => failwith("Unhandle case in generated_atom_parsers")
    }
 }
 
-let generate_atom_func_calls = (atom: B.atom) => {
+let generate_atom_func_calls = (atom: N.atom) => {
    switch(atom) {
-   | B.SYMBOL(_) => spf("parse_%s(%s)",generate_atom(atom), generate_atom_local_var(atom))
-   | B.STRING(_) => spf("\"%s\"", generate_atom(atom))
-   | B.TOKEN => failwith("Unhandle case in generated_atom_parsers")
+   | N.SYMBOL(_) => spf("parse_%s(%s)",generate_atom(atom), generate_atom_local_var(atom))
+   | N.STRING(_) => spf("\"%s\"", generate_atom(atom))
+   | N.TOKEN => failwith("Unhandle case in generated_atom_parsers")
    }
 }
 
-let generate_atom_seq = (atoms: list(B.atom)): string => {
+let generate_atom_seq = (atoms: list(N.atom)): string => {
    local_var_counter := 0;
    let generated_atoms = List.map(generate_atom_json_type_matchers, atoms);
 
    local_var_counter := 0;
    let generated_atom_parsers = List.map(generate_atom_func_calls, atoms);
 
-   let im_type_name = map_to_im_rules(B.SEQ(atoms), im_rules^);
+   let im_type_name = map_to_im_rules(N.SEQ(atoms), im_rules^);
 
    let im_type_str = switch(im_type_name) {
       | Some(rule_name) => spf("%s((%s))", rule_name, String.concat(",", generated_atom_parsers))
@@ -96,9 +96,9 @@ let generate_atom_seq = (atoms: list(B.atom)): string => {
    im_type_str)
 }
 
-let generate_simple = (parent_name: string, simple: B.simple): string => {
+let generate_simple = (parent_name: string, simple: N.simple): string => {
    switch(simple) {
-   | B.ATOM(atom) => {
+   | N.ATOM(atom) => {
       let simple_name = generate_atom(atom);
       let im_type_name = map_to_im_rules(simple, im_rules^);
       let im_name = switch(im_type_name) {
@@ -120,13 +120,13 @@ let generate_simple = (parent_name: string, simple: B.simple): string => {
          simple_name, im_name, simple_name);
       }
    }
-   | B.SEQ(atoms) => generate_atom_seq(atoms)
+   | N.SEQ(atoms) => generate_atom_seq(atoms)
    }
 }
 
-let generate_recursive_parser = ((name:string, body: B.rule_body)): string => {
+let generate_recursive_parser = ((name:string, body: N.rule_body)): string => {
    switch(body) {
-   | B.SIMPLE(B.ATOM(_)) => {
+   | N.SIMPLE(N.ATOM(_)) => {
       /* Leaf node */
       spf("parse_%s = (json: J.json_type): token => {
       switch(json) {
@@ -140,7 +140,7 @@ let generate_recursive_parser = ((name:string, body: B.rule_body)): string => {
       name,
       name)
    }
-   | B.SIMPLE(B.SEQ(xs)) => {
+   | N.SIMPLE(N.SEQ(xs)) => {
      spf("parse_%s = (json: J.json_type): %s => {
       switch(json) {%s
          | _ => error(\"Bad\", json)
@@ -151,7 +151,7 @@ let generate_recursive_parser = ((name:string, body: B.rule_body)): string => {
      generate_atom_seq(xs)
      )
    }
-   | B.REPEAT(B.ATOM(atom)) => {
+   | N.REPEAT(N.ATOM(atom)) => {
       spf("parse_%s = (json:  J.json_type): %s => {
             switch(json) {
                | J.Array(xs) =>  List.map(parse_%s, xs)
@@ -163,7 +163,7 @@ let generate_recursive_parser = ((name:string, body: B.rule_body)): string => {
          generate_atom(atom),
       )
    }
-   | B.CHOICE(simples) => {
+   | N.CHOICE(simples) => {
       /* Check simple nodes against intermediate nodes list by structure
          if they match, return the intermediate node constructor
       */
@@ -182,7 +182,7 @@ let generate_recursive_parser = ((name:string, body: B.rule_body)): string => {
    }
 }
 
-let generate_parser_func = (rules: list((string, B.rule_body))): string => {
+let generate_parser_func = (rules: list((string, N.rule_body))): string => {
    let parser_simple_strings = List.map(generate_recursive_parser, rules);
    let parser_func_body = spf("
 let rec %s\n"
@@ -191,7 +191,7 @@ let rec %s\n"
 }
 
 /* Main */
-let codegen = (nast: B.grammar, rules: list((string, B.simple)), generated_cst_filename: string): string => {
+let codegen = (nast: N.grammar, rules: list((string, N.simple)), generated_cst_filename: string): string => {
    let header = spf(
 "/* DO NOT MODIFY MANUALLY:
 Auto-generated by codegen_json_reader*/
