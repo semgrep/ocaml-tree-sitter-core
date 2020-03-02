@@ -32,7 +32,7 @@ let generate_atom = (atom: N.atom): string => {
    switch(atom) {
    | N.SYMBOL(ident) =>  ident
    | N.STRING(string) => string
-   | _ => failwith("Unhandle case in generated_atom_parsers")
+   | N.TOKEN => failwith("Unhandle case in generated_atom_parsers")
    }
 }
 
@@ -46,7 +46,7 @@ let set_entry_name = (rules: list(N.rule)) => {
          }
          atom_name
       }
-      | _ => ""
+      | _ => "" /* this is to skip over the rest of the cases. Sadly there is no `continue` for ocaml */
       }
    }, rules);
 }
