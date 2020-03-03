@@ -50,13 +50,13 @@ def _generate_json(grammar_dir: str) -> Optional[str]:
   print_warning(f"Generating grammar.json from {grammar_dir}")
 
   # Sanity check with -V
-  subprocess.call([LOCAL_TREE_SITTER_PATH, "-V"], cwd=grammar_dir)
+  wrap_call([LOCAL_TREE_SITTER_PATH, "-V"], cwd=grammar_dir)
 
   exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "generate"], cwd=grammar_dir)
   if exit_code != 0:
     print("Could not generate grammar.json. Try running `tree-sitter generate` manually!")
     sys.exit(1)
-  return os.path.join(grammar_dir, "grammar.json")
+  return os.path.join(grammar_dir, "src", "grammar.json")
 
 def parse_grammar(grammar_path: str) -> Optional[Dict[str, Any]]:
   """
@@ -90,7 +90,7 @@ const sourceCode = fs.readFileSync(args[0]).toString();
 const parser = new Parser();
 parser.setLanguage({language_name.capitalize()});
 const tree = parser.parse(sourceCode);
-# TODO: add the position elements to AST
+// TODO: add the position elements to AST
 console.log(JSON.stringify(tree.rootNode, ["type", "children"], 2))
 """
   fname = f"{language_name}_cst_json_dump.js"
@@ -120,19 +120,17 @@ def install_specified_language(dir_path: str) -> None:
   wrap_call(["npm", "install"], cwd=dir_path)
   exit_code = wrap_call(["npm", "link"], cwd=dir_path)
   if exit_code != 0:
-    print_warning(f"Could not install language at {dir_path}. See README.md for instructions")
+    print_warning(f"Could not install language at {dir_path}. Run `npm init -y && npm install && npm link` manually.")
     sys.exit(1)
 
 
 
 def dump_cst(fname:str, dir_path: str, input_file: str) -> None:
-  print(f"Writing CST for {input_file}")
   if dir_path in input_file:
     input_file = os.path.relpath(input_file, dir_path)
   exit_code = subprocess.call(["node", fname, input_file], cwd=dir_path)
 
 def dump_cst_native(fname:str, dir_path: str, input_file: str) -> None:
-  print(f"Writing CST for {input_file}")
   if dir_path in input_file:
     input_file = os.path.relpath(input_file, dir_path)
   exit_code = subprocess.call([LOCAL_TREE_SITTER_PATH, "parse", input_file], cwd=dir_path)

@@ -32,7 +32,7 @@ let test_normalize = file => {
 }
 
 let _test_code = (nast, expected_str) => {
-  let generated_code =  Codegen_types.codegen(nast);
+  let (generated_code, _) =  Codegen_types.codegen(nast);
   if (generated_code == expected_str) {
     print_string("PASSED codegen\n");
   } else {
@@ -380,16 +380,20 @@ let test_codegen = _ => {
 let test_codegen_types = file => {
   let ast = Parse_grammar.parse(file);
   let nast = Normalize_grammar.normalize(ast);
-  print_string (Codegen_types.codegen(nast));
+  let (nast_str, _) = Codegen_types.codegen(nast);
+  print_string (nast_str);
   print_string ("\n");
 }
 
 let test_codegen_jsonreader = file => {
   let ast = Parse_grammar.parse(file);
   let nast = Normalize_grammar.normalize(ast);
-  print_string (Codegen_json_reader.codegen(nast));
-  print_string("\n")
+  let (_, im_rules) = Codegen_types.codegen(nast);
+  let codegen_str = Codegen_json_reader.codegen(nast, im_rules, "Ast_arithmetic");
+  print_string(codegen_str)
+  print_string("\n");
 }
+
 
 /*****************************************************************************/
 /* Main entry for Arg */
