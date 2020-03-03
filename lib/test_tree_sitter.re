@@ -394,12 +394,6 @@ let test_codegen_jsonreader = file => {
   print_string("\n");
 }
 
-/* TODO: move auto-generated file to lib/arith_cst_json_reader.re
-let test_end_to_end = (_) => {
-  let program = Arith_cst_json_reader.parse(file);
-  print_string(CST.show_program(program));
-}
-*/
 
 /*****************************************************************************/
 /* Main entry for Arg */
@@ -412,5 +406,4 @@ let actions = () => [
   ("-test_codegen", "   <file>", Common.mk_action_0_arg(test_codegen)),
   ("-codegen_types", "   <file>", Common.mk_action_1_arg(test_codegen_types)),
   ("-codegen_jsonreader", "   <file>", Common.mk_action_1_arg(test_codegen_jsonreader)),
-  /*("-test", "<file>", Common.mk_action_1_arg(test_end_to_end))*/
 ];

@@ -1,0 +1,9 @@
+(test
+ (name test)
+ (preprocess (pps ppx_deriving.show ppx_deriving.ord))
+ (libraries
+    threads          ;; needed for json-wheel (Condition?)
+    json-wheel       ;; Json_io, Json_type
+    commons
+  )
+)
