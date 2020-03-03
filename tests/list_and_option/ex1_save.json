@@ -1,0 +1,47 @@
+{
+  "type": "program",
+  "children": [
+    {
+      "type": "a_rule",
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "children": []
+    },
+    {
+      "type": "d_rule",
+      "children": []
+    },
+    {
+      "type": "e_rule_alias",
+      "children": [
+        {
+          "type": "e_rule",
+          "children": []
+        }
+      ]
+    },
+    {
+      "type": "f_rule_alias",
+      "children": [
+        {
+          "type": "f_rule",
+          "children": []
+        }
+      ]
+    }
+  ]
+}
