@@ -8,15 +8,17 @@ previous grammar).
 This AST definition can be automatically derived from the grammar.
 
 The grammar definition we are using (e.g., `tests/arithmetic/grammar.json`)
-does not use a traditional format to define a grammar 
-(e.g., a BNF grammar using the Yacc syntax).
+does not use a traditional format (e.g., a BNF grammar using the Yacc syntax).
 Instead, it uses a particuliar format (see the Context section below). 
 This `grammar.json` file is derived itself from another file
 (e.g., `tests/arithmetic/grammar.js` for the arithmetic grammar) which is
 easier to read (but harder to analyze). 
 See http://tree-sitter.github.io/tree-sitter/creating-parsers#the-grammar-dsl 
-if you need to understand the format of grammar.js 
-(which itself will help to understand the format of grammar.json).
+if you need to understand the format of `grammar.js`
+(which itself will help to understand the format of `grammar.json`).
+
+You can use any programming language to solve this problem, but we provide
+skeleton code only for ReasonML.
 
 ## Main problem
 
@@ -29,6 +31,7 @@ the expeced output in `tests/arithmetic/ast_arithmetic.re`.
 Your result does not have to match exactly `tests/arithmetic/ast_arithmetic.re`,
 but it should compile, and it should be mostly equivalent to
 `tests/arithmetic/ast_arithmetic.re`.
+
 Note that your code should be general enough that it can be applied to
 other grammar files, not just `tests/arithmetic/grammar.json`.
 
