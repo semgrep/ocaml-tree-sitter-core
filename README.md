@@ -1,19 +1,22 @@
 # project-reason-tree-sitter
 
 The goal of this project is to write code to convert the definition
-of an arithmetic grammar (in tests/arithmetic/grammar.json) into
-the definition of an Abstract Syntax tree (AST) for arithmetic expressions
-(see tests/arithmetic/ast_arithmetic.re for the expected output). This
-AST definition can be automatically derived from the grammar.
+of a programming language *grammar* (e.g., `tests/arithmetic/grammar.json`) into
+the definition of an *Abstract Syntax tree* (AST) for this grammar
+(e.g., `tests/arithmetic/ast_arithmetic.re` for the expected output on the
+previous grammar). 
+This AST definition can be automatically derived from the grammar.
 
-The tests/arithmetic/grammar.json file does not use a traditional
-format to define a grammar (e.g., a BNF grammar using the yacc syntax).
+The grammar definition we are using (e.g., `tests/arithmetic/grammar.json`)
+does not use a traditional format to define a grammar 
+(e.g., a BNF grammar using the Yacc syntax).
 Instead, it uses a particuliar format (see the Context section below). 
-It is derived from tests/arithmetic/grammar.js which is easier to read 
-(but harder to analyze). 
+This `grammar.json` file is derived itself from another file
+(e.g., `tests/arithmetic/grammar.js` for the arithmetic grammar) which is
+easier to read (but harder to analyze). 
 See http://tree-sitter.github.io/tree-sitter/creating-parsers#the-grammar-dsl 
-if you need to understand the format of grammar.js (which itself
-will help to understand the format of grammar.json).
+if you need to understand the format of grammar.js 
+(which itself will help to understand the format of grammar.json).
 
 ## Main problem
 
@@ -21,45 +24,47 @@ To test your code, run:
 ```bash
 ./_build/default/bin/main_codegen.exe -codegen_types tests/arithmetic/grammar.json > tests/arithmetic/ast_arithmetic_output.re
 ```
-and compare your result in tests/arithmetic/ast_arithmetic_output.re with
-the expeced output in tests/arithmetic/ast_arithmetic.re.
-Your result does not have to match exactly tests/arithmetic/ast_arithmetic.re,
+and compare your result in `tests/arithmetic/ast_arithmetic_output.re` with
+the expeced output in `tests/arithmetic/ast_arithmetic.re`.
+Your result does not have to match exactly `tests/arithmetic/ast_arithmetic.re`,
 but it should compile, and it should be mostly equivalent to
-tests/arithmetic/ast_arithmetic.re.
+`tests/arithmetic/ast_arithmetic.re`.
+Note that your code should be general enough that it can be applied to
+other grammar files, not just `tests/arithmetic/grammar.json`.
 
-The code you have to implement is mostly in lib/codegen_types.re.
+The code you have to implement is mostly in `lib/codegen_types.re`.
 
 ## Hint
 
-Because the format of the grammar in grammar.json allows nested
+Because the format of the grammar in `grammar.json` allows nested
 alternatives, it can be difficult to generate directly from the
-grammar.json the reason type definitions. You could find useful to
-define an intermediate ast_normalized_grammar.re that would be closer
-to what reason can accept for type definitions.
+`grammar.json` the ReasonML type definitions. You could find useful to
+define an intermediate `ast_normalized_grammar.re` that would be closer
+to what ReasonML can accept for type definitions.
 
 ## Bonus
 
 As a bonus, you can generate the type definitions in a certain order,
-from the toplevel types (e.g., 'program') to its leaves (e.g., 'number')
-as done in tests/arithmetic/ast_arithmetic.re. You will need
+from the toplevel types (e.g., `program`) to its leaves (e.g., `number`)
+as done in `tests/arithmetic/ast_arithmetic.re`. You will need
 to perform a topological sort of the type dependencies to do so.
 
 ## Context 
 
-The tests/arithmetic/grammar.json file is part of the tree-sitter project
+The `tests/arithmetic/grammar.json` file is part of the tree-sitter project
 https://github.com/tree-sitter/tree-sitter. tree-sitter is a parser
-generator (similar to yacc), which takes as input a grammar.js file
-(e.g., tests/arithmetic/grammar.js). From this grammar.js file it
+generator (similar to Yacc), which takes as input a `grammar.js` file
+(e.g., `tests/arithmetic/grammar.js`). From this `grammar.js` file it
 can generate a JSON file defining the same grammar but that is easier
-to analyze (e.g., tests/arithmetic/grammar.json) and from this file
+to analyze (e.g., `tests/arithmetic/grammar.json`) and from this file
 it can generate a parser for this grammar in C. 
 
 Note that you do not need to understand or use tree-sitter for this project.
-We just use the same format for the grammar definition (grammar.json).
+We just use the same format for the grammar definition (`grammar.json`).
 
 ## What we are looking for:
 
-* Comfort with the language of choice: e.g. json parsing and matching should be easily understood
+* Comfort with the language of choice: e.g. JSON parsing and matching should be easily understood
 * Grasp of grammar, abstract datatypes, polymorphic types
 * Test driven development
 * Communication of complex graph algorithms like recursive top-down walk
@@ -68,8 +73,7 @@ We just use the same format for the grammar definition (grammar.json).
 
 ## Installation from source
 
-To compile the code, you first need to [install OCaml](https://opam.ocaml.org/doc/Install.html) and its
-package manager OPAM.
+To compile the code, you first need to [install OCaml](https://opam.ocaml.org/doc/Install.html) and its package manager OPAM.
 On macOS, it should simply consist in doing:
 
 ```bash
@@ -98,7 +102,7 @@ dune build
 
 ## Run
 
-Then to test on a file, for example tests/arithmetic/grammar.json
+Then to test on a file, for example `tests/arithmetic/grammar.json`
 run:
 
 ```bash
@@ -130,7 +134,7 @@ code .
 
 ## Debugging code
 
-Set the OCAMLRUNPARAM environment variable to 'b' for backtrace. 
+Set the `OCAMLRUNPARAM` environment variable to `b` for backtrace. 
 You will get better backtrace information when an exception is thrown.
 
 ```bash
