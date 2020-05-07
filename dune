@@ -6,4 +6,4 @@
 )
 
 ; Don't build the original Reason code.
-(dirs :standard \ lib.orig)
+(dirs :standard \ lib.orig bin.orig)
