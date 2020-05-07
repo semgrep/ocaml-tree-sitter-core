@@ -8,3 +8,7 @@ Wednesday 05/06
 17:30 getting started
 18:00 pause
 18:15 resume
+20:00 stopping for the day
+
+Thursday 05/07
+09:00 resume
