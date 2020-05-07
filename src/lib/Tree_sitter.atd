@@ -9,7 +9,7 @@ type ident = string
 type grammar = {
   name: ident;
   rules: (ident * rule_body) list <json repr="object">;
-  ~extras: string list; (* tokens (?) *)
+  ~extras: rule_body list; (* tokens (can only be STRING or PATTERN) *)
   ~inline: ident list; (* rule names *)
   ~conflicts: ident list list; (* list of lists of rule names *)
   ~externals: ident list; (* list of token names *)
