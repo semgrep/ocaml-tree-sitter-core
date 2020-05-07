@@ -12,3 +12,5 @@ Wednesday 05/06
 
 Thursday 05/07
 09:00 resume
+13:00 pause
+13:40 resume
