@@ -1,9 +1,0 @@
-(library
- (public_name project_reason_tree_sitter)
- (wrapped false)
- (preprocess (pps ppx_deriving.show ppx_deriving.ord))
- (libraries
-   json-wheel
-   commons
- )
-)

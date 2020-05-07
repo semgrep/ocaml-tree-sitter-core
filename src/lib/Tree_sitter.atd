@@ -1,0 +1,32 @@
+(*
+   Type definitions for representing a raw tree-sitter grammar.json file.
+
+   Allows reading and writing tree-sitter grammars in a type-safe manner.
+*)
+
+type ident = string
+
+type grammar = {
+  name: ident;
+  rules: (ident * rule_body) list <json repr="object">;
+  ~extras: string list; (* tokens (?) *)
+  ~inline: ident list; (* rule names *)
+  ~conflicts: ident list list; (* list of lists of rule names *)
+  ~externals: ident list; (* list of token names *)
+  ?word: ident option; (* token name *)
+  ~supertypes: ident list; (* rule names *)
+}
+
+type rule_body = [
+  | SYMBOL of ident
+  | STRING of string
+  | PATTERN of string
+  | REPEAT of rule_body
+  | CHOICE of rule_body list
+  | SEQ of rule_body list
+  | PREC of (int * rule_body)
+  | PREC_DYNAMIC of (int * rule_body)
+  | PREC_LEFT of (int nullable * rule_body)
+  | PREC_RIGHT of (int nullable * rule_body)
+] <json adapter.ocaml="Json_rule_adapter">
+  <ocaml repr="classic">

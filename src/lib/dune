@@ -1,0 +1,18 @@
+(library
+ (public_name prts)
+ (wrapped false)
+ (preprocess (pps ppx_deriving.show ppx_deriving.ord))
+ (libraries
+   atdgen-runtime
+ )
+)
+
+(rule
+ (targets Tree_sitter_j.ml Tree_sitter_j.mli)
+ (deps    Tree_sitter.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+(rule
+ (targets Tree_sitter_t.ml Tree_sitter_t.mli)
+ (deps    Tree_sitter.atd)
+ (action  (run atdgen -t %{deps})))
