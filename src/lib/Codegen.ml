@@ -77,7 +77,7 @@ and format_choice l =
     `Inline [
       `Line (sprintf "| `%s(" name);
       `Block [`Block (format_body body)];
-      `Line "  );"
+      `Line "  )"
     ]
   ) l
 
@@ -85,17 +85,25 @@ and format_seq l =
   List.map (fun body -> `Block (format_body body)) l
   |> interleave (`Line ",")
 
-let format_rule ~use_rec pos (name, body) : Indent.t =
+let format_rule ~use_rec ~num_rules pos (name, body) : Indent.t =
+  let is_first = pos > 0 in
+  let is_last = pos = num_rules - 1 in
   let type_ =
-    if use_rec && pos > 0 then
+    if use_rec && is_first then
       "and"
     else
       "type"
   in
+  let closing =
+    if not use_rec || is_last then
+      [`Line ";"]
+    else
+      []
+  in
   [
     `Line (sprintf "%s %s =" type_ name);
     `Block (format_body body);
-  ]
+  ] @ closing
 
 let format grammar : Indent.t =
   let use_rec, rules =
@@ -104,7 +112,10 @@ let format grammar : Indent.t =
     | Some reordered_rules -> false, reordered_rules
     | None -> true, orig_rules
   in
-  List.mapi (fun pos x -> `Inline (format_rule ~use_rec pos x)) rules
+  let num_rules = List.length rules in
+  List.mapi
+    (fun pos x -> `Inline (format_rule ~use_rec ~num_rules pos x))
+    rules
   |> interleave (`Line "")
 
 let reason grammar =
