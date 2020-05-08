@@ -11,7 +11,7 @@ let codegen filename =
   print_string out
 
 let main () =
-  (* TODO: use cmdliner *)
+  (* TODO: use cmdliner (see e.g. dune-deps for a simple template) *)
   match Sys.argv with
   | [| _; filename |] -> codegen filename
   | _ -> failwith "Usage: pass exactly one grammar.json file as argument"

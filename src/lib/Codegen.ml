@@ -49,7 +49,7 @@ let interleave sep l =
 
 let rec format_body body : Indent.t =
   match body with
-  | Symbol ident -> [`Line ident]
+  | Symbol ident -> [`Line ident] (* TODO: check identifier validity *)
   | String s -> [`Line (sprintf "string /* %S */" s)]
   | Pattern s -> [`Line (sprintf "string /* pattern %S */" s)]
   | Repeat body ->
@@ -101,7 +101,7 @@ let format_rule ~use_rec ~num_rules pos (name, body) : Indent.t =
       []
   in
   [
-    `Line (sprintf "%s %s =" type_ name);
+    `Line (sprintf "%s %s =" type_ name); (* TODO: check identifier validity *)
     `Block (format_body body);
   ] @ closing
 
