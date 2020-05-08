@@ -97,13 +97,10 @@ let format_rule ~use_rec pos (name, body) : Indent.t =
     `Block (format_body body);
   ]
 
-(* TODO *)
-let tsort _rules = None
-
 let format grammar : Indent.t =
   let use_rec, rules =
     let orig_rules = grammar.rules in
-    match tsort orig_rules with
+    match Topo_sort.sort orig_rules with
     | Some reordered_rules -> false, reordered_rules
     | None -> true, orig_rules
   in
