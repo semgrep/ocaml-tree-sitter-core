@@ -38,6 +38,10 @@ end
 
 open AST_grammar
 
+let translate_ident =
+  let registry = Protect_ident.create () in
+  fun ident -> Protect_ident.translate registry ident
+
 let interleave sep l =
   let rec loop = function
     | [] -> []
@@ -49,7 +53,7 @@ let interleave sep l =
 
 let rec format_body body : Indent.t =
   match body with
-  | Symbol ident -> [`Line ident] (* TODO: check identifier validity *)
+  | Symbol ident -> [`Line (translate_ident ident)]
   | String s -> [`Line (sprintf "string /* %S */" s)]
   | Pattern s -> [`Line (sprintf "string /* pattern %S */" s)]
   | Blank -> [`Line "string /* blank */"]
@@ -108,7 +112,7 @@ let format_rule ~use_rec ~num_rules pos (name, body) : Indent.t =
       []
   in
   [
-    `Line (sprintf "%s %s =" type_ name); (* TODO: check identifier validity *)
+    `Line (sprintf "%s %s =" type_ (translate_ident name));
     `Block (format_body body);
   ] @ closing
 
