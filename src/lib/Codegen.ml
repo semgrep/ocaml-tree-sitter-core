@@ -52,9 +52,16 @@ let rec format_body body : Indent.t =
   | Symbol ident -> [`Line ident] (* TODO: check identifier validity *)
   | String s -> [`Line (sprintf "string /* %S */" s)]
   | Pattern s -> [`Line (sprintf "string /* pattern %S */" s)]
+  | Blank -> [`Line "string /* blank */"]
   | Repeat body ->
       [
-        `Line "list(";
+        `Line "list( /* zero or more */";
+        `Block (format_body body);
+        `Line ")"
+      ]
+  | Repeat1 body ->
+      [
+        `Line "list( /* one or more */";
         `Block (format_body body);
         `Line ")"
       ]

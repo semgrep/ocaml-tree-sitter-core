@@ -23,6 +23,7 @@ type ident = string
 type rule_body =
   (* composite (nodes) *)
   | Repeat of rule_body
+  | Repeat1 of rule_body
   | Choice of rule_body list
   | Seq of rule_body list
 
@@ -30,6 +31,7 @@ type rule_body =
   | Symbol of ident
   | String of string
   | Pattern of string
+  | Blank
 
 type rule = (ident * rule_body)
 

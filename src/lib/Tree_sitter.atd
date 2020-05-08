@@ -21,12 +21,17 @@ type rule_body = [
   | SYMBOL of ident
   | STRING of string
   | PATTERN of string
+  | BLANK
   | REPEAT of rule_body
+  | REPEAT1 of rule_body
   | CHOICE of rule_body list
   | SEQ of rule_body list
   | PREC of (int * rule_body)
   | PREC_DYNAMIC of (int * rule_body)
   | PREC_LEFT of (int nullable * rule_body)
   | PREC_RIGHT of (int nullable * rule_body)
+  | FIELD of (ident * rule_body)
+  | IMMEDIATE_TOKEN of rule_body (* presumably must contain a token *)
+  | TOKEN of rule_body
 ] <json adapter.ocaml="Json_rule_adapter"> (* see Json_rule_adapter.ml *)
   <ocaml repr="classic">

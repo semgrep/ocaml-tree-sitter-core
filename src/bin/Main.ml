@@ -2,6 +2,8 @@
    Application's entrypoint.
 *)
 
+open Printf
+
 let codegen filename =
   let tree_sitter_grammar =
     Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar filename
@@ -21,5 +23,14 @@ let main () =
 Usage: please pass exactly one grammar.json file as argument\n%!";
       exit 1
 
-(* TODO: print clean error messages, print backtrace for unexpected errors. *)
-let () = main ()
+(* TODO: print clean error messages. *)
+let () =
+  Printexc.record_backtrace true;
+  try
+    main ()
+  with e ->
+    let trace = Printexc.get_backtrace () in
+    eprintf "Error: %s\n%s%!"
+      (Printexc.to_string e)
+      trace;
+    exit 1

@@ -18,4 +18,5 @@ Thursday 05/07
 13:40 resume
 ~~ first end-to-end compilable and runnable program ~~
 15:30
+~~ topological sort ~~
 ```
