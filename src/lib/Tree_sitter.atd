@@ -28,5 +28,5 @@ type rule_body = [
   | PREC_DYNAMIC of (int * rule_body)
   | PREC_LEFT of (int nullable * rule_body)
   | PREC_RIGHT of (int nullable * rule_body)
-] <json adapter.ocaml="Json_rule_adapter">
+] <json adapter.ocaml="Json_rule_adapter"> (* see Json_rule_adapter.ml *)
   <ocaml repr="classic">

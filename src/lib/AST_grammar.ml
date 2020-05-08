@@ -26,7 +26,7 @@ type grammar = {
 type t = grammar
 
 (*
-   Simple translation without normalization.
+   Simple translation without normalization. Get rid of PREC_*
 *)
 let rec translate (x : Tree_sitter_t.rule_body) =
   match x with
@@ -43,7 +43,8 @@ let rec translate (x : Tree_sitter_t.rule_body) =
 
 (*
    Algorithm: convert the nodes of tree from unnormalized to normalized,
-   starting from the leaves.
+   starting from the leaves. This ensures that the argument of flatten_choice
+   or flatten_seq is already fully normalized.
 *)
 let rec normalize x =
   match x with

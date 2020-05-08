@@ -10,10 +10,16 @@ let codegen filename =
   let out = Codegen.reason grammar in
   print_string out
 
+(* TODO: use cmdliner (see e.g. dune-deps for a simple template)
+   TODO: provide basic command-line help
+*)
 let main () =
-  (* TODO: use cmdliner (see e.g. dune-deps for a simple template) *)
   match Sys.argv with
   | [| _; filename |] -> codegen filename
-  | _ -> failwith "Usage: pass exactly one grammar.json file as argument"
+  | _ ->
+      eprintf "\
+Usage: please pass exactly one grammar.json file as argument\n%!";
+      exit 1
 
+(* TODO: print clean error messages, print backtrace for unexpected errors. *)
 let () = main ()
