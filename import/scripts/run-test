@@ -1,0 +1,36 @@
+#! /usr/bin/env bash
+#
+# Run a test and compare the result with the expectations.
+#
+# Each folder in tests/ contains one test case. This program is meant to
+# run from one such folder.
+#
+set -eu
+
+prts=$(pwd)/_build/install/default/bin/prts
+
+run_test() {
+  input="$dir"/grammar.json
+  raw_output="$dir"/grammar.re
+  refmt_output="$dir"/grammar_refmt.re
+
+  # real work
+  "$prts" "$input" > "$raw_output"
+
+  # reformatting for better visual results
+  refmt "$raw_output" > "$refmt_output"
+
+  # auto-generate .expected file, which needs to be put under version control
+  if [[ ! -f "$raw_output".expected ]]; then
+    cp "$raw_output" "$raw_output".expected
+  fi
+
+  # check output against expectations
+  diff -u "$raw_output".expected "$raw_output"
+}
+
+for dir in tests/*; do
+  name=$(basename "$dir")
+  echo "Testing $name"
+  run_test
+done

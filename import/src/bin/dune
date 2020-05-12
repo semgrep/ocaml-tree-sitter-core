@@ -1,0 +1,7 @@
+(executable
+  (public_name prts)
+  (name Main)
+  (libraries
+    prts
+  )
+)
