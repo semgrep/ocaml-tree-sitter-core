@@ -33,7 +33,7 @@ let grammar_term =
 let lang_term =
   let info =
     Arg.info ["lang"; "l"]
-      ~docs:"LANG"
+      ~docv:"LANG"
       ~doc:"$(docv) is the name of the language described by the grammar.
             If specified, this name will appear in the generated file names.
             It must be a valid OCaml lowercase identifier."
@@ -43,7 +43,7 @@ let lang_term =
 let out_dir_term =
   let info =
     Arg.info ["out-dir"; "d"]
-      ~docs:"DIR"
+      ~docv:"DIR"
       ~doc:"$(docv) specifies where to put the output files. The default is
             the current directory."
   in
