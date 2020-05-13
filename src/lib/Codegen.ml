@@ -92,7 +92,7 @@ and format_choice l =
 
 and format_seq l =
   List.map (fun body -> `Block (format_body body)) l
-  |> interleave (`Line ",")
+  |> interleave (`Line "*")
 
 let format_rule ~use_rec pos (name, body) : Indent.t =
   let is_first = pos > 0 in
