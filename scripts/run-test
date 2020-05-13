@@ -2,58 +2,20 @@
 #
 # Run a test and compare the result with the expectations.
 #
-# Each folder tests/X contains a grammar for language X and expected outputs.
-# Other files are generated and checked against expectations.
-#
-# Folder for language X contains:
-#
-# - grammar.js           # source grammar
-# - grammar.json         # derived from grammar.js by tree-sitter-json
-# - parser.c             # derived from grammar.js by tree-sitter
-# - AST_X.ml             # output of 'ocaml-tree-sitter grammar.json'
-# - Parse_X.ml           # output of ocaml-tree-sitter
-# - ex1.X                # sample program in language X
-# - ex1.X.json           # output of parser.c
-# - ex1.X.out            # output of Parse_X.ml for visual inspection
-# - AST_X.ml.expected    # expected output
-# - Parse_X.ml.expected  # expected output
-# - ex1.X.out.expected   # expected output
+# Input: list of test directories, each containing a 'grammar.js'
 #
 set -eu
 
-ocaml_tree_sitter=$(pwd)/_build/install/default/bin/ocaml-tree-sitter
+project_root=$(git rev-parse --show-toplevel)
+ocaml_tree_sitter="$project_root"/bin/ocaml-tree-sitter
 
-final_status=0
-status=OK
-fail() {
-  status=ERROR
-  final_status=1
-}
-
-run_test() {
-  input="$dir"/grammar.json
-  output_ast="$dir"/AST_"$lang".ml
-  output_parse="$dir"/Parse_"$lang".ml
-
-  if [[ -f "$output_ast".expected ]]; then
-    echo "Testing $lang"
-    "$ocaml_tree_sitter" --lang "$lang" --out-dir "$dir" "$input"
-
-    status=OK
-    diff -u "$output_ast".expected "$output_ast" || fail
-    echo "  $output_ast: $status"
-
-    if [[ -f "$output_parse".expected ]]; then
-      status=OK
-      diff -u "$output_parse".expected "$output_parse" || fail
-      echo "  $output_ast: $status"
-    fi
-  fi
-}
-
-for dir in tests/*; do
-  lang=$(basename "$dir")
-  run_test
+for lang_dir in "$@"; do
+  (
+    set -eu
+    cd "$lang_dir"
+    echo "Generate test data for '$lang_dir'"
+    "$project_root"/scripts/generate-test-data
+  )
 done
 
-exit "$final_status"
+"$project_root"/scripts/check-expectations "$@"
