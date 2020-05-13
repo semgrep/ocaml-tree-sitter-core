@@ -1,0 +1,69 @@
+{
+  "type": "program",
+  "startPosition": { "row": 0, "column": 0 },
+  "endPosition": { "row": 1, "column": 0 },
+  "children": [
+    {
+      "type": "a_rule",
+      "startPosition": { "row": 0, "column": 0 },
+      "endPosition": { "row": 0, "column": 1 },
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "startPosition": { "row": 0, "column": 2 },
+      "endPosition": { "row": 0, "column": 3 },
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "startPosition": { "row": 0, "column": 4 },
+      "endPosition": { "row": 0, "column": 5 },
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "startPosition": { "row": 0, "column": 6 },
+      "endPosition": { "row": 0, "column": 7 },
+      "children": []
+    },
+    {
+      "type": "b_rule",
+      "startPosition": { "row": 0, "column": 8 },
+      "endPosition": { "row": 0, "column": 9 },
+      "children": []
+    },
+    {
+      "type": "d_rule",
+      "startPosition": { "row": 0, "column": 10 },
+      "endPosition": { "row": 0, "column": 11 },
+      "children": []
+    },
+    {
+      "type": "e_rule_alias",
+      "startPosition": { "row": 0, "column": 12 },
+      "endPosition": { "row": 0, "column": 13 },
+      "children": [
+        {
+          "type": "e_rule",
+          "startPosition": { "row": 0, "column": 12 },
+          "endPosition": { "row": 0, "column": 13 },
+          "children": []
+        }
+      ]
+    },
+    {
+      "type": "f_rule_alias",
+      "startPosition": { "row": 0, "column": 14 },
+      "endPosition": { "row": 0, "column": 15 },
+      "children": [
+        {
+          "type": "f_rule",
+          "startPosition": { "row": 0, "column": 14 },
+          "endPosition": { "row": 0, "column": 15 },
+          "children": []
+        }
+      ]
+    }
+  ]
+}
