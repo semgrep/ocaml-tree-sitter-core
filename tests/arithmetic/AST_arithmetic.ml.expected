@@ -18,45 +18,45 @@ type expression =
   | `Case2 of (
       (
           expression
-        ,
+        *
           string (* "+" *)
-        ,
+        *
           expression
       )
     )
   | `Case3 of (
       (
           expression
-        ,
+        *
           string (* "-" *)
-        ,
+        *
           expression
       )
     )
   | `Case4 of (
       (
           expression
-        ,
+        *
           string (* "*" *)
-        ,
+        *
           expression
       )
     )
   | `Case5 of (
       (
           expression
-        ,
+        *
           string (* "/" *)
-        ,
+        *
           expression
       )
     )
   | `Case6 of (
       (
           expression
-        ,
+        *
           string (* "^" *)
-        ,
+        *
           expression
       )
     )
@@ -65,18 +65,18 @@ type expression =
 type assignment_statement =
   (
       variable
-    ,
+    *
       string (* "=" *)
-    ,
+    *
       expression
-    ,
+    *
       string (* ";" *)
   )
 
 type expression_statement =
   (
       expression
-    ,
+    *
       string (* ";" *)
   )
 
