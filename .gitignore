@@ -1,7 +1,7 @@
 /bin
 
 # Dune build data
-_build
+/_build
 
 # Merlin configuring file for Vim and Emacs
 .merlin
@@ -10,19 +10,19 @@ _build
 *.install
 
 # Local OPAM switch
-_opam/
+/_opam/
 
 # Node at root
-node_modules
-package-lock.json
+/node_modules
+/package-lock.json
 
 # Node inside tests
-tests/**/node_modules
-tests/**/package.json
-tests/**/package-lock.json
-tests/**/src/
-tests/**/build/
-tests/**/*.js
-tests/**/*.gyp
-tests/**/*.json
-tests/**/*.txt
+/tests/**/node_modules
+/tests/**/package.json
+/tests/**/package-lock.json
+/tests/**/src/
+/tests/**/build/
+/tests/**/*.js
+/tests/**/*.gyp
+/tests/**/*.json
+/tests/**/*.txt
