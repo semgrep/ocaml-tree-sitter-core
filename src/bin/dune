@@ -1,7 +1,8 @@
 (executable
-  (public_name prts)
+  (public_name ocaml-tree-sitter)
   (name Main)
   (libraries
-    prts
+    cmdliner
+    ocaml-tree-sitter
   )
 )

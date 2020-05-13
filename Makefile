@@ -1,13 +1,17 @@
-all:
+.PHONY: build
+build:
 	dune build
+	test -e bin || ln -s _build/install/default/bin .
+
+.PHONY: clean
 clean:
-	dune clean
-test:
-	dune runtest
+	# remove everything that's git-ignored
+	git clean -dfX
+
+.PHONY: test
+test: build
+	./scripts/run-test
+
+.PHONY: install
 install:
 	dune install
-
-dump:
-	./_build/default/bin/main_codegen.exe -parse_grammar tests/arithmetic/grammar.json
-
-.PHONY: all clean install test dump

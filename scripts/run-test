@@ -2,35 +2,58 @@
 #
 # Run a test and compare the result with the expectations.
 #
-# Each folder in tests/ contains one test case. This program is meant to
-# run from one such folder.
+# Each folder tests/X contains a grammar for language X and expected outputs.
+# Other files are generated and checked against expectations.
+#
+# Folder for language X contains:
+#
+# - grammar.js           # source grammar
+# - grammar.json         # derived from grammar.js by tree-sitter-json
+# - parser.c             # derived from grammar.js by tree-sitter
+# - AST_X.ml             # output of 'ocaml-tree-sitter grammar.json'
+# - Parse_X.ml           # output of ocaml-tree-sitter
+# - ex1.X                # sample program in language X
+# - ex1.X.json           # output of parser.c
+# - ex1.X.out            # output of Parse_X.ml for visual inspection
+# - AST_X.ml.expected    # expected output
+# - Parse_X.ml.expected  # expected output
+# - ex1.X.out.expected   # expected output
 #
 set -eu
 
-prts=$(pwd)/_build/install/default/bin/prts
+ocaml_tree_sitter=$(pwd)/_build/install/default/bin/ocaml-tree-sitter
+
+final_status=0
+status=OK
+fail() {
+  status=ERROR
+  final_status=1
+}
 
 run_test() {
   input="$dir"/grammar.json
-  raw_output="$dir"/grammar.re
-  refmt_output="$dir"/grammar_refmt.re
+  output_ast="$dir"/AST_"$lang".ml
+  output_parse="$dir"/Parse_"$lang".ml
 
-  # real work
-  "$prts" "$input" > "$raw_output"
+  if [[ -f "$output_ast".expected ]]; then
+    echo "Testing $lang"
+    "$ocaml_tree_sitter" --lang "$lang" --out-dir "$dir" "$input"
 
-  # reformatting for better visual results
-  refmt "$raw_output" > "$refmt_output"
+    status=OK
+    diff -u "$output_ast".expected "$output_ast" || fail
+    echo "  $output_ast: $status"
 
-  # auto-generate .expected file, which needs to be put under version control
-  if [[ ! -f "$raw_output".expected ]]; then
-    cp "$raw_output" "$raw_output".expected
+    if [[ -f "$output_parse".expected ]]; then
+      status=OK
+      diff -u "$output_parse".expected "$output_parse" || fail
+      echo "  $output_ast: $status"
+    fi
   fi
-
-  # check output against expectations
-  diff -u "$raw_output".expected "$raw_output"
 }
 
 for dir in tests/*; do
-  name=$(basename "$dir")
-  echo "Testing $name"
+  lang=$(basename "$dir")
   run_test
 done
+
+exit "$final_status"

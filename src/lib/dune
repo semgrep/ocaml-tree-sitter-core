@@ -1,6 +1,6 @@
 (library
- (public_name prts)
- (wrapped false)
+ (public_name ocaml-tree-sitter)
+ (name ocaml_tree_sitter)
  (preprocess (pps ppx_deriving.show ppx_deriving.ord))
  (libraries
    atdgen-runtime

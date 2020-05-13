@@ -54,20 +54,18 @@ let interleave sep l =
 let rec format_body body : Indent.t =
   match body with
   | Symbol ident -> [`Line (translate_ident ident)]
-  | String s -> [`Line (sprintf "string /* %S */" s)]
-  | Pattern s -> [`Line (sprintf "string /* pattern %S */" s)]
-  | Blank -> [`Line "string /* blank */"]
+  | String s -> [`Line (sprintf "string (* %S *)" s)]
+  | Pattern s -> [`Line (sprintf "string (* pattern %S *)" s)]
+  | Blank -> [`Line "string (* blank *)"]
   | Repeat body ->
       [
-        `Line "list( /* zero or more */";
-        `Block (format_body body);
-        `Line ")"
+        `Inline (format_body body);
+        `Block [`Line "list (* zero or more *)"]
       ]
   | Repeat1 body ->
       [
-        `Line "list( /* one or more */";
-        `Block (format_body body);
-        `Line ")"
+        `Inline (format_body body);
+        `Block [`Line "list (* one or more *)"]
       ]
   | Choice body_list ->
       [
@@ -86,7 +84,7 @@ and format_choice l =
   List.mapi (fun i body ->
     let name = sprintf "Case%i" i in
     `Inline [
-      `Line (sprintf "| `%s(" name);
+      `Line (sprintf "| `%s of (" name);
       `Block [`Block (format_body body)];
       `Line "  )"
     ]
@@ -96,25 +94,18 @@ and format_seq l =
   List.map (fun body -> `Block (format_body body)) l
   |> interleave (`Line ",")
 
-let format_rule ~use_rec ~num_rules pos (name, body) : Indent.t =
+let format_rule ~use_rec pos (name, body) : Indent.t =
   let is_first = pos > 0 in
-  let is_last = pos = num_rules - 1 in
   let type_ =
     if use_rec && is_first then
       "and"
     else
       "type"
   in
-  let closing =
-    if not use_rec || is_last then
-      [`Line ";"]
-    else
-      []
-  in
   [
     `Line (sprintf "%s %s =" type_ (translate_ident name));
     `Block (format_body body);
-  ] @ closing
+  ]
 
 let format grammar : Indent.t =
   let use_rec, rules =
@@ -123,12 +114,37 @@ let format grammar : Indent.t =
     | Some reordered_rules -> false, reordered_rules
     | None -> true, orig_rules
   in
-  let num_rules = List.length rules in
   List.mapi
-    (fun pos x -> `Inline (format_rule ~use_rec ~num_rules pos x))
+    (fun pos x -> `Inline (format_rule ~use_rec pos x))
     rules
   |> interleave (`Line "")
 
-let reason grammar =
+let generate_ast_code grammar =
   let tree = format grammar in
   Indent.to_string tree
+
+let save filename data =
+  let oc = open_out filename in
+  output_string oc data;
+  close_out oc
+
+let mkpath opt_dir filename =
+  match opt_dir with
+  | None -> filename
+  | Some dir -> Filename.concat dir filename
+
+let ocaml ?out_dir ?lang grammar =
+  let lang_suffix =
+    match lang with
+    | None -> ""
+    | Some s -> "_" ^ s
+  in
+  let ast_module = sprintf "AST%s" lang_suffix in
+  let parse_module = sprintf "Parse%s" lang_suffix in
+  let ast_file = mkpath out_dir (sprintf "%s.ml" ast_module) in
+  let parse_file = mkpath out_dir (sprintf "%s.ml" parse_module) in
+
+  let ast_code = generate_ast_code grammar in
+  let parse_code = "TODO" in
+  save ast_file ast_code;
+  save parse_file parse_code
