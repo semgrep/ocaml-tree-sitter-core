@@ -1,0 +1,14 @@
+#! /usr/bin/env bash
+#
+# Steps for installing the tree-sitter tools used in the project.
+#
+set -eu
+
+project_root=$(git rev-parse --show-toplevel)
+
+# Install node modules at the project root.
+# The tree-sitter executable will be in 'node_modules/.bin'.
+(
+  cd "$project_root"
+  npm install tree-sitter tree-sitter-cli
+)
