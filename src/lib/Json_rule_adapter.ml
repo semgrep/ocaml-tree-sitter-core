@@ -41,6 +41,7 @@ let normalize_variant_object fields =
     | "PREC_DYNAMIC" -> Some (`List [get "value"; get "content"])
     | "PREC_LEFT" -> Some (`List [opt "value"; get "content"])
     | "PREC_RIGHT" -> Some (`List [opt "value"; get "content"])
+    | "ALIAS" -> Some (`Assoc fields)
     | "FIELD" -> Some (`List [get "name"; get "content"])
     | "IMMEDIATE_TOKEN" -> Some (get "content")
     | "TOKEN" -> Some (get "content")

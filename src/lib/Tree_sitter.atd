@@ -12,7 +12,7 @@ type grammar = {
   ~extras: rule_body list; (* tokens (can only be STRING or PATTERN) *)
   ~inline: ident list; (* rule names *)
   ~conflicts: ident list list; (* list of lists of rule names *)
-  ~externals: ident list; (* list of token names *)
+  ~externals: rule_body list; (* list of token names? *)
   ?word: ident option; (* token name *)
   ~supertypes: ident list; (* rule names *)
 }
@@ -30,8 +30,15 @@ type rule_body = [
   | PREC_DYNAMIC of (int * rule_body)
   | PREC_LEFT of (int nullable * rule_body)
   | PREC_RIGHT of (int nullable * rule_body)
+  | ALIAS of alias
   | FIELD of (ident * rule_body)
   | IMMEDIATE_TOKEN of rule_body (* presumably must contain a token *)
   | TOKEN of rule_body
 ] <json adapter.ocaml="Json_rule_adapter"> (* see Json_rule_adapter.ml *)
   <ocaml repr="classic">
+
+type alias = {
+  value: ident;
+  named: bool;
+  content: rule_body;
+}

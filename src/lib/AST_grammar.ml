@@ -45,6 +45,8 @@ let rec translate (x : Tree_sitter_t.rule_body) =
   | PREC_LEFT (_opt_prio, x) -> translate x
   | PREC_RIGHT (_opt_prio, x) -> translate x
   | FIELD (_name, x) -> translate x (* TODO not sure about ignoring this *)
+  | ALIAS alias ->
+      translate alias.content (* TODO probably good to not ignore *)
   | IMMEDIATE_TOKEN x -> translate x (* TODO check what this is *)
   | TOKEN x -> translate x
 
