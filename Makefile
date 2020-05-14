@@ -20,7 +20,7 @@ clean:
 
 .PHONY: test
 test: build
-	./scripts/run-test tests/arithmetic tests/list_and_option
+	$(MAKE) -C tests
 
 .PHONY: install
 install:

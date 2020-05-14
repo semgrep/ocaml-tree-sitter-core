@@ -6,3 +6,8 @@ Parse_*.ml
 
 # Various output files
 *.out
+
+node_modules
+package.json
+package-lock.json
+/*/src

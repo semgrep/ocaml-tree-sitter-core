@@ -15,14 +15,3 @@
 # Node at root
 /node_modules
 /package-lock.json
-
-# Node inside tests
-/tests/**/node_modules
-/tests/**/package.json
-/tests/**/package-lock.json
-/tests/**/src/
-/tests/**/build/
-/tests/**/*.js
-/tests/**/*.gyp
-/tests/**/*.json
-/tests/**/*.txt

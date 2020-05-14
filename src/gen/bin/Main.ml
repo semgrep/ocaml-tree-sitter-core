@@ -4,7 +4,7 @@
 
 open Printf
 open Cmdliner
-open Ocaml_tree_sitter
+open Ocaml_tree_sitter_gen
 
 type config = {
   grammar : string;
@@ -91,11 +91,18 @@ let safe_run config =
   try codegen config
   with
   | Failure msg ->
-      eprintf "Error: %s\n%!" msg;
+      eprintf "\
+Error: %s
+Try --help.
+%!" msg;
       exit 1
   | e ->
       let trace = Printexc.get_backtrace () in
-      eprintf "Error: exception %s\n%s%!"
+      eprintf "\
+Error: exception %s
+%s
+Try --help.
+%!"
         (Printexc.to_string e)
         trace
 
