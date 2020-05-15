@@ -11,12 +11,12 @@
 
 type node = {
   type_ <json name="type">: string;
-  startPosition: location;
-  endPosition: location;
+  startPosition: position;
+  endPosition: position;
   ~children: node list;
 }
 
-type location = {
+type position = {
   row: int;
   column: int;
 }
