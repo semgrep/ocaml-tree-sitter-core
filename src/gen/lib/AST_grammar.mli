@@ -21,17 +21,17 @@
 type ident = string
 
 type rule_body =
-  (* composite (nodes) *)
-  | Repeat of rule_body
-  | Repeat1 of rule_body
-  | Choice of rule_body list
-  | Seq of rule_body list
-
   (* atomic (leaves) *)
   | Symbol of ident
   | String of string
   | Pattern of string
   | Blank
+
+  (* composite (nodes) *)
+  | Repeat of rule_body
+  | Repeat1 of rule_body
+  | Choice of rule_body list
+  | Seq of rule_body list
 
 type rule = (ident * rule_body)
 

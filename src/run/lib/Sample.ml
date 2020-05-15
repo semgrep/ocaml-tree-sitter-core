@@ -38,51 +38,83 @@ module Parse = struct
       )
     in
 
-    let parse_number = _parse_token "number" in
-    let parse_variable = _parse_token "variable" in
+    let parse_number nodes =
+      (
+        _parse_token "number"
+      ) nodes
+    in
+    let parse_variable nodes =
+      (
+        _parse_token "variable"
+      ) nodes
+    in
     let rec parse_expression nodes =
-      (match parse_variable nodes with
-       | Some (e, [](*last*)) ->
-           Some (`Case0 e, [](*last*))
-       | _ (* last *) ->
-           (match parse_number nodes with
-            | Some (e, [](*last*)) ->
-                Some (`Case1 e, [](*last*))
-            | _ (* last *) ->
-                let seq_start = nodes in
-                match parse_expression nodes with
-                | Some (e1, nodes) ->
-                    (match _parse_token "+" nodes with
-                     | Some (e2, nodes) ->
-                         (match parse_expression nodes with
-                          | Some (e3, [](* last *)) ->
-                              Some (`Case2 (e1, e2, e3), [](* last *))
-                          | _ (* last *) ->
-                              None
-                         )
-                     | None ->
-                         None
-                    )
-                | None ->
-                    None
-           )
-      )
+      let parse_case0 nodes =
+        match
+          (
+            let parse_elt = parse_variable in
+            Combine.parse_last parse_elt
+          )
+            nodes
+        with
+        | Some (res, nodes) -> Some (`Case0 res, nodes)
+        | None -> None
+      in
+      let parse_case1 nodes =
+        match
+          (
+            let parse_elt = parse_number in
+            Combine.parse_last parse_elt
+          )
+            nodes
+        with
+        | Some (res, nodes) -> Some (`Case1 res, nodes)
+        | None -> None
+      in
+      let parse_case2 nodes =
+        let parse_nested =
+          let parse_elt = parse_expression in
+          let parse_tail =
+            let parse_elt = _parse_token "+" in
+            let parse_tail =
+              let parse_elt = parse_expression in
+              Combine.parse_last parse_elt
+            in
+            Combine.parse_seq parse_elt parse_tail
+          in
+          Combine.parse_seq parse_elt parse_tail
+        in
+        match parse_nested nodes with
+        | Some ((e0, (e1, e2)), nodes) -> Some (`Case2 (e0, e1, e2), nodes)
+        | None -> None
+      in
+      (* (parse_case0 ||| parse_case1 ||| parse_case2) nodes *)
+      match parse_case0 nodes with
+      | Some _ as res -> res
+      | None ->
+          match parse_case1 nodes with
+          | Some _ as res -> res
+          | None ->
+              parse_case2 nodes
     in
     let parse_statement nodes =
-      (match parse_expression nodes with
-       | Some (e1, nodes) ->
-           (match _parse_token ";" nodes with
-            | Some (e2, [](*last*)) ->
-                Some ((e1, e2), [](*last*))
-            | _ (* last *) ->
-                None
-           )
-       | None ->
-           None
-      )
+      (* (parse_expression &&& parse_token ";" &&& parse_end) nodes *)
+      let parse_nested =
+        let parse_elt = parse_expression in
+        let parse_tail =
+          let parse_elt = _parse_token ";" in
+          Combine.parse_last parse_elt
+        in
+        Combine.parse_seq parse_elt parse_tail
+      in
+      match parse_nested nodes with
+      | Some ((e1, e2), nodes) -> Some (`Case2 (e1, e2), nodes)
+      | None -> None
     in
     let parse_program nodes =
-      Combine.parse_repeat parse_statement nodes
+      Combine.parse_repeat (
+        parse_statement
+      ) nodes
     in
     parse_program
 end
