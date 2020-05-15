@@ -13,15 +13,52 @@ open Tree_sitter_output_t
 *)
 type 'a reader = node list -> ('a * node list) option
 
-(* A success reader is a reader that always succeeds so we don't need to
-   wrap it in an option type. *)
-type 'a success_reader = node list -> ('a * node list)
+(* Always fail/succeed without consuming the input. *)
+val parse_fail : 'a reader
+val parse_success : unit reader
 
 (* Create a reader of a single input node. *)
-val parse_node: (node -> 'a option) -> 'a reader
+val parse_node : (node -> 'a option) -> 'a reader
 
-(* Read zero or more elements of the same kind. Always succeed. *)
-val parse_repeat: 'a reader -> 'a list success_reader
+(* Parse the first thing in the sequence then everything else in the
+   sequence.
 
-(* Try to read one or more elements of the same kind. *)
-val parse_repeat1 : 'a reader -> 'a list reader
+   Usage:
+
+   When requiring the consumption of the full sequence, we use parse_last:
+
+     let parse_case2 nodes =
+       let parse_nested =
+         let parse_elt = ... in
+         let parse_tail =
+            let parse_elt = ... in
+            let parse_tail =
+               let parse_elt = ... in
+               Combine.parse_last parse_elt
+            in
+            Combine.parse_seq parse_elt parse_tail
+         in
+         Combine.parse_seq parse_elt parse_tail
+       in
+       match parse_nested nodes with
+       | Some ((e1, (e2, e3)), nodes) -> Some (`Case2 (e1, e2, e3), nodes)
+       | None -> None
+
+   When we don't need to consume full sequence, we use simply 'parse_elt'
+   instead of 'Combine.parse_last parse_elt' above.
+
+   The captured elements are wrapped as '`Case2 (e1, e2, e3)'
+   but it could be anything generated from the list ["e1"; "e2"; "e3"].
+*)
+val parse_seq : 'a reader -> 'tail reader -> ('a * 'tail) reader
+
+(* Parse the last element of a sequence. *)
+val parse_last : 'a reader -> 'a reader
+
+(* Read zero or more elements of the same kind, then the rest of the
+   sequence. Prioritizes longest match first. *)
+val parse_repeat : 'a reader -> 'tail reader -> ('a list * 'tail) reader
+
+(* Try to read one or more elements of the same kind, then the rest of the
+   sequence. Prioritizes longest match first. *)
+val parse_repeat1 : 'a reader -> 'tail reader -> ('a list * 'tail) reader
