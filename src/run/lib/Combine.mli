@@ -68,3 +68,7 @@ val parse_repeat : 'a reader -> 'tail reader -> ('a list * 'tail) reader
 (* Try to read one or more elements of the same kind, then the rest of the
    sequence. Prioritizes longest match first. *)
 val parse_repeat1 : 'a reader -> 'tail reader -> ('a list * 'tail) reader
+
+(* Convert the result of a reader. *)
+val map : ('a -> 'b) -> 'a reader -> 'b reader
+val map_fst : ('a -> 'b) -> ('a * 'c) reader -> ('b * 'c) reader

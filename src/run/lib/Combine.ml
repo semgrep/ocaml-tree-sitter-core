@@ -78,10 +78,12 @@ let parse_repeat1 parse_elt parse_tail nodes =
       | Some ((repeat_tail, res2), nodes) ->
           Some ((elt :: repeat_tail, res2), nodes)
 
-(*
-   choice: (A | B | C) next
-     parse_A nodes parse_tail
-     || parse_B nodes parse_tail
-     || parse_C nodes parse_tail
-     || fail
-*)
+let map f parse_elt nodes =
+  match parse_elt nodes with
+  | None -> None
+  | Some (elt, nodes) -> Some (f elt, nodes)
+
+let map_fst f parse_elt nodes =
+  match parse_elt nodes with
+  | None -> None
+  | Some ((a, b), nodes) -> Some ((f a, b), nodes)
