@@ -22,18 +22,28 @@ let parse input_file =
   let get_token x =
     Input_file.get_token input x.startPosition x.endPosition in
 
-  let _parse_token type_ =
-    Combine.parse_node (fun x ->
-      if x.type_ = type_ then
-        Some (get_loc x, get_token x)
-      else
-        None
-    )
-  in
+    let _parse_rule type_ parse_children =
+      Combine.parse_node (fun x ->
+        if x.type_ = type_ then
+          parse_children x.children
+        else
+          None
+      )
+    in
+
+    (* childless rule, from which we extract location and token. *)
+    let _parse_leaf_rule type_ =
+      Combine.parse_node (fun x ->
+        if x.type_ = type_ then
+          Some (get_loc x, get_token x)
+        else
+          None
+      )
+    in
 "
 ]
 
-let gen_parser_name name = "parser_" ^ name
+let gen_parser_name name = "parse_" ^ name
 
 let paren x =
   [
@@ -42,25 +52,44 @@ let paren x =
     Line ")";
   ]
 
-(* Call a parsing function on the standard argument name. *)
-let apply parser_fun =
-  [
-    Line "(";
-    Block parser_fun;
-    Line ") nodes";
-  ]
+(*
+   For some functions it's shorter to produce the function's body,
+   for others it's shorter to produce the whole function expression.
+   Each can be wrapped to convert to the other form.
+*)
+type code =
+  | Fun of Indent.t (* takes one argument of type 'node list' *)
+  | Body of Indent.t (* assumes one argument, 'nodes' *)
+
+let as_fun = function
+  | Fun code -> code
+  | Body code ->
+      [
+        Line "(fun nodes ->";
+        Block code;
+        Line ")";
+      ]
+
+let as_body = function
+  | Fun code ->
+      [
+        Line "(";
+        Block code;
+        Line ") nodes";
+      ]
+  | Body code -> code
 
 let gen_lazy_or num_cases =
   assert (num_cases > 0);
   let rec gen i =
     if i = num_cases - 1 then
-      [ Line (sprintf "parse_case%i" i) ]
+      [ Line (sprintf "parse_case%i nodes" i) ]
     else
       [
         Line (sprintf "match parse_case%i nodes with" i);
         Line "| Some _ as res -> res";
-        Line "None ->";
-        Block (gen (i + 1));
+        Line "| None ->";
+        Block [Block (gen (i + 1))];
       ]
   in
   gen 0
@@ -85,10 +114,10 @@ let gen_nested_pairs n =
   gen buf 0;
   Buffer.contents buf
 
-let gen_match_end parser_fun =
+let gen_match_end parser_code =
   [
     Line "Combine.parse_last (";
-    Block parser_fun;
+    Block (parser_code |> as_fun);
     Line ")";
   ]
 
@@ -98,29 +127,32 @@ let gen_result_tuple n =
      |> List.map (fun pos -> sprintf "e%i" pos)
      |> String.concat ", ")
 
-let rec gen_parser_fun body =
+let rec gen_parser_code body =
   match body with
-  | Symbol s
+  | Symbol s ->
+      Fun [
+        Line (sprintf "parse_%s" s)
+      ]
   | String s ->
-      [
-        Line (sprintf "_parse_token %S" s)
+      Fun [
+        Line (sprintf "_parse_leaf_rule %S" s)
       ]
   | Pattern s ->
-      [
-        Line (sprintf "_parse_token %S" s) (* doesn't seem right *)
+      Fun [
+        Line (sprintf "_parse_leaf_rule %S" s) (* does this happen? *)
       ]
   | Blank ->
-      [
+      Fun [
         Line (sprintf "_parse_token %S" "blank" (* ? *))
       ]
   | Repeat body ->
-      [
+      Fun [
         Line "Combine.parse_repeat (";
         Block (gen_parser_fun body);
         Line ")";
       ]
   | Repeat1 body ->
-      [
+      Fun [
         Line "Combine.parse_repeat (";
         Block (gen_parser_fun body);
         Line ")";
@@ -130,6 +162,12 @@ let rec gen_parser_fun body =
   | Seq bodies ->
       let wrapped_result = gen_result_tuple (List.length bodies) in
       gen_seq ~wrapped_result bodies
+
+and gen_parser_fun body =
+  gen_parser_code body |> as_fun
+
+and gen_parser_body body =
+  gen_parser_code body |> as_body
 
 and gen_seq ~wrapped_result bodies =
   let rec gen bodies =
@@ -149,8 +187,10 @@ and gen_seq ~wrapped_result bodies =
         ]
   in
   let len = List.length bodies in
-  [
-    Inline (gen bodies);
+  Body [
+    Line "let parse_nested =";
+    Block (gen bodies);
+    Line "in";
     Line "match parse_nested nodes with";
     Line (
       sprintf "| Some (%s, nodes) -> Some (%s, nodes)"
@@ -162,7 +202,7 @@ and gen_seq ~wrapped_result bodies =
 
 and gen_choice cases =
   let num_cases = List.length cases in
-  [
+  Body [
     Inline (List.mapi (fun i case -> Inline (gen_parse_case i case)) cases);
     Inline (gen_lazy_or num_cases);
   ]
@@ -186,6 +226,16 @@ and gen_parse_case i body =
     Line "in";
   ]
 
+let is_leaf = function
+  | Symbol _
+  | String _
+  | Pattern _
+  | Blank -> true
+  | Repeat _
+  | Repeat1 _
+  | Choice _
+  | Seq _ -> false
+
 let gen_rule_parser pos rule =
   let is_first = (pos = 0) in
   let let_ =
@@ -196,13 +246,21 @@ let gen_rule_parser pos rule =
     | false -> "and"
   in
   let ident, rule_body = rule in
-  [
-    Line (sprintf "%s %s nodes =" let_ (gen_parser_name ident));
-    Block (gen_parser_fun rule_body |> apply);
-  ]
+  if is_leaf rule_body then
+    [
+      Line (sprintf "%s %s = _parse_leaf_rule %S"
+              let_ (gen_parser_name ident) ident);
+    ]
+  else
+    [
+      Line (sprintf "%s %s = _parse_rule %S ("
+              let_ (gen_parser_name ident) ident);
+      Block (gen_parser_fun rule_body);
+      Line ")";
+    ]
 
 let gen grammar =
-  let entrypoint = grammar.name in
+  let entrypoint = grammar.entrypoint in
   let rule_parsers =
     List.mapi (fun i rule -> Inline (gen_rule_parser i rule)) grammar.rules in
   [
@@ -210,7 +268,7 @@ let gen grammar =
     Block [
       Inline rule_parsers;
       Line "in";
-      Line (gen_parser_name entrypoint);
+      Line (sprintf "Combine.parse_root %s" (gen_parser_name entrypoint));
     ]
   ]
 

@@ -20,6 +20,9 @@ val parse_success : unit reader
 (* Create a reader of a single input node. *)
 val parse_node : (node -> 'a option) -> 'a reader
 
+(* Read exactly one node. *)
+val parse_root : 'a reader -> node -> 'a option
+
 (* Parse the first thing in the sequence then everything else in the
    sequence.
 
@@ -51,6 +54,9 @@ val parse_node : (node -> 'a option) -> 'a reader
    but it could be anything generated from the list ["e1"; "e2"; "e3"].
 *)
 val parse_seq : 'a reader -> 'tail reader -> ('a * 'tail) reader
+
+(* Match at the end of input. *)
+val parse_end : unit reader
 
 (* Parse the last element of a sequence. *)
 val parse_last : 'a reader -> 'a reader

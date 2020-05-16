@@ -27,11 +27,21 @@ let parse_seq parse_elt1 parse_tail nodes =
       | None -> None
       | Some (res2, nodes) -> Some ((res1, res2), nodes)
 
+let parse_end nodes =
+  match nodes with
+  | [] -> Some ((), [])
+  | _ -> None
+
 let parse_last parse_elt nodes =
   match parse_elt nodes with
   | Some (res1, []) -> Some (res1, [])
   | Some (_res1, _) -> None
   | None -> None
+
+let parse_root parse_elt node =
+  match parse_elt [node] with
+  | Some (res, []) -> Some res
+  | _ -> None
 
 let parse_repeat parse_elt parse_tail nodes =
   let rec repeat nodes0 =

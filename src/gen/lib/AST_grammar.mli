@@ -37,6 +37,7 @@ type rule = (ident * rule_body)
 
 type grammar = {
   name: string;
+  entrypoint: string;
   rules: rule list;
 }
 

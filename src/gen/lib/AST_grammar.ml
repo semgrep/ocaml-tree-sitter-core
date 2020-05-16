@@ -21,6 +21,7 @@ type rule = (ident * rule_body)
 
 type grammar = {
   name: ident;
+  entrypoint: ident;
   rules: rule list;
 }
 
@@ -86,8 +87,15 @@ let translate_rules rules =
   List.map (fun (name, body) -> (name, translate body |> normalize)) rules
 
 let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
+  let entrypoint =
+    (* assuming the grammar's entrypoint is the first rule in grammar.json *)
+    match x.rules with
+    | (name, _) :: _ -> name
+    | _ -> "program"
+  in
   let rules = translate_rules x.rules in
   {
     name = x.name;
+    entrypoint;
     rules = rules;
   }

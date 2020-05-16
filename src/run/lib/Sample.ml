@@ -29,7 +29,17 @@ module Parse = struct
     let get_token x =
       Input_file.get_token input x.startPosition x.endPosition in
 
-    let _parse_token type_ =
+    let _parse_rule type_ parse_children =
+      Combine.parse_node (fun x ->
+        if x.type_ = type_ then
+          parse_children x.children
+        else
+          None
+      )
+    in
+
+    (* childless rule, from which we extract location and token. *)
+    let _parse_leaf_rule type_ =
       Combine.parse_node (fun x ->
         if x.type_ = type_ then
           Some (get_loc x, get_token x)
@@ -40,81 +50,87 @@ module Parse = struct
 
     let parse_number nodes =
       (
-        _parse_token "number"
+        _parse_leaf_rule "number"
       ) nodes
     in
     let parse_variable nodes =
       (
-        _parse_token "variable"
+        _parse_leaf_rule "variable"
       ) nodes
     in
     let rec parse_expression nodes =
-      let parse_case0 nodes =
-        match
-          (
-            let parse_elt = parse_variable in
-            Combine.parse_last parse_elt
-          )
-            nodes
-        with
-        | Some (res, nodes) -> Some (`Case0 res, nodes)
-        | None -> None
-      in
-      let parse_case1 nodes =
-        match
-          (
-            let parse_elt = parse_number in
-            Combine.parse_last parse_elt
-          )
-            nodes
-        with
-        | Some (res, nodes) -> Some (`Case1 res, nodes)
-        | None -> None
-      in
-      let parse_case2 nodes =
+      _parse_rule "expression" (fun nodes ->
+        let parse_case0 nodes =
+          match
+            (
+              let parse_elt = parse_variable in
+              Combine.parse_last parse_elt
+            )
+              nodes
+          with
+          | Some (res, nodes) -> Some (`Case0 res, nodes)
+          | None -> None
+        in
+        let parse_case1 nodes =
+          match
+            (
+              let parse_elt = parse_number in
+              Combine.parse_last parse_elt
+            )
+              nodes
+          with
+          | Some (res, nodes) -> Some (`Case1 res, nodes)
+          | None -> None
+        in
+        let parse_case2 nodes =
+          let parse_nested =
+            let parse_elt = parse_expression in
+            let parse_tail =
+              let parse_elt = _parse_leaf_rule "+" in
+              let parse_tail =
+                let parse_elt = parse_expression in
+                Combine.parse_last parse_elt
+              in
+              Combine.parse_seq parse_elt parse_tail
+            in
+            Combine.parse_seq parse_elt parse_tail
+          in
+          match parse_nested nodes with
+          | Some ((e0, (e1, e2)), nodes) -> Some (`Case2 (e0, e1, e2), nodes)
+          | None -> None
+        in
+        (* (parse_case0 ||| parse_case1 ||| parse_case2) nodes *)
+        match parse_case0 nodes with
+        | Some _ as res -> res
+        | None ->
+            match parse_case1 nodes with
+            | Some _ as res -> res
+            | None ->
+                parse_case2 nodes
+      ) nodes
+    in
+    let parse_statement nodes =
+      _parse_rule "statement" (fun nodes ->
+        (* (parse_expression &&& parse_leaf_rule ";" &&& parse_end) nodes *)
         let parse_nested =
           let parse_elt = parse_expression in
           let parse_tail =
-            let parse_elt = _parse_token "+" in
-            let parse_tail =
-              let parse_elt = parse_expression in
-              Combine.parse_last parse_elt
-            in
-            Combine.parse_seq parse_elt parse_tail
+            let parse_elt = _parse_leaf_rule ";" in
+            Combine.parse_last parse_elt
           in
           Combine.parse_seq parse_elt parse_tail
         in
         match parse_nested nodes with
-        | Some ((e0, (e1, e2)), nodes) -> Some (`Case2 (e0, e1, e2), nodes)
+        | Some ((e1, e2), nodes) -> Some (`Case2 (e1, e2), nodes)
         | None -> None
-      in
-      (* (parse_case0 ||| parse_case1 ||| parse_case2) nodes *)
-      match parse_case0 nodes with
-      | Some _ as res -> res
-      | None ->
-          match parse_case1 nodes with
-          | Some _ as res -> res
-          | None ->
-              parse_case2 nodes
-    in
-    let parse_statement nodes =
-      (* (parse_expression &&& parse_token ";" &&& parse_end) nodes *)
-      let parse_nested =
-        let parse_elt = parse_expression in
-        let parse_tail =
-          let parse_elt = _parse_token ";" in
-          Combine.parse_last parse_elt
-        in
-        Combine.parse_seq parse_elt parse_tail
-      in
-      match parse_nested nodes with
-      | Some ((e1, e2), nodes) -> Some (`Case2 (e1, e2), nodes)
-      | None -> None
-    in
-    let parse_program nodes =
-      Combine.parse_repeat (
-        parse_statement
       ) nodes
     in
-    parse_program
+    let parse_program nodes =
+      _parse_rule "program" (
+        Combine.parse_repeat
+          parse_statement
+          Combine.parse_end
+      ) nodes
+    in
+    Combine.parse_root parse_program
 end
