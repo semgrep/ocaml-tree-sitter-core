@@ -426,6 +426,11 @@ let is_leaf = function
   | Choice _
   | Seq _ -> false
 
+let gen_rule_cache (ident, _rule_body) =
+  [
+    Line (sprintf "let cache_%s = Combine.Memoize.create () in" ident);
+  ]
+
 let gen_rule_parser pos rule =
   let is_first = (pos = 0) in
   let let_ =
@@ -438,27 +443,42 @@ let gen_rule_parser pos rule =
   let ident, rule_body = rule in
   if is_leaf rule_body then
     [
-      Line (sprintf "%s %s = _parse_leaf_rule %S"
-              let_ (gen_parser_name ident) ident);
+      Line (sprintf "%s %s nodes =" let_ (gen_parser_name ident));
+      Block [
+        Line (sprintf "Combine.Memoize.apply cache_%s" ident);
+        Block [
+          Line (sprintf "(_parse_leaf_rule %S) nodes" ident);
+        ]
+      ]
     ]
   else
     [
-      Line (sprintf "%s %s = _parse_rule %S ("
-              let_ (gen_parser_name ident) ident);
-      Block (gen_seq rule_body next_match_end |> force_next |> as_fun);
-      Line ")";
+      Line (sprintf "%s %s nodes =" let_ (gen_parser_name ident));
+      Block [
+        Line (sprintf "Combine.Memoize.apply cache_%s (" ident);
+        Block [
+          Line (sprintf "_parse_rule %S (" ident);
+          Block (gen_seq rule_body next_match_end |> force_next |> as_fun);
+          Line ")";
+        ];
+        Line ") nodes";
+      ]
     ]
 
 let gen grammar =
   let entrypoint = grammar.entrypoint in
+  let rule_caches =
+    List.map (fun rule -> Inline (gen_rule_cache rule)) grammar.rules in
   let rule_parsers =
     List.mapi (fun i rule -> Inline (gen_rule_parser i rule)) grammar.rules in
   [
     Inline preamble;
     Block [
+      Inline rule_caches;
       Inline rule_parsers;
       Line "in";
-      Line (sprintf "Combine.parse_root %s root_node"
+      Line "Combine.assign_unique_ids root_node";
+      Line (sprintf "|> Combine.parse_root %s"
               (gen_parser_name entrypoint));
     ]
   ]

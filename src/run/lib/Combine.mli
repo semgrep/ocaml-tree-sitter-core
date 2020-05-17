@@ -72,3 +72,13 @@ val parse_repeat1 : 'a reader -> 'tail reader -> ('a list * 'tail) reader
 (* Convert the result of a reader. *)
 val map : ('a -> 'b) -> 'a reader -> 'b reader
 val map_fst : ('a -> 'b) -> ('a * 'c) reader -> ('b * 'c) reader
+
+(* Set the id field of all the nodes of an input tree. *)
+val assign_unique_ids : node -> node
+
+(* Memoization functions designed to cache the result of matching a subtree. *)
+module Memoize : sig
+  type 'a t
+  val create : unit -> 'a t
+  val apply : 'a t -> (node list -> 'a) -> node list -> 'a
+end

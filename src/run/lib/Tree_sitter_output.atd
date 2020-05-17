@@ -14,6 +14,10 @@ type node = {
   startPosition: position;
   endPosition: position;
   ~children: node list;
+
+ (* Unique ID assigned right after parsing the json file so as to facilitate
+    further processing. *)
+  ~id: int;
 }
 
 type position = {

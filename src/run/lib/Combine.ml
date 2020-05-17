@@ -87,3 +87,41 @@ let map_fst f parse_elt nodes =
   match parse_elt nodes with
   | None -> None
   | Some ((a, b), nodes) -> Some ((f a, b), nodes)
+
+let assign_unique_ids root_node =
+  let counter = ref (-1) in
+  let create_id () = incr counter; !counter in
+  let rec map node =
+    let id = create_id () in
+    assert (id >= 0);
+    let children = List.map map node.children in
+    { node with id; children }
+  in
+  map root_node
+
+module Node_list = struct
+  type t = node list
+
+  (* The input tree doesn't change during parsing, so it's safe to assume
+     that a given node will always be the head of the same list and
+     use it to identify the list. *)
+  let id = function
+    | [] -> -1
+    | node :: _ -> node.id
+
+  let equal a b = (id a) = (id b)
+  let hash x = id x
+end
+
+module Tbl = Hashtbl.Make (Node_list)
+
+module Memoize = struct
+  type 'a t = 'a Tbl.t
+  let create () = Tbl.create 100
+  let apply tbl parse nodes =
+    try Tbl.find tbl nodes
+    with Not_found ->
+      let res = parse nodes in
+      Tbl.replace tbl nodes res;
+      res
+end

@@ -48,6 +48,9 @@ module Parse = struct
       )
     in
 
+    let tbl_expression = Combine.Memoize.create () in
+    let tbl_statement = Combine.Memoize.create () in
+
     let parse_number nodes =
       (
         _parse_leaf_rule "number"
@@ -110,19 +113,21 @@ module Parse = struct
       ) nodes
     in
     let parse_statement nodes =
-      _parse_rule "statement" (fun nodes ->
-        (* (parse_expression &&& parse_leaf_rule ";" &&& parse_end) nodes *)
-        let parse_nested =
-          let parse_elt = parse_expression in
-          let parse_tail =
-            let parse_elt = _parse_leaf_rule ";" in
-            Combine.parse_last parse_elt
+      Combine.Memoize.apply tbl_statement (
+        _parse_rule "statement" (fun nodes ->
+          (* (parse_expression &&& parse_leaf_rule ";" &&& parse_end) nodes *)
+          let parse_nested =
+            let parse_elt = parse_expression in
+            let parse_tail =
+              let parse_elt = _parse_leaf_rule ";" in
+              Combine.parse_last parse_elt
+            in
+            Combine.parse_seq parse_elt parse_tail
           in
-          Combine.parse_seq parse_elt parse_tail
-        in
-        match parse_nested nodes with
-        | Some ((e1, e2), nodes) -> Some (`Case2 (e1, e2), nodes)
-        | None -> None
+          match parse_nested nodes with
+          | Some ((e1, e2), nodes) -> Some (`Case2 (e1, e2), nodes)
+          | None -> None
+        )
       ) nodes
     in
     let parse_program nodes =
