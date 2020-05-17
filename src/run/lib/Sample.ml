@@ -26,6 +26,14 @@ module Parse = struct
 
   let parse input_file =
     let input = Input_file.load input_file in
+
+    let root_node =
+      Atdgen_runtime.Util.Json.from_file
+        Tree_sitter_output_j.read_node
+        input_file
+      |> Combine.assign_unique_ids
+    in
+
     let get_token x =
       Input_file.get_token input x.startPosition x.endPosition in
 
@@ -51,7 +59,7 @@ module Parse = struct
     let tbl_expression = Combine.Memoize.create () in
     let tbl_statement = Combine.Memoize.create () in
 
-    let parse_number nodes =
+    let parse_number : AST.number Combine.reader = fun nodes ->
       (
         _parse_leaf_rule "number"
       ) nodes
@@ -137,5 +145,5 @@ module Parse = struct
           Combine.parse_end
       ) nodes
     in
-    Combine.parse_root parse_program
+    parse_program [root_node]
 end

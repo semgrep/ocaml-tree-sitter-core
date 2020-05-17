@@ -20,7 +20,7 @@ val parse_success : unit reader
 (* Create a reader of a single input node. *)
 val parse_node : (node -> 'a option) -> 'a reader
 
-(* Read exactly one node. *)
+(* Read a single rule, typically the root of the json input. *)
 val parse_root : 'a reader -> node -> 'a option
 
 (* Parse the first thing in the sequence then everything else in the
@@ -80,5 +80,5 @@ val assign_unique_ids : node -> node
 module Memoize : sig
   type 'a t
   val create : unit -> 'a t
-  val apply : 'a t -> (node list -> 'a) -> node list -> 'a
+  val apply : 'a t -> 'a reader -> 'a reader
 end

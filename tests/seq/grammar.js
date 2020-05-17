@@ -1,11 +1,11 @@
 module.exports = grammar({
-  name: "simple",
+  name: "seq",
   rules: {
-    program: $ => choice(
+    program: $ => seq(
       $.variable,
       $.number
     ),
-    variable: $ => /\a\w*/,
+    variable: $ => /[a-z]+/,
     number: $ => /\d+/
   }
 });

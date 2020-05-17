@@ -11,6 +11,7 @@ setup:
 # Keep things like node_modules that are worth keeping around
 .PHONY: clean
 clean:
+	rm -r bin
 	dune clean
 	make -C tests clean
 

@@ -19,6 +19,11 @@ let parse_node : (node -> 'a option) -> 'a reader = fun f nodes ->
       )
   | [] -> None
 
+let parse_root parse_elt node =
+  match parse_elt [node] with
+  | None -> None
+  | Some (res, _nodes) -> Some res
+
 let parse_seq parse_elt1 parse_tail nodes =
   match parse_elt1 nodes with
   | None -> None
@@ -37,11 +42,6 @@ let parse_last parse_elt nodes =
   | Some (res1, []) -> Some (res1, [])
   | Some (_res1, _) -> None
   | None -> None
-
-let parse_root parse_elt node =
-  match parse_elt [node] with
-  | Some (res, []) -> Some res
-  | _ -> None
 
 let parse_repeat parse_elt parse_tail nodes =
   let rec repeat nodes0 =
@@ -116,7 +116,7 @@ end
 module Tbl = Hashtbl.Make (Node_list)
 
 module Memoize = struct
-  type 'a t = 'a Tbl.t
+  type 'a t = ('a * node list) option Tbl.t
   let create () = Tbl.create 100
   let apply tbl parse nodes =
     try Tbl.find tbl nodes

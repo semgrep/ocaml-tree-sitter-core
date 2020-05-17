@@ -1,5 +1,5 @@
 module.exports = grammar({
-  name: "simple",
+  name: "choice",
   rules: {
     program: $ => choice(
       $.variable,
