@@ -218,6 +218,12 @@ let map_next f next =
   | Next (num_captured, num_keep, code) ->
       Next (num_captured, num_keep, f code)
 
+let map_next_any_code f next =
+  map_next (function
+    | Fun x -> Fun (f x)
+    | Body x -> Body (f x)
+  ) next
+
 let match_end = Fun [Line "Combine.parse_end"]
 
 let next_match_end = Next (0, 0, match_end)
@@ -391,16 +397,20 @@ and gen_choice cases next0 =
   let next = map_next (fun _code -> Fun [Line "_parse_tail"]) next0 in
   let choice_matcher =
     Body [
-      Line "let _parse_tail =";
-      Block (force_next next0 |> as_fun);
-      Line "in";
       Inline (List.mapi (fun i case ->
         Inline (gen_parse_case i case next)
       ) cases);
       Inline (gen_lazy_or (List.length cases));
     ]
   in
-  prepend_next choice_matcher next
+  map_next_any_code (fun code ->
+    [
+      Line "let _parse_tail =";
+      Block (force_next next0 |> as_fun);
+      Line "in";
+      Inline code
+    ]
+  ) (prepend_next choice_matcher next)
 
 (*
    A case is a sequence, which in addition:
