@@ -42,8 +42,8 @@ cp "$project_root"/scripts/tree-sitter-parser.js .
 # If you want to make the language visible, use e.g. 'hello.c.in'.
 #
 if [[ -d examples ]]; then
-  for input in $(ls examples/*.in || :); do
-    output=${input%.in}.out
+  for input in $(ls examples/*.src || :); do
+    output=${input%.src}.json
     ./tree-sitter-parser.js "$input" | ydump > "$output"
   done
 fi

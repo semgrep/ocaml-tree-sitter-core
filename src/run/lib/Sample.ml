@@ -24,18 +24,18 @@ module Parse = struct
   open Tree_sitter_output_t
   let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
 
-  let parse input_file =
-    let input = Input_file.load input_file in
+  let parse ~src_file ~json_file =
+    let input = Src_file.load src_file in
 
     let root_node =
       Atdgen_runtime.Util.Json.from_file
         Tree_sitter_output_j.read_node
-        input_file
+        json_file
       |> Combine.assign_unique_ids
     in
 
     let get_token x =
-      Input_file.get_token input x.startPosition x.endPosition in
+      Src_file.get_token input x.startPosition x.endPosition in
 
     let _parse_rule type_ parse_children =
       Combine.parse_node (fun x ->

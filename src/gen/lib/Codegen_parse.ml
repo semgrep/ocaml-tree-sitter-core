@@ -20,18 +20,18 @@ open Ocaml_tree_sitter_run
 open Tree_sitter_output_t
 let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
 
-let parse input_file : %s.%s option =
-  let input = Input_file.load input_file in
+let parse ~src_file ~json_file : %s.%s option =
+  let src = Src_file.load src_file in
 
   let root_node =
     Atdgen_runtime.Util.Json.from_file
       Tree_sitter_output_j.read_node
-      input_file
+      json_file
     |> Combine.assign_unique_ids
   in
 
   let get_token x =
-    Input_file.get_token input x.startPosition x.endPosition in
+    Src_file.get_token src x.startPosition x.endPosition in
 
   (* Parse a single node which may have children, which also need parsing.
      The result of parsing the children should be cached.

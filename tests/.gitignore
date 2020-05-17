@@ -5,8 +5,8 @@ AST_*.ml
 Parse_*.ml
 
 # Various output files
-*.out
-*.dump
+/*/examples/*.ast
+/*/examples/*.json
 
 node_modules
 package.json

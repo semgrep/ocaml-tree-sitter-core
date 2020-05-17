@@ -1,13 +1,16 @@
 # Run all the tests that are supposed to work.
 .PHONY: test
 test:
-	../scripts/run-test arithmetic list_and_option
+	../scripts/run-test seq repeat choice list_and_option arithmetic
 
 ALL_TESTS = \
+  seq \
+  repeat \
+  choice \
+  list_and_option \
   arithmetic \
   csharp \
   java \
-  list_and_option \
   nested \
   ruby \
   rust \
