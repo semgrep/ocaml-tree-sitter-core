@@ -10,7 +10,6 @@ set -eu
 project_root=$(git rev-parse --show-toplevel)
 
 tree_sitter="$project_root"/node_modules/.bin/tree-sitter
-ocaml_tree_sitter="$project_root"/bin/ocaml-tree-sitter
 
 error() {
   cat >&2 <<EOF
@@ -20,7 +19,6 @@ EOF
 }
 
 test -x "$tree_sitter" || error "missing executable $tree_sitter"
-test -x "$ocaml_tree_sitter" || error "missing executable $ocaml_tree_sitter"
 
 # Generate C source code for the grammar.
 # Also generate 'grammar.json' used by the OCaml code generator.
@@ -49,16 +47,3 @@ if [[ -d examples ]]; then
     ./tree-sitter-parser.js "$input" | ydump > "$output"
   done
 fi
-
-# Generate the OCaml code needed to parse the examples/*.out json files.
-#
-"$ocaml_tree_sitter" src/grammar.json
-
-# Compile the OCaml files into an executable that takes a json file
-# and dumps the OCaml AST in some arbitrary format suitable for human review.
-#
-# TODO
-
-# Run the parser from json to ocaml AST
-#
-# TODO

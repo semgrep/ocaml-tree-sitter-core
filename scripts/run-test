@@ -14,7 +14,8 @@ for lang_dir in "$@"; do
     set -eu
     cd "$lang_dir"
     echo "Generate test data for '$lang_dir'"
-    "$project_root"/scripts/generate-test-data
+    "$project_root"/scripts/generate-test-part1
+    "$project_root"/scripts/generate-test-part2
   )
 done
 

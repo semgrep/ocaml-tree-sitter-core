@@ -50,30 +50,54 @@ and format_seq l =
   List.map (fun body -> Block (format_body body)) l
   |> interleave (Line "*")
 
-let format_rule ~use_rec pos (name, body) : Indent.t =
-  let is_first = pos > 0 in
+let format_rule ~use_rec pos len (name, body) : Indent.t =
+  let is_first = (pos = 0) in
+  let is_last = (pos = len - 1) in
   let type_ =
-    if use_rec && is_first then
+    if use_rec && not is_first then
       "and"
     else
       "type"
   in
+  let ppx =
+    if not use_rec || is_last then
+      [
+        Line "[@@deriving show {with_path = false}]";
+      ]
+    else
+      []
+  in
   [
     Line (sprintf "%s %s =" type_ (translate_ident name));
     Block (format_body body);
+    Inline ppx;
   ]
 
-let format grammar =
+let format_types grammar =
   let use_rec, rules =
     let orig_rules = grammar.rules in
     match Topo_sort.sort orig_rules with
     | Some reordered_rules -> false, reordered_rules
     | None -> true, orig_rules
   in
+  let len = List.length rules in
   List.mapi
-    (fun pos x -> Inline (format_rule ~use_rec pos x))
+    (fun pos x -> Inline (format_rule ~use_rec pos len x))
     rules
   |> interleave (Line "")
+
+let generate_dumper grammar =
+  [
+    Line "";
+    Line (sprintf "let dump root =");
+    Block [
+      Line (sprintf "print_endline (show_%s root)"
+              grammar.entrypoint);
+    ]
+  ]
+
+let format grammar =
+  format_types grammar @ generate_dumper grammar
 
 let generate grammar =
   let tree = format grammar in

@@ -14,32 +14,40 @@ let preamble = [ Line "\
 (* Disable warnings against unused variables *)
 [@@@warning \"-26-27\"]
 
+open Ocaml_tree_sitter_run
 open Tree_sitter_output_t
 let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
 
 let parse input_file =
   let input = Input_file.load input_file in
+
+  let root_node =
+    Atdgen_runtime.Util.Json.from_file
+      Tree_sitter_output_j.read_node
+      input_file
+  in
+
   let get_token x =
     Input_file.get_token input x.startPosition x.endPosition in
 
-    let _parse_rule type_ parse_children =
-      Combine.parse_node (fun x ->
-        if x.type_ = type_ then
-          parse_children x.children
-        else
-          None
-      )
-    in
+  let _parse_rule type_ parse_children =
+    Combine.parse_node (fun x ->
+      if x.type_ = type_ then
+        parse_children x.children
+      else
+        None
+    )
+  in
 
-    (* childless rule, from which we extract location and token. *)
-    let _parse_leaf_rule type_ =
-      Combine.parse_node (fun x ->
-        if x.type_ = type_ then
-          Some (get_loc x, get_token x)
-        else
-          None
-      )
-    in
+  (* childless rule, from which we extract location and token. *)
+  let _parse_leaf_rule type_ =
+    Combine.parse_node (fun x ->
+      if x.type_ = type_ then
+        Some (get_loc x, get_token x)
+      else
+        None
+    )
+  in
 "
 ]
 
@@ -450,7 +458,8 @@ let gen grammar =
     Block [
       Inline rule_parsers;
       Line "in";
-      Line (sprintf "Combine.parse_root %s" (gen_parser_name entrypoint));
+      Line (sprintf "Combine.parse_root %s root_node"
+              (gen_parser_name entrypoint));
     ]
   ]
 
