@@ -100,10 +100,10 @@ let gen_lazy_or num_cases =
   assert (num_cases > 0);
   let rec gen i =
     if i = num_cases - 1 then
-      [ Line (sprintf "parse_case%i nodes" i) ]
+      [ Line (sprintf "_parse_case%i nodes" i) ]
     else
       [
-        Line (sprintf "match parse_case%i nodes with" i);
+        Line (sprintf "match _parse_case%i nodes with" i);
         Line "| Some _ as res -> res";
         Line "| None ->";
         Block [Block (gen (i + 1))];
