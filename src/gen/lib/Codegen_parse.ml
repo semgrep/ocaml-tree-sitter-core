@@ -8,6 +8,8 @@ open Printf
 open AST_grammar
 open Indent.Types
 
+let debug = false
+
 let preamble ~ast_module_name grammar =
   [
     Line (sprintf "\
@@ -19,6 +21,21 @@ let preamble ~ast_module_name grammar =
 open Ocaml_tree_sitter_run
 open Tree_sitter_output_t
 let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
+
+(* Parse a single node which may have children, which also need parsing.
+   The result of parsing the children should be cached.
+   If the parser succeeds, all the children must be consumed. *)
+let _parse_rule type_ parse_children : 'a Combine.reader = fun nodes ->
+  match nodes with
+  | [] -> None
+  | node :: nodes ->
+      if node.type_ = type_ then
+        match parse_children node.children with
+        | Some (res, []) -> Some (res, nodes)
+        | Some (_, _::_) -> assert false
+        | None -> None
+      else
+        None
 
 let parse ~src_file ~json_file : %s.%s option =
   let src = Src_file.load src_file in
@@ -32,22 +49,6 @@ let parse ~src_file ~json_file : %s.%s option =
 
   let get_token x =
     Src_file.get_token src x.startPosition x.endPosition in
-
-  (* Parse a single node which may have children, which also need parsing.
-     The result of parsing the children should be cached.
-     If the parser succeeds, all the children must be consumed. *)
-  let _parse_rule type_ parse_children : 'a Combine.reader = fun nodes ->
-    match nodes with
-    | [] -> None
-    | node :: nodes ->
-        if node.type_ = type_ then
-          match parse_children node.children with
-          | Some (res, []) -> Some (res, nodes)
-          | Some (_, _::_) -> assert false
-          | None -> None
-        else
-          None
-  in
 
   (* Parse a single node that has no children.
      We extract its location and source code (token). *)
@@ -282,7 +283,8 @@ let prepend_next match_elt next =
                                        ^^^^^^^^ single result
 *)
 let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
-  printf "flatten_seq_head next:%s discard:%B\n" (show_next next) discard;
+  if debug then
+    printf "flatten_seq_head next:%s discard:%B\n" (show_next next) discard;
   assert (num_elts >= 0);
   match num_elts, wrap_tuple with
   | 0, _ -> next
@@ -307,9 +309,10 @@ let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
             in
             gen_flat_tuple ~head_len:num_elts ~len wrap_tuple
           in
-          printf "flatten:%i, total:%i, keep:%i  %s -> %s\n"
-            num_elts num_captured num_keep
-            nested_tuple_pat wrapped_result;
+          if debug then
+            printf "flatten:%i, total:%i, keep:%i  %s -> %s\n"
+              num_elts num_captured num_keep
+              nested_tuple_pat wrapped_result;
           let cases = [
             sprintf "Some (%s, nodes)" nested_tuple_pat, [
               Line (sprintf "Some (%s, nodes)" wrapped_result)
@@ -337,7 +340,8 @@ let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
    Flatten the full sequence and eliminate the ignored tail.
 *)
 let flatten_seq ?wrap_tuple next =
-  printf "flatten_seq next:%s\n" (show_next next);
+  if debug then
+    printf "flatten_seq next:%s\n" (show_next next);
   let num_elts =
     match next with
     | Nothing -> 0
@@ -484,7 +488,8 @@ and gen_choice cases next0 =
       in
       map_next_incr (fun _code -> choice_matcher) next0
 ) |> (fun res ->
-    printf "gen_choice returns next:%s\n" (show_next res);
+    if debug then
+      printf "gen_choice returns next:%s\n" (show_next res);
     res
   )
 
@@ -511,7 +516,8 @@ and repeat kind body next =
     ]
   in
   let res = map_next_incr repeat_matcher next in
-  printf "result from repeat: %s\n" (show_next res);
+  if debug then
+    printf "result from repeat: %s\n" (show_next res);
   res
 
 let is_leaf = function
