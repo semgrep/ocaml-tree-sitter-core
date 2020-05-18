@@ -1,9 +1,9 @@
 opam-version: "2.0"
-maintainer: "martin@mjambon.com"
-authors: ["Martin Jambon"]
-homepage: "https://github.com/mjambon/prts"
-bug-reports: "https://github.com/mjambon/prts/issues"
-dev-repo: "git+https://github.com/mjambon/prts.git"
+maintainer: "martin@returntocorp.com"
+authors: ["r2c"]
+homepage: "https://github.com/returntocorp/ocaml-tree-sitter"
+bug-reports: "https://github.com/returntocorp/ocaml-tree-sitter/issues"
+dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
 license: "BSD-3-Clause"
 
 build: [
@@ -21,10 +21,10 @@ depends: [
 synopsis: ""
 
 description: """
-prts translates a tree-sitter json grammar to Reason type definitions
-for an AST corresponding to this grammar.
+ocaml-tree-sitter translates a tree-sitter json grammar to OCaml code
+for recovering a full AST from the output for a tree-sitter parser.
 """
 
 url {
-  src: "git+https://github.com/mjambon/prts"
+  src: "git+https://github.com/returntocorp/ocaml-tree-sitter"
 }
