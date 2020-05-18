@@ -9,7 +9,6 @@ SUCCESS_TESTS = \
 ALL_TESTS = \
   $(SUCCESS_TESTS) \
   list_and_option \
-  arithmetic \
   csharp \
   java \
   nested \
