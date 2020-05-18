@@ -10,6 +10,13 @@ open Indent.Types
 
 let debug = false
 
+(* All rule names and other names directly defined in grammar.json
+   must go through this translation. For example, it turns
+   "true" into "true_" because "true" is a reserved keyword in the generated
+   code.
+*)
+let trans = Codegen_util.translate_ident
+
 let preamble ~ast_module_name grammar =
   [
     Line (sprintf "\
@@ -61,11 +68,11 @@ let parse ~src_file ~json_file : %s.%s option =
     )
   in
 "
-            ast_module_name grammar.entrypoint
+            ast_module_name (trans grammar.entrypoint)
          )
   ]
 
-let gen_parser_name name = "parse_" ^ name
+let gen_parser_name name = "parse_" ^ (trans name)
 
 let paren x =
   [
@@ -250,7 +257,7 @@ let match_success = Fun [Line "Combine.parse_success"]
 let next_match_end = Next (1, 0, match_end)
 
 (* Put a matcher in front a sequence of matchers. *)
-let prepend_next match_elt next =
+let prepend match_elt next =
   match next with
   | Nothing ->
       Next (1, 1, match_elt)
@@ -388,26 +395,26 @@ let rec gen_seq body (next : next) : next =
   match body with
   | Symbol s ->
       (* (symbol, tail) *)
-      prepend_next (Fun [
-        Line (sprintf "parse_%s" s)
+      prepend (Fun [
+        Line (sprintf "parse_%s" (trans s))
       ]) next
 
   | String s ->
       (* (string, tail) *)
-      prepend_next (Fun [
+      prepend (Fun [
         Line (sprintf "_parse_leaf_rule %S" s)
       ]) next
 
   | Pattern s ->
       (* (pattern, tail) *)
-      prepend_next (Fun [
+      prepend (Fun [
         Line (sprintf "_parse_leaf_rule %S" s) (* does this happen? *)
       ]) next
 
   | Blank ->
-      (* (blank, tail) *)
-      prepend_next (Fun [
-        Line (sprintf "_parse_token %S" "blank" (* ? *))
+      (* ((), tail) *)
+      prepend (Fun [
+        Line "Combine.parse_success";
       ]) next
 
   | Repeat body ->
@@ -533,7 +540,7 @@ let is_leaf = function
 let gen_rule_cache ~ast_module_name (ident, _rule_body) =
   [
     Line (sprintf "let cache_%s : %s.%s Combine.Memoize.t ="
-            ident ast_module_name ident);
+            (trans ident) ast_module_name (trans ident));
     Block [ Line "Combine.Memoize.create () in" ];
   ]
 
@@ -550,10 +557,10 @@ let gen_rule_parser ~ast_module_name pos rule =
   if is_leaf rule_body then
     [
       Line (sprintf "%s %s : %s.%s Combine.reader = fun nodes ->"
-              let_ (gen_parser_name ident)
-              ast_module_name ident);
+              let_ (gen_parser_name (trans ident))
+              ast_module_name (trans ident));
       Block [
-        Line (sprintf "Combine.Memoize.apply cache_%s" ident);
+        Line (sprintf "Combine.Memoize.apply cache_%s" (trans ident));
         Block [
           Line (sprintf "(_parse_leaf_rule %S) nodes" ident);
         ]
@@ -563,9 +570,9 @@ let gen_rule_parser ~ast_module_name pos rule =
     [
       Line (sprintf "%s %s : %s.%s Combine.reader = fun nodes ->"
               let_ (gen_parser_name ident)
-              ast_module_name ident);
+              ast_module_name (trans ident));
       Block [
-        Line (sprintf "Combine.Memoize.apply cache_%s (" ident);
+        Line (sprintf "Combine.Memoize.apply cache_%s (" (trans ident));
         Block [
           Line (sprintf "_parse_rule %S (" ident);
           Block (gen_seq rule_body next_match_end
@@ -593,7 +600,7 @@ let gen ~ast_module_name grammar =
       Inline rule_parsers;
       Line "in";
       Line (sprintf "Combine.parse_root %s root_node"
-              (gen_parser_name entrypoint));
+              (gen_parser_name (trans entrypoint)));
     ]
   ]
 

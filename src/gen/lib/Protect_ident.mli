@@ -6,7 +6,9 @@
 (* Registry of translated identifiers. *)
 type t
 
-(* All English keywords that can't be used as type names in Reason. *)
+(* All English keywords that can't be used as type names in OCaml or Reason. *)
+val ocaml_reason_keywords : string list
+val ocaml_keywords : string list
 val reason_keywords : string list
 
 (*
@@ -16,7 +18,7 @@ val reason_keywords : string list
 *)
 val create : ?reserved:string list -> unit -> t
 
-(* Translate an identifier to a valid Reason identifier, ensuring that
+(* Translate an identifier to a valid OCaml/Reason identifier, ensuring that
    the new identifier is as close as possible to the original and that the
    resulting identifier is not already in use by something else.
 *)

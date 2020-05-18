@@ -79,6 +79,68 @@ let reason_keywords = [
   "asr";
 ]
 
+let ocaml_keywords = [
+  "and";
+  "as";
+  "assert";
+  "asr";
+  "begin";
+  "class";
+  "constraint";
+  "do";
+  "done";
+  "downto";
+  "else";
+  "end";
+  "exception";
+  "external";
+  "false";
+  "for";
+  "fun";
+  "function";
+  "functor";
+  "if";
+  "in";
+  "include";
+  "inherit";
+  "initializer";
+  "";
+  "land";
+  "lazy";
+  "let";
+  "lor";
+  "lsl";
+  "lsr";
+  "lxor";
+  "match";
+  "method";
+  "mod";
+  "module";
+  "mutable";
+  "new";
+  "nonrec";
+  "object";
+  "of";
+  "open";
+  "or";
+  "private";
+  "rec";
+  "sig";
+  "struct";
+  "then";
+  "to";
+  "true";
+  "try";
+  "type";
+  "val";
+  "virtual";
+  "when";
+  "while";
+  "with";
+]
+
+let ocaml_reason_keywords = ocaml_keywords @ reason_keywords
+
 type availability = Available | Taken | Mismatched
 
 (* Check that a maps to b and b maps to a, either already or if we make them
@@ -93,7 +155,7 @@ let force_add x a b =
   Hashtbl.replace x.forward a b;
   Hashtbl.replace x.backward b a
 
-let create ?(reserved = reason_keywords) () =
+let create ?(reserved = ocaml_keywords) () =
   let x = {
     forward = Hashtbl.create 100;
     backward = Hashtbl.create 100;

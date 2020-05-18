@@ -30,7 +30,7 @@ let rec format_body body : Indent.t =
   | Symbol ident -> [Line (translate_ident ident)]
   | String s -> [Line (sprintf "(Loc.t * string (* %S *))" s)]
   | Pattern s -> [Line (sprintf "(Loc.t * string (* pattern %S *))" s)]
-  | Blank -> [Line "(Loc.t * string (* blank *))"]
+  | Blank -> [Line "unit (* blank *)"]
   | Repeat body ->
       [
         Inline (format_body body);
