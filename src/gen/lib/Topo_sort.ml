@@ -12,7 +12,8 @@ open AST_grammar
 let rec collect_names acc x =
   match x with
   | Repeat x
-  | Repeat1 x -> collect_names acc x
+  | Repeat1 x
+  | Optional x -> collect_names acc x
   | Choice l
   | Seq l -> List.fold_left (fun acc x -> collect_names acc x) acc l
   | Symbol name -> name :: acc

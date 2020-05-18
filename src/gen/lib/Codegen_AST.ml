@@ -47,6 +47,11 @@ let rec format_body body : Indent.t =
         Inline (format_choice body_list);
         Line "]"
       ]
+  | Optional body ->
+      [
+        Inline (format_body body);
+        Block [Line "option"]
+      ]
   | Seq body_list ->
       [
         Line "(";

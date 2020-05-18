@@ -31,6 +31,7 @@ type rule_body =
   | Repeat of rule_body
   | Repeat1 of rule_body
   | Choice of rule_body list
+  | Optional of rule_body
   | Seq of rule_body list
 
 type rule = (ident * rule_body)

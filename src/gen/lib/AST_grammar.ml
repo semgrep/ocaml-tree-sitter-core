@@ -15,6 +15,7 @@ type rule_body =
   | Repeat of rule_body
   | Repeat1 of rule_body
   | Choice of rule_body list
+  | Optional of rule_body
   | Seq of rule_body list
 
 type rule = (ident * rule_body)
@@ -39,6 +40,7 @@ let rec translate (x : Tree_sitter_t.rule_body) =
   | BLANK -> Blank
   | REPEAT x -> Repeat (translate x)
   | REPEAT1 x -> Repeat1 (translate x)
+  | CHOICE [x; BLANK] -> Optional (translate x)
   | CHOICE l -> Choice (List.map translate l)
   | SEQ l -> Seq (List.map translate l)
   | PREC (_prio, x) -> translate x
@@ -61,10 +63,11 @@ let rec normalize x =
   | Symbol _
   | String _
   | Pattern _
-  | Blank
-  | Repeat _
-  | Repeat1 _ as x -> x
+  | Blank as x -> x
+  | Repeat x -> Repeat (normalize x)
+  | Repeat1 x -> Repeat1 (normalize x)
   | Choice l -> Choice (List.map normalize l |> flatten_choice)
+  | Optional x -> Optional (normalize x)
   | Seq l -> Seq (List.map normalize l |> flatten_seq)
 
 and flatten_choice normalized_list =

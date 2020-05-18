@@ -412,7 +412,7 @@ let rec gen_seq body (next : next) : next =
       ]) next
 
   | Blank ->
-      (* ((), tail) *)
+      (* tail) *)
       prepend (Fun [
         Line "Combine.parse_success";
       ]) next
@@ -428,6 +428,10 @@ let rec gen_seq body (next : next) : next =
   | Choice bodies ->
       (* (choice, tail) *)
       gen_choice bodies next
+
+  | Optional body ->
+      (* (option, tail) *)
+      repeat `Optional body next
 
   | Seq bodies ->
       (* (e1, (e2, ...(en, tail))) *)
@@ -514,6 +518,7 @@ and repeat kind body next =
     match kind with
     | `Repeat -> "Combine.parse_repeat"
     | `Repeat1 -> "Combine.parse_repeat1"
+    | `Optional -> "Combine.parse_optional"
   in
   let repeat_matcher match_tail =
     Fun [
@@ -535,6 +540,7 @@ let is_leaf = function
   | Repeat _
   | Repeat1 _
   | Choice _
+  | Optional _
   | Seq _ -> false
 
 let gen_rule_cache ~ast_module_name (ident, _rule_body) =
