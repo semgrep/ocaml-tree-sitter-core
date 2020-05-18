@@ -152,7 +152,6 @@ let gen_match_end parser_code =
     "(e0, (e1, tail))"
 *)
 let gen_nested_pairs ~head_len ~len =
-  printf "gen_nested_pairs head_len:%i len:%i\n" head_len len;
   assert (head_len <= len);
   assert (head_len > 0);
   let buf = Buffer.create 50 in
@@ -247,7 +246,7 @@ let map_next_incr f next =
 let match_end = Fun [Line "Combine.parse_end"]
 let match_success = Fun [Line "Combine.parse_success"]
 
-let next_match_end = Next (0, 0, match_end)
+let next_match_end = Next (1, 0, match_end)
 
 (* Put a matcher in front a sequence of matchers. *)
 let prepend_next match_elt next =
@@ -282,40 +281,52 @@ let prepend_next match_elt next =
      | Some ((e1, e2), nodes) -> Some ((e1, e2), nodes)
                                        ^^^^^^^^ single result
 *)
-let flatten_seq_head ?(wrap_tuple = fun x -> x) num_elts next =
+let flatten_seq_head ?wrap_tuple num_elts next =
   assert (num_elts >= 0);
-  match num_elts with
-  | 0 -> next
+  match num_elts, wrap_tuple with
+  | 0, _ -> next
+  | 1, None -> next
   | _ ->
       let num_captured, num_keep, match_seq = flatten_next next in
-      let nested_tuple_pat =
-        gen_nested_pairs ~head_len:num_elts ~len:num_captured
-      in
-      let wrapped_result =
-        gen_flat_tuple ~head_len:num_elts ~len:num_captured wrap_tuple
-      in
-      let cases = [
-        sprintf "Some (%s, nodes)" nested_tuple_pat, [
-          Line (sprintf "Some (%s, nodes)" wrapped_result)
-        ];
-        "None", [Line "None"];
-      ] in
-      let match_seq =
-        Body (
-          match_with
-            (as_body match_seq)
-            cases
-        )
-      in
-      (* reflect the collapse of num_elts results into one. *)
-      let num_captured = num_captured - num_elts + 1 in
-      let num_keep = num_keep - num_elts + 1 in
-      assert (num_captured >= 0);
-      assert (num_keep >= 0);
-      if num_captured = 0 then
-        Nothing
-      else
-        Next (num_captured, num_keep, match_seq)
+      match num_elts, num_captured, wrap_tuple with
+      | 2, 2, None -> next
+      | _ ->
+          let wrap_tuple =
+            match wrap_tuple with
+            | None -> (fun x -> x)
+            | Some f -> f
+          in
+          let nested_tuple_pat =
+            gen_nested_pairs ~head_len:num_elts ~len:num_captured
+          in
+          let wrapped_result =
+            gen_flat_tuple ~head_len:num_elts ~len:num_keep wrap_tuple
+          in
+          printf "flatten:%i, total:%i, keep:%i  %s -> %s\n"
+            num_elts num_captured num_keep
+            nested_tuple_pat wrapped_result;
+          let cases = [
+            sprintf "Some (%s, nodes)" nested_tuple_pat, [
+              Line (sprintf "Some (%s, nodes)" wrapped_result)
+            ];
+            "None", [Line "None"];
+          ] in
+          let match_seq =
+            Body (
+              match_with
+                (as_body match_seq)
+                cases
+            )
+          in
+          (* reflect the collapse of num_elts results into one. *)
+          let num_captured = num_captured - num_elts + 1 in
+          let num_keep = num_keep - num_elts + 1 in
+          assert (num_captured >= 0);
+          assert (num_keep >= 0);
+          if num_captured = 0 then
+            Nothing
+          else
+            Next (num_captured, num_keep, match_seq)
 
 (*
    Flatten the full sequence.
@@ -424,11 +435,8 @@ and gen_seqn bodies next =
 *)
 and gen_seqn_head ?wrap_tuple bodies (next : next) : next =
   (* the length of the tuple to extract before the rest of the sequence *)
-  printf "gen_seqn_head bodies next:%s\n%!" (show_next next);
   let num_elts = List.length bodies in
   let next = gen_seqn bodies next in
-  printf "gen_seqn_head: new next:%s\n%!" (show_next next);
-  printf "gen_seqn_head: want to flatten %i elements\n%!" num_elts;
   flatten_seq_head ?wrap_tuple num_elts next
 
 (*
@@ -458,11 +466,11 @@ and gen_choice cases next0 =
       Inline (gen_lazy_or (List.length cases));
     ]
   in
-  map_next (fun _code -> choice_matcher) next0
+  let res = map_next_incr (fun _code -> choice_matcher) next0 in
+  printf "gen_choice returns next:%s\n" (show_next res);
+  res
 
 and gen_parse_case i body next =
-  printf "gen_parse_case %i next:%s\n%!"
-    i (show_next next);
   let bodies = as_sequence body in
   let wrap_tuple tuple = sprintf "`Case%i %s" i tuple in
   [
