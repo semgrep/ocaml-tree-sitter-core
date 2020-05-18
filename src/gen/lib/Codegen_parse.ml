@@ -281,14 +281,15 @@ let prepend_next match_elt next =
      | Some ((e1, e2), nodes) -> Some ((e1, e2), nodes)
                                        ^^^^^^^^ single result
 *)
-let flatten_seq_head ?wrap_tuple num_elts next =
+let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
+  printf "flatten_seq_head next:%s discard:%B\n" (show_next next) discard;
   assert (num_elts >= 0);
   match num_elts, wrap_tuple with
   | 0, _ -> next
-  | 1, None -> next
   | _ ->
       let num_captured, num_keep, match_seq = flatten_next next in
       match num_elts, num_captured, wrap_tuple with
+      | 1, 1, None -> next
       | 2, 2, None -> next
       | _ ->
           let wrap_tuple =
@@ -300,7 +301,11 @@ let flatten_seq_head ?wrap_tuple num_elts next =
             gen_nested_pairs ~head_len:num_elts ~len:num_captured
           in
           let wrapped_result =
-            gen_flat_tuple ~head_len:num_elts ~len:num_keep wrap_tuple
+            let len =
+              if discard then num_elts
+              else num_captured
+            in
+            gen_flat_tuple ~head_len:num_elts ~len wrap_tuple
           in
           printf "flatten:%i, total:%i, keep:%i  %s -> %s\n"
             num_elts num_captured num_keep
@@ -329,15 +334,16 @@ let flatten_seq_head ?wrap_tuple num_elts next =
             Next (num_captured, num_keep, match_seq)
 
 (*
-   Flatten the full sequence.
+   Flatten the full sequence and eliminate the ignored tail.
 *)
 let flatten_seq ?wrap_tuple next =
+  printf "flatten_seq next:%s\n" (show_next next);
   let num_elts =
     match next with
     | Nothing -> 0
     | Next (_num_captured, num_keep, _code) -> num_keep
   in
-  let next = flatten_seq_head ?wrap_tuple num_elts next in
+  let next = flatten_seq_head ?wrap_tuple ~discard:true num_elts next in
   force_next next
 
 let wrap_matcher_result opt_wrap_result matcher_code =
@@ -454,21 +460,33 @@ and gen_seqn_head ?wrap_tuple bodies (next : next) : next =
        | None -> ...
 *)
 and gen_choice cases next0 =
-  let choice_matcher =
-    let next = map_next (fun _code -> Fun [Line "_parse_tail"]) next0 in
-    Body [
-      Line "let _parse_tail =";
-      Block (force_next next0 |> as_fun);
-      Line "in";
-      Inline (List.mapi (fun i case ->
-        Inline (gen_parse_case i case next)
-      ) cases);
-      Inline (gen_lazy_or (List.length cases));
-    ]
-  in
-  let res = map_next_incr (fun _code -> choice_matcher) next0 in
-  printf "gen_choice returns next:%s\n" (show_next res);
-  res
+(
+  match next0 with
+  | Nothing ->
+      Next (1, 1, Body [
+        Inline (List.mapi (fun i case ->
+          Inline (gen_parse_case i case Nothing)
+        ) cases);
+        Inline (gen_lazy_or (List.length cases));
+      ])
+  | Next _ ->
+      let choice_matcher =
+        let next = map_next (fun _code -> Fun [Line "_parse_tail"]) next0 in
+        Body [
+          Line "let _parse_tail =";
+          Block (force_next next0 |> as_fun);
+          Line "in";
+          Inline (List.mapi (fun i case ->
+            Inline (gen_parse_case i case next)
+          ) cases);
+          Inline (gen_lazy_or (List.length cases));
+        ]
+      in
+      map_next_incr (fun _code -> choice_matcher) next0
+) |> (fun res ->
+    printf "gen_choice returns next:%s\n" (show_next res);
+    res
+  )
 
 and gen_parse_case i body next =
   let bodies = as_sequence body in
@@ -492,7 +510,9 @@ and repeat kind body next =
       Block (paren (match_tail |> as_fun));
     ]
   in
-  map_next_incr repeat_matcher next
+  let res = map_next_incr repeat_matcher next in
+  printf "result from repeat: %s\n" (show_next res);
+  res
 
 let is_leaf = function
   | Symbol _

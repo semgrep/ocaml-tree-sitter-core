@@ -2,7 +2,8 @@ SUCCESS_TESTS = \
   seq \
   repeat \
   choice \
-  choice-seq
+  choice-seq \
+  repeat-choice
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \
