@@ -524,9 +524,11 @@ let is_leaf = function
   | Choice _
   | Seq _ -> false
 
-let gen_rule_cache (ident, _rule_body) =
+let gen_rule_cache ~ast_module_name (ident, _rule_body) =
   [
-    Line (sprintf "let cache_%s = Combine.Memoize.create () in" ident);
+    Line (sprintf "let cache_%s : %s.%s Combine.Memoize.t ="
+            ident ast_module_name ident);
+    Block [ Line "Combine.Memoize.create () in" ];
   ]
 
 let gen_rule_parser ~ast_module_name pos rule =
@@ -572,7 +574,8 @@ let gen_rule_parser ~ast_module_name pos rule =
 let gen ~ast_module_name grammar =
   let entrypoint = grammar.entrypoint in
   let rule_caches =
-    List.map (fun rule -> Inline (gen_rule_cache rule)) grammar.rules in
+    List.map (fun rule ->
+      Inline (gen_rule_cache ~ast_module_name rule)) grammar.rules in
   let rule_parsers =
     List.mapi (fun i rule ->
       Inline (gen_rule_parser ~ast_module_name i rule)
