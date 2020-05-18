@@ -145,21 +145,22 @@ let gen_match_end parser_code =
   ]
 
 (*
-   Produce, for num_elts = num_avail = 3:
+   Produce, for head_len = len = 3:
     "(e0, (e1, e2))"
 
-   For num_elts = 2 and num_avail = 5:
+   For head_len = 2 and len = 5:
     "(e0, (e1, tail))"
 *)
-let gen_nested_pairs num_elts num_avail =
-  assert (num_elts <= num_avail);
-  assert (num_elts > 0);
+let gen_nested_pairs ~head_len ~len =
+  printf "gen_nested_pairs head_len:%i len:%i\n" head_len len;
+  assert (head_len <= len);
+  assert (head_len > 0);
   let buf = Buffer.create 50 in
-  let has_tail = (num_elts = num_avail) in
+  let has_tail = (head_len < len) in
   let rec gen buf pos =
-    if pos < num_elts - 1 then
+    if pos < head_len - 1 then
       bprintf buf "(e%i, %a)" pos gen (pos + 1)
-    else if pos = num_elts - 1 then
+    else if pos = head_len - 1 then
       if has_tail then
         bprintf buf "(e%i, tail)" pos
       else
@@ -177,16 +178,16 @@ let gen_nested_pairs num_elts num_avail =
    For num_elts = 2 and num_avail = 5:
     "((e0, e1), tail))"
 *)
-let gen_flat_tuple num_elts num_avail wrap_tuple =
-  assert (num_elts >= 0);
+let gen_flat_tuple ~head_len ~len wrap_tuple =
+  assert (head_len >= 0);
   let elts =
     sprintf "(%s)"
-      (Codegen_util.enum num_elts
+      (Codegen_util.enum head_len
        |> List.map (fun pos -> sprintf "e%i" pos)
        |> String.concat ", ")
     |> wrap_tuple
   in
-  if num_elts = num_avail then
+  if head_len = len then
     elts
   else
     sprintf "(%s, tail)" elts
@@ -213,6 +214,11 @@ let gen_flat_tuple num_elts num_avail wrap_tuple =
 type next =
   | Nothing
   | Next of (int * int * code)
+
+let show_next = function
+  | Nothing -> "nothing"
+  | Next (num_avail, num_keep, _) ->
+      sprintf "(avail:%i, keep:%i, _)" num_avail num_keep
 
 let flatten_next = function
   | Next x -> x
@@ -282,8 +288,12 @@ let flatten_seq_head ?(wrap_tuple = fun x -> x) num_elts next =
   | 0 -> next
   | _ ->
       let num_captured, num_keep, match_seq = flatten_next next in
-      let nested_tuple_pat = gen_nested_pairs num_elts num_keep in
-      let wrapped_result = gen_flat_tuple num_elts num_keep wrap_tuple in
+      let nested_tuple_pat =
+        gen_nested_pairs ~head_len:num_elts ~len:num_captured
+      in
+      let wrapped_result =
+        gen_flat_tuple ~head_len:num_elts ~len:num_captured wrap_tuple
+      in
       let cases = [
         sprintf "Some (%s, nodes)" nested_tuple_pat, [
           Line (sprintf "Some (%s, nodes)" wrapped_result)
@@ -414,8 +424,11 @@ and gen_seqn bodies next =
 *)
 and gen_seqn_head ?wrap_tuple bodies (next : next) : next =
   (* the length of the tuple to extract before the rest of the sequence *)
+  printf "gen_seqn_head bodies next:%s\n%!" (show_next next);
   let num_elts = List.length bodies in
   let next = gen_seqn bodies next in
+  printf "gen_seqn_head: new next:%s\n%!" (show_next next);
+  printf "gen_seqn_head: want to flatten %i elements\n%!" num_elts;
   flatten_seq_head ?wrap_tuple num_elts next
 
 (*
@@ -448,6 +461,8 @@ and gen_choice cases next0 =
   map_next (fun _code -> choice_matcher) next0
 
 and gen_parse_case i body next =
+  printf "gen_parse_case %i next:%s\n%!"
+    i (show_next next);
   let bodies = as_sequence body in
   let wrap_tuple tuple = sprintf "`Case%i %s" i tuple in
   [

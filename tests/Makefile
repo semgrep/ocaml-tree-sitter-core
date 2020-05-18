@@ -1,12 +1,11 @@
-# Run all the tests that are supposed to work.
-.PHONY: test
-test:
-	../scripts/run-test seq repeat choice list_and_option arithmetic
-
-ALL_TESTS = \
+SUCCESS_TESTS = \
   seq \
   repeat \
   choice \
+  choice-seq
+
+ALL_TESTS = \
+  $(SUCCESS_TESTS) \
   list_and_option \
   arithmetic \
   csharp \
@@ -16,6 +15,11 @@ ALL_TESTS = \
   rust \
   scala \
   typescript
+
+# Run all the tests that are supposed to work.
+.PHONY: test
+test:
+	../scripts/run-test $(SUCCESS_TESTS)
 
 # Try to run all the tests. Some may be work in progress and may fail.
 .PHONY: all
