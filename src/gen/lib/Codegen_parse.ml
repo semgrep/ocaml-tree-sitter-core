@@ -404,26 +404,34 @@ and gen_seqn ?wrap_tuple bodies (next : next) : next =
   let next = gen bodies in
   flatten_seq_head ?wrap_tuple num_elts next
 
+(*
+   Generate something like the following:
+
+   let parse_tail = ... in
+   let parse_case0 = ... parse_tail in
+   let parse_case1 = ... parse_tail in
+   ...
+   match parse_case0 nodes with
+   | Some (res, tail), nodes) -> Some (((`Case0 res), tail), nodes)
+   | None ->
+       match parse_case1 nodes with
+       | Some ... -> ...
+       | None -> ...
+*)
 and gen_choice cases next0 =
-  (* Ensure we don't duplicate an unbounded amount of code for each case,
-     by defining a parse_tail function. *)
-  let next = map_next (fun _code -> Fun [Line "_parse_tail"]) next0 in
   let choice_matcher =
+    let next = map_next (fun _code -> Fun [Line "_parse_tail"]) next0 in
     Body [
+      Line "let _parse_tail =";
+      Block (force_next next0 |> as_fun);
+      Line "in";
       Inline (List.mapi (fun i case ->
         Inline (gen_parse_case i case next)
       ) cases);
       Inline (gen_lazy_or (List.length cases));
     ]
   in
-  map_next_any_code (fun code ->
-    [
-      Line "let _parse_tail =";
-      Block (force_next next0 |> as_fun);
-      Line "in";
-      Inline code
-    ]
-  ) (prepend_next choice_matcher next)
+  map_next (fun _code -> choice_matcher) next0
 
 (*
    A case is a sequence, which in addition:
