@@ -104,7 +104,8 @@ Error: exception %s
 Try --help.
 %!"
         (Printexc.to_string e)
-        trace
+        trace;
+      exit 1
 
 let main () =
   Printexc.record_backtrace true;

@@ -1,8 +1,11 @@
 module.exports = grammar({
   name: "repeat",
   rules: {
-    program: $ => repeat(
-      $.variable
+    program: $ => seq(
+      $.variable,
+      repeat(
+        $.variable
+      )
     ),
     variable: $ => /[a-z]+/
   }
