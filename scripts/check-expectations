@@ -6,12 +6,13 @@
 #
 set -eu
 
-root_dirs="$@"
+root_dirs="$*"
 
 missing=0
 errors=0
 total=0
 for root_dir in $root_dirs; do
+  # shellcheck disable=SC2044
   for expected in $(find "$root_dir" -name '*.expected'); do
     output=${expected%.expected}
     if [[ ! -e "$output" ]]; then
