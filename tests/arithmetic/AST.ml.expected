@@ -1,0 +1,92 @@
+type number =
+  string (* pattern "\\d+" *)
+
+type variable =
+  string (* pattern "\\a\\w*" *)
+
+type comment =
+  string (* pattern "#.*" *)
+
+type expression =
+  [
+  | `Case0 of (
+      variable
+    )
+  | `Case1 of (
+      number
+    )
+  | `Case2 of (
+      (
+          expression
+        *
+          string (* "+" *)
+        *
+          expression
+      )
+    )
+  | `Case3 of (
+      (
+          expression
+        *
+          string (* "-" *)
+        *
+          expression
+      )
+    )
+  | `Case4 of (
+      (
+          expression
+        *
+          string (* "*" *)
+        *
+          expression
+      )
+    )
+  | `Case5 of (
+      (
+          expression
+        *
+          string (* "/" *)
+        *
+          expression
+      )
+    )
+  | `Case6 of (
+      (
+          expression
+        *
+          string (* "^" *)
+        *
+          expression
+      )
+    )
+  ]
+
+type assignment_statement =
+  (
+      variable
+    *
+      string (* "=" *)
+    *
+      expression
+    *
+      string (* ";" *)
+  )
+
+type expression_statement =
+  (
+      expression
+    *
+      string (* ";" *)
+  )
+
+type program =
+  [
+  | `Case0 of (
+      assignment_statement
+    )
+  | `Case1 of (
+      expression_statement
+    )
+  ]
+    list (* zero or more *)

@@ -1,26 +1,33 @@
 #!/bin/bash
+#
+# Run tree-sitter's java parser on a sample program, emits a json AST.
+#
+set -eu
 
-example_count=$(find $1 -name '*.java' | wc -l)
+input_dir="."
+output_dir="corpus"
+input_files=$(find "$input_dir" -name '*.java')
 
-echo "$example_count files found"
+count=0
+errors=0
 
-declare -i count
-declare -i error
+mkdir -p "$output_dir"
 
-mkdir corpus
-
-for file in $(find $1 -name '*.java');  do
-    node tree-sitter-parser.js "$file" > corpus/results$count.json
-    if grep -qF "ERROR" corpus/results$count.json;then
-        if grep -qF "ERROR" "$file";then
-            error+=0
-        else 
-            echo "Error found"
-            error+=1
-        fi
-    fi 
-    count+=1
-    echo "Parsed: $count/$example_count"
+for file in $input_files; do
+  count=$(( count + 1))
+  node tree-sitter-parser.js "$file" > corpus/results"$count".json
+  echo -n "$file: "
+  if grep -qF "ERROR" corpus/results"$count".json \
+      && ! grep -qF "ERROR" "$file"; then
+    echo "ERROR"
+    errors=$(( errors + 1 ))
+  else
+    echo "OK"
+  fi
 done
 
-echo "Errors: $error/$example_count"
+cat <<EOF
+Input root: $input_dir
+Output directory: $output_dir
+Errors: $errors/$count
+EOF

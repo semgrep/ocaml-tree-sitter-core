@@ -1,23 +1,7 @@
-*.annot
-*.cmo
-*.cma
-*.cmi
-*.a
-*.o
-*.cmx
-*.cmxs
-*.cmxa
+/bin
 
-# ocamlbuild working directory
-_build/
-
-# ocamlbuild targets
-*.byte
-*.native
-
-# oasis generated files
-setup.data
-setup.log
+# Dune build data
+/_build
 
 # Merlin configuring file for Vim and Emacs
 .merlin
@@ -26,19 +10,8 @@ setup.log
 *.install
 
 # Local OPAM switch
-_opam/
+/_opam/
 
 # Node at root
-node_modules
-package-lock.json
-
-# Node inside tests
-tests/**/node_modules
-tests/**/package.json
-tests/**/package-lock.json
-tests/**/src/
-tests/**/build/
-tests/**/*.js
-tests/**/*.gyp
-tests/**/*.json
-tests/**/*.txt
+/node_modules
+/package-lock.json

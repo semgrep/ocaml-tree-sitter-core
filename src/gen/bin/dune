@@ -1,0 +1,8 @@
+(executable
+  (public_name ocaml-tree-sitter)
+  (name Main)
+  (libraries
+    cmdliner
+    ocaml-tree-sitter.gen
+  )
+)

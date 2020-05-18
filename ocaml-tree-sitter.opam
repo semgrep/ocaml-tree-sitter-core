@@ -1,0 +1,30 @@
+opam-version: "2.0"
+maintainer: "martin@returntocorp.com"
+authors: ["r2c"]
+homepage: "https://github.com/returntocorp/ocaml-tree-sitter"
+bug-reports: "https://github.com/returntocorp/ocaml-tree-sitter/issues"
+dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
+license: "BSD-3-Clause"
+
+build: [
+  ["dune" "build" "-p" name "-j" jobs]
+]
+
+depends: [
+  "atdgen"
+  "cmdliner"
+  "dune" {>= "2.1"}
+  "ocaml"
+  "tsort"
+]
+
+synopsis: ""
+
+description: """
+ocaml-tree-sitter translates a tree-sitter json grammar to OCaml code
+for recovering a full AST from the output for a tree-sitter parser.
+"""
+
+url {
+  src: "git+https://github.com/returntocorp/ocaml-tree-sitter"
+}

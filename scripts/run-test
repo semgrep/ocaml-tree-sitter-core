@@ -1,0 +1,22 @@
+#! /usr/bin/env bash
+#
+# Run a test and compare the result with the expectations.
+#
+# Input: list of test directories, each containing a 'grammar.js'
+#
+set -eu
+
+project_root=$(git rev-parse --show-toplevel)
+ocaml_tree_sitter="$project_root"/bin/ocaml-tree-sitter
+
+for lang_dir in "$@"; do
+  (
+    set -eu
+    cd "$lang_dir"
+    echo "Generate test data for '$lang_dir'"
+    "$project_root"/scripts/generate-test-part1
+    "$project_root"/scripts/generate-test-part2
+  )
+done
+
+"$project_root"/scripts/check-expectations "$@"
