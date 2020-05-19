@@ -5,6 +5,7 @@ SUCCESS_TESTS = \
   choice-seq \
   repeat-choice \
   repeat-optional \
+  optional-seq \
   arithmetic
 
 ALL_TESTS = \

@@ -523,7 +523,7 @@ and repeat kind body next =
   let repeat_matcher match_tail =
     Fun [
       Line parse_repeat;
-      Block (paren (gen_seq body Nothing |> force_next |> as_fun));
+      Block (paren (gen_seq body Nothing |> flatten_seq |> as_fun));
       Block (paren (match_tail |> as_fun));
     ]
   in
