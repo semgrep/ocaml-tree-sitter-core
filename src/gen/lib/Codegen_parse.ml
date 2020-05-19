@@ -29,21 +29,6 @@ open Ocaml_tree_sitter_run
 open Tree_sitter_output_t
 let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
 
-(* Parse a single node which may have children, which also need parsing.
-   The result of parsing the children should be cached.
-   If the parser succeeds, all the children must be consumed. *)
-let _parse_rule type_ parse_children : 'a Combine.reader = fun nodes ->
-  match nodes with
-  | [] -> None
-  | node :: nodes ->
-      if node.type_ = type_ then
-        match parse_children node.children with
-        | Some (res, []) -> Some (res, nodes)
-        | Some (_, _::_) -> assert false
-        | None -> None
-      else
-        None
-
 let parse ~src_file ~json_file : %s.%s option =
   let src = Src_file.load src_file in
 
@@ -580,7 +565,7 @@ let gen_rule_parser ~ast_module_name pos rule =
       Block [
         Line (sprintf "Combine.Memoize.apply cache_%s (" (trans ident));
         Block [
-          Line (sprintf "_parse_rule %S (" ident);
+          Line (sprintf "Combine.parse_rule %S (" ident);
           Block (gen_seq rule_body next_match_end
                  |> flatten_seq
                  |> as_fun);

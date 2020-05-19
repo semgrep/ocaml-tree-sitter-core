@@ -7,6 +7,18 @@ open Tree_sitter_output_t
 
 type 'a reader = node list -> ('a * node list) option
 
+let parse_rule type_ parse_children : 'a reader = fun nodes ->
+  match nodes with
+  | [] -> None
+  | node :: nodes ->
+      if node.type_ = type_ then
+        match parse_children node.children with
+        | Some (res, []) -> Some (res, nodes)
+        | Some (_, _::_) -> assert false
+        | None -> None
+      else
+        None
+
 let parse_fail: 'a reader = fun _nodes -> None
 let parse_success : 'a reader = fun nodes -> Some ((), nodes)
 

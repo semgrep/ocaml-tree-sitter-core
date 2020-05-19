@@ -13,6 +13,13 @@ open Tree_sitter_output_t
 *)
 type 'a reader = node list -> ('a * node list) option
 
+(* [parse_rule name parse_children] returns a parser that expects a node
+   with the given name and parses its children using [parse_children].
+   It is illegal for the [parse_children] function to not consume all
+   the children.
+*)
+val parse_rule : string -> 'a reader -> 'a reader
+
 (* Always fail/succeed without consuming the input. *)
 val parse_fail : 'a reader
 val parse_success : unit reader
