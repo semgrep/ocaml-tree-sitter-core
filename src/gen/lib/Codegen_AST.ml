@@ -53,25 +53,25 @@ let rec format_body body : Indent.t =
         Block [Line "option"]
       ]
   | Seq body_list ->
-      [
-        Line "(";
-        Block (format_seq body_list);
-        Line ")"
-      ]
+      format_seq body_list
 
 and format_choice l =
   List.mapi (fun i body ->
     let name = sprintf "Case%i" i in
-    Inline [
-      Line (sprintf "| `%s of (" name);
+    Block [
+      Line (sprintf "| `%s of" name);
       Block [Block (format_body body)];
-      Line "  )"
     ]
   ) l
 
 and format_seq l =
-  List.map (fun body -> Block (format_body body)) l
-  |> interleave (Line "*")
+  let prod =
+    List.map (fun body -> Block (format_body body)) l
+    |> interleave (Line "*")
+  in
+  match l with
+  | [_] -> prod
+  | _ -> [Paren ("(", prod, ")")]
 
 let format_rule pos len (rule : rule) : Indent.t =
   let is_first = (pos = 0) in
@@ -102,9 +102,9 @@ let format_types grammar =
     List.mapi
       (fun pos x -> Inline (format_rule pos len x))
       rule_group
-    |> interleave (Line "")
   ) grammar.rules
   |> List.flatten
+  |> interleave (Line "")
 
 let generate_dumper grammar =
   [

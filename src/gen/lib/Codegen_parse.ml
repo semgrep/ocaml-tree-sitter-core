@@ -59,12 +59,7 @@ let parse ~src_file ~json_file : %s.%s option =
 
 let gen_parser_name name = "parse_" ^ (trans name)
 
-let paren x =
-  [
-    Line "(";
-    Block x;
-    Line ")";
-  ]
+let paren x = [Paren ("(", x, ")")]
 
 let format_cases cases =
   List.map (fun (pat, e) ->
@@ -129,13 +124,6 @@ let as_sequence body =
   match body with
   | Seq bodies -> bodies
   | body -> [body]
-
-let gen_match_end parser_code =
-  [
-    Line "Combine.parse_last (";
-    Block (parser_code |> as_fun);
-    Line ")";
-  ]
 
 (*
    Produce, for head_len = len = 3:
