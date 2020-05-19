@@ -73,17 +73,17 @@ and format_seq l =
   List.map (fun body -> Block (format_body body)) l
   |> interleave (Line "*")
 
-let format_rule ~use_rec pos len (name, body) : Indent.t =
+let format_rule pos len (rule : rule) : Indent.t =
   let is_first = (pos = 0) in
   let is_last = (pos = len - 1) in
   let type_ =
-    if use_rec && not is_first then
+    if not is_first then
       "and"
     else
       "type"
   in
   let ppx =
-    if not use_rec || is_last then
+    if is_last then
       [
         Line "[@@deriving show {with_path = false}]";
       ]
@@ -91,23 +91,20 @@ let format_rule ~use_rec pos len (name, body) : Indent.t =
       []
   in
   [
-    Line (sprintf "%s %s =" type_ (translate_ident name));
-    Block (format_body body);
+    Line (sprintf "%s %s =" type_ (translate_ident rule.name));
+    Block (format_body rule.body);
     Inline ppx;
   ]
 
 let format_types grammar =
-  let use_rec, rules =
-    let orig_rules = grammar.rules in
-    match Topo_sort.sort orig_rules with
-    | Some reordered_rules -> false, reordered_rules
-    | None -> true, orig_rules
-  in
-  let len = List.length rules in
-  List.mapi
-    (fun pos x -> Inline (format_rule ~use_rec pos len x))
-    rules
-  |> interleave (Line "")
+  List.map (fun rule_group ->
+    let len = List.length rule_group in
+    List.mapi
+      (fun pos x -> Inline (format_rule pos len x))
+      rule_group
+    |> interleave (Line "")
+  ) grammar.rules
+  |> List.flatten
 
 let generate_dumper grammar =
   [

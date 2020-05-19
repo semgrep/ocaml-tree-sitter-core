@@ -528,27 +528,32 @@ let is_leaf = function
   | Optional _
   | Seq _ -> false
 
-let gen_rule_cache ~ast_module_name (ident, _rule_body) =
+let gen_rule_cache ~ast_module_name (rule : rule) =
+  let ident = rule.name in
   [
     Line (sprintf "let cache_%s : %s.%s Combine.Memoize.t ="
             (trans ident) ast_module_name (trans ident));
     Block [ Line "Combine.Memoize.create () in" ];
   ]
 
-let gen_rule_parser ~ast_module_name pos rule =
+let gen_rule_parser ~ast_module_name ~pos ~num_rules rule =
   let is_first = (pos = 0) in
+  let is_alone = (num_rules = 1) in
   let let_ =
-    (* TODO: minimize recursive calls with topological sort of strongly
-       connected components. See https://github.com/dmbaturin/ocaml-tsort *)
-    match is_first with
-    | true -> "let rec"
-    | false -> "and"
+    if is_first then
+      if is_alone && not rule.is_rec then
+        "let"
+      else
+        "let rec"
+    else
+      "and"
   in
-  let ident, rule_body = rule in
-  if is_leaf rule_body then
+  let ident = rule.name in
+  let body = rule.body in
+  if is_leaf body then
     [
       Line (sprintf "%s %s : %s.%s Combine.reader = fun nodes ->"
-              let_ (gen_parser_name (trans ident))
+              let_ (gen_parser_name ident)
               ast_module_name (trans ident));
       Block [
         Line (sprintf "Combine.Memoize.apply cache_%s" (trans ident));
@@ -566,7 +571,7 @@ let gen_rule_parser ~ast_module_name pos rule =
         Line (sprintf "Combine.Memoize.apply cache_%s (" (trans ident));
         Block [
           Line (sprintf "Combine.parse_rule %S (" ident);
-          Block (gen_seq rule_body next_match_end
+          Block (gen_seq body next_match_end
                  |> flatten_seq
                  |> as_fun);
           Line ")";
@@ -577,19 +582,29 @@ let gen_rule_parser ~ast_module_name pos rule =
 
 let gen ~ast_module_name grammar =
   let entrypoint = grammar.entrypoint in
-  let rule_caches =
-    List.map (fun rule ->
-      Inline (gen_rule_cache ~ast_module_name rule)) grammar.rules in
-  let rule_parsers =
-    List.mapi (fun i rule ->
-      Inline (gen_rule_parser ~ast_module_name i rule)
-    ) grammar.rules in
+  let rule_defs =
+    List.map (fun rule_group ->
+      let rule_caches =
+        List.map (fun rule ->
+          Inline (gen_rule_cache ~ast_module_name rule)
+        ) rule_group in
+      let rule_parsers =
+        let num_rules = List.length rule_group in
+        List.mapi (fun i rule ->
+          Inline (gen_rule_parser ~ast_module_name ~pos:i ~num_rules rule)
+        ) rule_group in
+      [
+        Inline rule_caches;
+        Inline rule_parsers;
+        Line "in";
+      ]
+    ) grammar.rules
+    |> List.flatten
+  in
   [
     Inline (preamble ~ast_module_name grammar);
     Block [
-      Inline rule_caches;
-      Inline rule_parsers;
-      Line "in";
+      Inline rule_defs;
       Line (sprintf "Combine.parse_root %s root_node"
               (gen_parser_name (trans entrypoint)));
     ]
