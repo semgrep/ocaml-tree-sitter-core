@@ -86,6 +86,13 @@ and flatten_seq normalized_list =
   )
   |> List.flatten
 
+let make_external_rules externals =
+  List.filter_map (function
+    | Tree_sitter_t.SYMBOL name -> Some (name, String name)
+    | Tree_sitter_t.STRING _ -> None (* no need for a rule *)
+    | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"
+  ) externals
+
 let translate_rules rules =
   List.map (fun (name, body) -> (name, translate body |> normalize)) rules
 
@@ -96,9 +103,10 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
     | (name, _) :: _ -> name
     | _ -> "program"
   in
-  let rules = translate_rules x.rules in
+  let grammar_rules = translate_rules x.rules in
+  let all_rules = make_external_rules x.externals @ grammar_rules in
   {
     name = x.name;
     entrypoint;
-    rules = rules;
+    rules = all_rules;
   }

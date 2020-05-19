@@ -6,15 +6,19 @@
 (* Registry of translated identifiers. *)
 type t
 
-(* All English keywords that can't be used as type names in OCaml or Reason. *)
-val ocaml_reason_keywords : string list
+(* Lowercase identifiers that are keywords in OCaml. *)
 val ocaml_keywords : string list
-val reason_keywords : string list
+
+(* Lowercase identifiers that are built-in type names in OCaml. *)
+val ocaml_builtin_types : string list
+
+(* Union of ocaml_keywords and ocaml_builtin_types *)
+val ocaml_reserved : string list
 
 (*
    Initialize a translation registry, using the specified list of reserved
    keywords, to which an underscore will be appended.
-   The default list is reason_keywords.
+   The default list is ocaml_reserved.
 *)
 val create : ?reserved:string list -> unit -> t
 

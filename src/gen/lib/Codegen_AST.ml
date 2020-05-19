@@ -29,7 +29,7 @@ let rec format_body body : Indent.t =
   match body with
   | Symbol ident -> [Line (translate_ident ident)]
   | String s -> [Line (sprintf "(Loc.t * string (* %S *))" s)]
-  | Pattern s -> [Line (sprintf "(Loc.t * string (* pattern %S *))" s)]
+  | Pattern s -> [Line (sprintf "(Loc.t * string (* %S pattern *))" s)]
   | Blank -> [Line "unit (* blank *)"]
   | Repeat body ->
       [
