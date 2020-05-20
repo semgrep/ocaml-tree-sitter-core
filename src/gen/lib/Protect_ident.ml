@@ -14,15 +14,11 @@ type t = {
   backward: (string, string) Hashtbl.t;
 }
 
-(* All English keywords that can't be used as type names in Reason.
-
-   Taken from the Reason sources at
-   https://github.com/facebook/reason/blob/master/src/reason-parser/reason_declarative_lexer.mll#L85-L144
-*)
-let reason_keywords = [
+let ocaml_keywords = [
   "and";
   "as";
   "assert";
+  "asr";
   "begin";
   "class";
   "constraint";
@@ -36,7 +32,6 @@ let reason_keywords = [
   "false";
   "for";
   "fun";
-  "esfun";
   "function";
   "functor";
   "if";
@@ -44,11 +39,18 @@ let reason_keywords = [
   "include";
   "inherit";
   "initializer";
+  "";
+  "land";
   "lazy";
   "let";
-  "switch";
+  "lor";
+  "lsl";
+  "lsr";
+  "lxor";
+  "match";
+  "method";
+  "mod";
   "module";
-  "pub";
   "mutable";
   "new";
   "nonrec";
@@ -56,7 +58,7 @@ let reason_keywords = [
   "of";
   "open";
   "or";
-  "pri";
+  "private";
   "rec";
   "sig";
   "struct";
@@ -70,14 +72,20 @@ let reason_keywords = [
   "when";
   "while";
   "with";
-  "mod";
-  "land";
-  "lor";
-  "lxor";
-  "lsl";
-  "lsr";
-  "asr";
 ]
+
+let ocaml_builtin_types = [
+  "unit";
+  "bool";
+  "int";
+  "float";
+  "string";
+  "bytes";
+  "list";
+  "array";
+]
+
+let ocaml_reserved = ocaml_keywords @ ocaml_builtin_types
 
 type availability = Available | Taken | Mismatched
 
@@ -93,7 +101,7 @@ let force_add x a b =
   Hashtbl.replace x.forward a b;
   Hashtbl.replace x.backward b a
 
-let create ?(reserved = reason_keywords) () =
+let create ?(reserved = ocaml_reserved) () =
   let x = {
     forward = Hashtbl.create 100;
     backward = Hashtbl.create 100;

@@ -15,7 +15,7 @@ depends: [
   "cmdliner"
   "dune" {>= "2.1"}
   "ocaml"
-  "tsort"
+  "tsort" {>= "2.0"}
 ]
 
 synopsis: ""

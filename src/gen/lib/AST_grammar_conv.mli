@@ -18,30 +18,4 @@
    TODO: clarify what we intend to do with this
 *)
 
-type ident = string
-
-type rule_body =
-  (* atomic (leaves) *)
-  | Symbol of ident
-  | String of string
-  | Pattern of string
-  | Blank
-
-  (* composite (nodes) *)
-  | Repeat of rule_body
-  | Repeat1 of rule_body
-  | Choice of rule_body list
-  | Seq of rule_body list
-
-type rule = (ident * rule_body)
-
-type grammar = {
-  name: string;
-  entrypoint: string;
-  rules: rule list;
-}
-
-(* alias *)
-type t = grammar
-
-val of_tree_sitter : Tree_sitter_t.grammar -> t
+val of_tree_sitter : Tree_sitter_t.grammar -> AST_grammar.t

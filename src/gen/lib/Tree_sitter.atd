@@ -12,7 +12,11 @@ type grammar = {
   ~extras: rule_body list; (* tokens (can only be STRING or PATTERN) *)
   ~inline: ident list; (* rule names *)
   ~conflicts: ident list list; (* list of lists of rule names *)
-  ~externals: rule_body list; (* list of token names? *)
+
+  ~externals: rule_body list;
+    (* list of terminal symbols returned by an external C parser, hence not
+       defined (but used) in the 'rules' section. *)
+
   ?word: ident option; (* token name *)
   ~supertypes: ident list; (* rule names *)
 }

@@ -4,11 +4,13 @@ SUCCESS_TESTS = \
   choice \
   choice-seq \
   repeat-choice \
+  repeat-optional \
+  optional-seq \
+  opt-repeat1 \
   arithmetic
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \
-  list_and_option \
   csharp \
   java \
   nested \

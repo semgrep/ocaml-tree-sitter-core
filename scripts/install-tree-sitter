@@ -12,5 +12,14 @@ project_root=$(git rev-parse --show-toplevel)
   cd "$project_root"
 
   # tree-sitter-javascript is needed to generate grammar.json for typescript.
-  npm install tree-sitter tree-sitter-cli tree-sitter-javascript
+  #
+  # tree-sitter-ruby is because I don't know how to compile the parser,
+  # so our tests use the one from the npm package, whose grammar may
+  # differ. FIXME
+  #
+  npm install \
+    tree-sitter \
+    tree-sitter-cli \
+    tree-sitter-javascript \
+    tree-sitter-ruby
 )

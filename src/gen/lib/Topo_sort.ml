@@ -12,7 +12,8 @@ open AST_grammar
 let rec collect_names acc x =
   match x with
   | Repeat x
-  | Repeat1 x -> collect_names acc x
+  | Repeat1 x
+  | Optional x -> collect_names acc x
   | Choice l
   | Seq l -> List.fold_left (fun acc x -> collect_names acc x) acc l
   | Symbol name -> name :: acc
@@ -22,22 +23,37 @@ let rec collect_names acc x =
 
 let extract_rule_deps (name, body) =
   let deps = collect_names [] body in
-  (name, List.filter ((<>) name) deps)
+  (name, deps)
 
-let extract_deps rules =
-  List.map extract_rule_deps rules
-
-let index_names sorted_names =
+(* Generic function on top of Tsort.sort_strongly_connected_components *)
+let tsort get_deps elts =
+  let deps_data =
+    List.map (fun elt ->
+      let id, deps = get_deps elt in
+      let self_dep = List.mem id deps in
+      (id, deps, self_dep, elt)
+    ) elts
+  in
   let tbl = Hashtbl.create 100 in
-  List.iteri (fun i name -> Hashtbl.replace tbl name i) sorted_names;
-  fun name -> Hashtbl.find_opt tbl name
+  List.iter (fun ((id, _, _, _) as x) -> Hashtbl.replace tbl id x) deps_data;
+  let tsort_input = List.map (fun (id, deps, _, _) -> (id, deps)) deps_data in
+  let tsort_output = Tsort.sort_strongly_connected_components tsort_input in
+  List.map (fun group ->
+    List.map (fun id ->
+      let _id, _deps, self_dep, elt =
+        try Hashtbl.find tbl id
+        with Not_found -> assert false
+      in
+      (self_dep, elt)
+    ) group
+  ) tsort_output
 
+(*
+   Sort a list of objects so as to minimize mutual dependencies in the
+   generated code. Tsort works on elements IDs (rule names = strings).
+   Here we take care of:
+   - extracting the names of the dependencies of each rule
+   - substituting the sorted names with the rules
+*)
 let sort rules =
-  let graph_data = extract_deps rules in
-  match Tsort.sort graph_data with
-  | Tsort.Sorted sorted_names ->
-      let get_index = index_names sorted_names in
-      let cmp (a, _) (b, _) = compare (get_index a) (get_index b) in
-      let sorted_rules = List.sort cmp rules in
-      Some sorted_rules
-  | _ -> None
+  tsort extract_rule_deps rules

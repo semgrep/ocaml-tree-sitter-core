@@ -7,6 +7,18 @@ open Tree_sitter_output_t
 
 type 'a reader = node list -> ('a * node list) option
 
+let parse_rule type_ parse_children : 'a reader = fun nodes ->
+  match nodes with
+  | [] -> None
+  | node :: nodes ->
+      if node.type_ = type_ then
+        match parse_children node.children with
+        | Some (res, []) -> Some (res, nodes)
+        | Some (_, _::_) -> assert false
+        | None -> None
+      else
+        None
+
 let parse_fail: 'a reader = fun _nodes -> None
 let parse_success : 'a reader = fun nodes -> Some ((), nodes)
 
@@ -78,6 +90,18 @@ let parse_repeat1 parse_elt parse_tail nodes =
       | None -> None
       | Some ((repeat_tail, res2), nodes) ->
           Some ((elt :: repeat_tail, res2), nodes)
+
+let parse_optional parse_elt parse_tail nodes =
+  match parse_elt nodes with
+  | None ->
+      (match parse_tail nodes with
+       | None -> None
+       | Some (tail, nodes) -> Some ((None, tail), nodes)
+      )
+  | Some (elt, nodes) ->
+      match parse_tail nodes with
+      | None -> None
+      | Some (tail, nodes) -> Some ((Some elt, tail), nodes)
 
 let map f parse_elt nodes =
   match parse_elt nodes with

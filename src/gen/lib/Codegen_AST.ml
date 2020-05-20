@@ -29,8 +29,8 @@ let rec format_body body : Indent.t =
   match body with
   | Symbol ident -> [Line (translate_ident ident)]
   | String s -> [Line (sprintf "(Loc.t * string (* %S *))" s)]
-  | Pattern s -> [Line (sprintf "(Loc.t * string (* pattern %S *))" s)]
-  | Blank -> [Line "(Loc.t * string (* blank *))"]
+  | Pattern s -> [Line (sprintf "(Loc.t * string (* %S pattern *))" s)]
+  | Blank -> [Line "unit (* blank *)"]
   | Repeat body ->
       [
         Inline (format_body body);
@@ -47,38 +47,43 @@ let rec format_body body : Indent.t =
         Inline (format_choice body_list);
         Line "]"
       ]
-  | Seq body_list ->
+  | Optional body ->
       [
-        Line "(";
-        Block (format_seq body_list);
-        Line ")"
+        Inline (format_body body);
+        Block [Line "option"]
       ]
+  | Seq body_list ->
+      format_seq body_list
 
 and format_choice l =
   List.mapi (fun i body ->
     let name = sprintf "Case%i" i in
-    Inline [
-      Line (sprintf "| `%s of (" name);
+    Block [
+      Line (sprintf "| `%s of" name);
       Block [Block (format_body body)];
-      Line "  )"
     ]
   ) l
 
 and format_seq l =
-  List.map (fun body -> Block (format_body body)) l
-  |> interleave (Line "*")
+  let prod =
+    List.map (fun body -> Block (format_body body)) l
+    |> interleave (Line "*")
+  in
+  match l with
+  | [_] -> prod
+  | _ -> [Paren ("(", prod, ")")]
 
-let format_rule ~use_rec pos len (name, body) : Indent.t =
+let format_rule pos len (rule : rule) : Indent.t =
   let is_first = (pos = 0) in
   let is_last = (pos = len - 1) in
   let type_ =
-    if use_rec && not is_first then
+    if not is_first then
       "and"
     else
       "type"
   in
   let ppx =
-    if not use_rec || is_last then
+    if is_last then
       [
         Line "[@@deriving show {with_path = false}]";
       ]
@@ -86,22 +91,19 @@ let format_rule ~use_rec pos len (name, body) : Indent.t =
       []
   in
   [
-    Line (sprintf "%s %s =" type_ (translate_ident name));
-    Block (format_body body);
+    Line (sprintf "%s %s =" type_ (translate_ident rule.name));
+    Block (format_body rule.body);
     Inline ppx;
   ]
 
 let format_types grammar =
-  let use_rec, rules =
-    let orig_rules = grammar.rules in
-    match Topo_sort.sort orig_rules with
-    | Some reordered_rules -> false, reordered_rules
-    | None -> true, orig_rules
-  in
-  let len = List.length rules in
-  List.mapi
-    (fun pos x -> Inline (format_rule ~use_rec pos len x))
-    rules
+  List.map (fun rule_group ->
+    let len = List.length rule_group in
+    List.mapi
+      (fun pos x -> Inline (format_rule pos len x))
+      rule_group
+  ) grammar.rules
+  |> List.flatten
   |> interleave (Line "")
 
 let generate_dumper grammar =

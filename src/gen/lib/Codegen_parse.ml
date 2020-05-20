@@ -10,6 +10,13 @@ open Indent.Types
 
 let debug = false
 
+(* All rule names and other names directly defined in grammar.json
+   must go through this translation. For example, it turns
+   "true" into "true_" because "true" is a reserved keyword in the generated
+   code.
+*)
+let trans = Codegen_util.translate_ident
+
 let preamble ~ast_module_name grammar =
   [
     Line (sprintf "\
@@ -18,24 +25,11 @@ let preamble ~ast_module_name grammar =
 (* Disable warnings against unused variables *)
 [@@@warning \"-26-27\"]
 
+let debug = %B
+
 open Ocaml_tree_sitter_run
 open Tree_sitter_output_t
 let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
-
-(* Parse a single node which may have children, which also need parsing.
-   The result of parsing the children should be cached.
-   If the parser succeeds, all the children must be consumed. *)
-let _parse_rule type_ parse_children : 'a Combine.reader = fun nodes ->
-  match nodes with
-  | [] -> None
-  | node :: nodes ->
-      if node.type_ = type_ then
-        match parse_children node.children with
-        | Some (res, []) -> Some (res, nodes)
-        | Some (_, _::_) -> assert false
-        | None -> None
-      else
-        None
 
 let parse ~src_file ~json_file : %s.%s option =
   let src = Src_file.load src_file in
@@ -54,6 +48,9 @@ let parse ~src_file ~json_file : %s.%s option =
      We extract its location and source code (token). *)
   let _parse_leaf_rule type_ =
     Combine.parse_node (fun x ->
+      if debug then
+        Printf.printf \"_parse_leaf_rule %%S input:%%S\\n%%!\" type_ x.type_;
+
       if x.type_ = type_ then
         Some (get_loc x, get_token x)
       else
@@ -61,18 +58,14 @@ let parse ~src_file ~json_file : %s.%s option =
     )
   in
 "
-            ast_module_name grammar.entrypoint
+            debug
+            ast_module_name (trans grammar.entrypoint)
          )
   ]
 
-let gen_parser_name name = "parse_" ^ name
+let gen_parser_name name = "parse_" ^ (trans name)
 
-let paren x =
-  [
-    Line "(";
-    Block x;
-    Line ")";
-  ]
+let paren x = [Paren ("(", x, ")")]
 
 let format_cases cases =
   List.map (fun (pat, e) ->
@@ -137,13 +130,6 @@ let as_sequence body =
   match body with
   | Seq bodies -> bodies
   | body -> [body]
-
-let gen_match_end parser_code =
-  [
-    Line "Combine.parse_last (";
-    Block (parser_code |> as_fun);
-    Line ")";
-  ]
 
 (*
    Produce, for head_len = len = 3:
@@ -232,7 +218,8 @@ let force_next next =
    of the sequence. *)
 let map_next f next =
   match next with
-  | Nothing -> Nothing
+  | Nothing ->
+      Nothing
   | Next (num_captured, num_keep, code) ->
       Next (num_captured, num_keep, f code)
 
@@ -240,9 +227,10 @@ let map_next f next =
    keeps one more element. *)
 let map_next_incr f next =
   match next with
-  | Nothing -> Nothing
+  | Nothing ->
+      Next (2, 1, f None)
   | Next (num_captured, num_keep, code) ->
-      Next (num_captured + 1, num_keep + 1, f code)
+      Next (num_captured + 1, num_keep + 1, f (Some code))
 
 let match_end = Fun [Line "Combine.parse_end"]
 let match_success = Fun [Line "Combine.parse_success"]
@@ -250,7 +238,7 @@ let match_success = Fun [Line "Combine.parse_success"]
 let next_match_end = Next (1, 0, match_end)
 
 (* Put a matcher in front a sequence of matchers. *)
-let prepend_next match_elt next =
+let prepend match_elt next =
   match next with
   | Nothing ->
       Next (1, 1, match_elt)
@@ -388,26 +376,26 @@ let rec gen_seq body (next : next) : next =
   match body with
   | Symbol s ->
       (* (symbol, tail) *)
-      prepend_next (Fun [
-        Line (sprintf "parse_%s" s)
+      prepend (Fun [
+        Line (sprintf "parse_%s" (trans s))
       ]) next
 
   | String s ->
       (* (string, tail) *)
-      prepend_next (Fun [
+      prepend (Fun [
         Line (sprintf "_parse_leaf_rule %S" s)
       ]) next
 
   | Pattern s ->
       (* (pattern, tail) *)
-      prepend_next (Fun [
+      prepend (Fun [
         Line (sprintf "_parse_leaf_rule %S" s) (* does this happen? *)
       ]) next
 
   | Blank ->
-      (* (blank, tail) *)
-      prepend_next (Fun [
-        Line (sprintf "_parse_token %S" "blank" (* ? *))
+      (* tail) *)
+      prepend (Fun [
+        Line "Combine.parse_success";
       ]) next
 
   | Repeat body ->
@@ -421,6 +409,10 @@ let rec gen_seq body (next : next) : next =
   | Choice bodies ->
       (* (choice, tail) *)
       gen_choice bodies next
+
+  | Optional body ->
+      (* (option, tail) *)
+      repeat `Optional body next
 
   | Seq bodies ->
       (* (e1, (e2, ...(en, tail))) *)
@@ -507,12 +499,18 @@ and repeat kind body next =
     match kind with
     | `Repeat -> "Combine.parse_repeat"
     | `Repeat1 -> "Combine.parse_repeat1"
+    | `Optional -> "Combine.parse_optional"
   in
-  let repeat_matcher match_tail =
+  let repeat_matcher opt_tail_matcher =
+    let tail_matcher =
+      match opt_tail_matcher with
+      | None -> match_success
+      | Some tail_matcher -> tail_matcher
+    in
     Fun [
       Line parse_repeat;
-      Block (paren (gen_seq body Nothing |> force_next |> as_fun));
-      Block (paren (match_tail |> as_fun));
+      Block (paren (gen_seq body Nothing |> flatten_seq |> as_fun));
+      Block (paren (tail_matcher |> as_fun));
     ]
   in
   let res = map_next_incr repeat_matcher next in
@@ -521,39 +519,45 @@ and repeat kind body next =
   res
 
 let is_leaf = function
-  | Symbol _
   | String _
   | Pattern _
   | Blank -> true
+  | Symbol _
   | Repeat _
   | Repeat1 _
   | Choice _
+  | Optional _
   | Seq _ -> false
 
-let gen_rule_cache ~ast_module_name (ident, _rule_body) =
+let gen_rule_cache ~ast_module_name (rule : rule) =
+  let ident = rule.name in
   [
     Line (sprintf "let cache_%s : %s.%s Combine.Memoize.t ="
-            ident ast_module_name ident);
+            (trans ident) ast_module_name (trans ident));
     Block [ Line "Combine.Memoize.create () in" ];
   ]
 
-let gen_rule_parser ~ast_module_name pos rule =
+let gen_rule_parser ~ast_module_name ~pos ~num_rules rule =
   let is_first = (pos = 0) in
+  let is_alone = (num_rules = 1) in
   let let_ =
-    (* TODO: minimize recursive calls with topological sort of strongly
-       connected components. See https://github.com/dmbaturin/ocaml-tsort *)
-    match is_first with
-    | true -> "let rec"
-    | false -> "and"
+    if is_first then
+      if is_alone && not rule.is_rec then
+        "let"
+      else
+        "let rec"
+    else
+      "and"
   in
-  let ident, rule_body = rule in
-  if is_leaf rule_body then
+  let ident = rule.name in
+  let body = rule.body in
+  if is_leaf body then
     [
       Line (sprintf "%s %s : %s.%s Combine.reader = fun nodes ->"
               let_ (gen_parser_name ident)
-              ast_module_name ident);
+              ast_module_name (trans ident));
       Block [
-        Line (sprintf "Combine.Memoize.apply cache_%s" ident);
+        Line (sprintf "Combine.Memoize.apply cache_%s" (trans ident));
         Block [
           Line (sprintf "(_parse_leaf_rule %S) nodes" ident);
         ]
@@ -563,12 +567,15 @@ let gen_rule_parser ~ast_module_name pos rule =
     [
       Line (sprintf "%s %s : %s.%s Combine.reader = fun nodes ->"
               let_ (gen_parser_name ident)
-              ast_module_name ident);
+              ast_module_name (trans ident));
       Block [
-        Line (sprintf "Combine.Memoize.apply cache_%s (" ident);
+        Line (sprintf "if debug then \
+                         Printf.printf \"try rule %%S\\n%%!\" %S;"
+                (trans ident));
+        Line (sprintf "Combine.Memoize.apply cache_%s (" (trans ident));
         Block [
-          Line (sprintf "_parse_rule %S (" ident);
-          Block (gen_seq rule_body next_match_end
+          Line (sprintf "Combine.parse_rule %S (" ident);
+          Block (gen_seq body next_match_end
                  |> flatten_seq
                  |> as_fun);
           Line ")";
@@ -579,21 +586,31 @@ let gen_rule_parser ~ast_module_name pos rule =
 
 let gen ~ast_module_name grammar =
   let entrypoint = grammar.entrypoint in
-  let rule_caches =
-    List.map (fun rule ->
-      Inline (gen_rule_cache ~ast_module_name rule)) grammar.rules in
-  let rule_parsers =
-    List.mapi (fun i rule ->
-      Inline (gen_rule_parser ~ast_module_name i rule)
-    ) grammar.rules in
+  let rule_defs =
+    List.map (fun rule_group ->
+      let rule_caches =
+        List.map (fun rule ->
+          Inline (gen_rule_cache ~ast_module_name rule)
+        ) rule_group in
+      let rule_parsers =
+        let num_rules = List.length rule_group in
+        List.mapi (fun i rule ->
+          Inline (gen_rule_parser ~ast_module_name ~pos:i ~num_rules rule)
+        ) rule_group in
+      [
+        Inline rule_caches;
+        Inline rule_parsers;
+        Line "in";
+      ]
+    ) grammar.rules
+    |> List.flatten
+  in
   [
     Inline (preamble ~ast_module_name grammar);
     Block [
-      Inline rule_caches;
-      Inline rule_parsers;
-      Line "in";
+      Inline rule_defs;
       Line (sprintf "Combine.parse_root %s root_node"
-              (gen_parser_name entrypoint));
+              (gen_parser_name (trans entrypoint)));
     ]
   ]
 

@@ -10,8 +10,10 @@
    OCaml functions from type definitions)
 *)
 
-(* Sort rules topologically, such that a rule may only reference earlier
-   rules. A single rule may reference itself but multiple rules may not
-   reference each other. In such case, the result is None.
+(* Group rules and sort them topologically, such that a rule may only
+   reference earlier rules or rules in the same group.
+   The boolean indicates whether the given rule references itself.
 *)
-val sort : AST_grammar.rule list -> AST_grammar.rule list option
+val sort :
+  (string * AST_grammar.rule_body) list ->
+  (bool * (string * AST_grammar.rule_body)) list list
