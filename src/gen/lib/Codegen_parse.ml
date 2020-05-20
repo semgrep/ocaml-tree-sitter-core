@@ -8,7 +8,7 @@ open Printf
 open AST_grammar
 open Indent.Types
 
-let debug = true
+let debug = false
 
 (* All rule names and other names directly defined in grammar.json
    must go through this translation. For example, it turns
