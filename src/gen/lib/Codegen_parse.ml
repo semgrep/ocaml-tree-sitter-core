@@ -212,7 +212,8 @@ let force_next next =
    of the sequence. *)
 let map_next f next =
   match next with
-  | Nothing -> Nothing
+  | Nothing ->
+      Nothing
   | Next (num_captured, num_keep, code) ->
       Next (num_captured, num_keep, f code)
 
@@ -220,9 +221,10 @@ let map_next f next =
    keeps one more element. *)
 let map_next_incr f next =
   match next with
-  | Nothing -> Nothing
+  | Nothing ->
+      Next (2, 1, f None)
   | Next (num_captured, num_keep, code) ->
-      Next (num_captured + 1, num_keep + 1, f code)
+      Next (num_captured + 1, num_keep + 1, f (Some code))
 
 let match_end = Fun [Line "Combine.parse_end"]
 let match_success = Fun [Line "Combine.parse_success"]
@@ -493,11 +495,16 @@ and repeat kind body next =
     | `Repeat1 -> "Combine.parse_repeat1"
     | `Optional -> "Combine.parse_optional"
   in
-  let repeat_matcher match_tail =
+  let repeat_matcher opt_tail_matcher =
+    let tail_matcher =
+      match opt_tail_matcher with
+      | None -> match_success
+      | Some tail_matcher -> tail_matcher
+    in
     Fun [
       Line parse_repeat;
       Block (paren (gen_seq body Nothing |> flatten_seq |> as_fun));
-      Block (paren (match_tail |> as_fun));
+      Block (paren (tail_matcher |> as_fun));
     ]
   in
   let res = map_next_incr repeat_matcher next in
