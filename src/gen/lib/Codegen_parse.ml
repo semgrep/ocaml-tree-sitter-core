@@ -513,10 +513,10 @@ and repeat kind body next =
   res
 
 let is_leaf = function
-  | Symbol _
   | String _
   | Pattern _
   | Blank -> true
+  | Symbol _
   | Repeat _
   | Repeat1 _
   | Choice _
