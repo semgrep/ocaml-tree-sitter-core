@@ -5,7 +5,7 @@ PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
 #
 .PHONY: all
 all:
-	./tree-sitter-ruby.js examples/ex1.rb.src > examples/ex1.rb.json
+	./tree-sitter-ruby.js examples/ex1.rb.src | ydump > examples/ex1.rb.json
 	mkdir -p src
 	cp $(PROJECT_ROOT)/node_modules/tree-sitter-ruby/src/grammar.json src
 	$(PROJECT_ROOT)/scripts/generate-test-part2

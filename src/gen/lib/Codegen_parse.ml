@@ -8,7 +8,7 @@ open Printf
 open AST_grammar
 open Indent.Types
 
-let debug = false
+let debug = true
 
 (* All rule names and other names directly defined in grammar.json
    must go through this translation. For example, it turns
@@ -24,6 +24,8 @@ let preamble ~ast_module_name grammar =
 
 (* Disable warnings against unused variables *)
 [@@@warning \"-26-27\"]
+
+let debug = %B
 
 open Ocaml_tree_sitter_run
 open Tree_sitter_output_t
@@ -46,6 +48,9 @@ let parse ~src_file ~json_file : %s.%s option =
      We extract its location and source code (token). *)
   let _parse_leaf_rule type_ =
     Combine.parse_node (fun x ->
+      if debug then
+        Printf.printf \"_parse_leaf_rule %%S input:%%S\\n%%!\" type_ x.type_;
+
       if x.type_ = type_ then
         Some (get_loc x, get_token x)
       else
@@ -53,6 +58,7 @@ let parse ~src_file ~json_file : %s.%s option =
     )
   in
 "
+            debug
             ast_module_name (trans grammar.entrypoint)
          )
   ]
@@ -563,6 +569,9 @@ let gen_rule_parser ~ast_module_name ~pos ~num_rules rule =
               let_ (gen_parser_name ident)
               ast_module_name (trans ident));
       Block [
+        Line (sprintf "if debug then \
+                         Printf.printf \"try rule %%S\\n%%!\" %S;"
+                (trans ident));
         Line (sprintf "Combine.Memoize.apply cache_%s (" (trans ident));
         Block [
           Line (sprintf "Combine.parse_rule %S (" ident);
