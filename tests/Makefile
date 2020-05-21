@@ -7,7 +7,9 @@ SUCCESS_TESTS = \
   repeat-optional \
   optional-seq \
   opt-repeat1 \
-  arithmetic
+  arithmetic \
+  name-alias \
+  string-alias
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \

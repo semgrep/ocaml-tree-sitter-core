@@ -45,12 +45,10 @@ let extract_named_aliases_from_rule acc (_rule_name, rule_body) =
     | PREC_DYNAMIC (_, rule_body)
     | PREC_LEFT (_, rule_body)
     | PREC_RIGHT (_, rule_body) -> extract acc rule_body
-    | ALIAS alias ->
-        let acc =
-          if alias.named then alias :: acc
-          else acc
-        in
-        extract acc rule_body
+    | ALIAS { named = false; _ } -> acc
+    | ALIAS ({ named = true; _ } as alias) ->
+        let acc = alias :: acc in
+        extract acc alias.content
 
     | FIELD (_ident, rule_body) -> extract acc rule_body
     | IMMEDIATE_TOKEN rule_body

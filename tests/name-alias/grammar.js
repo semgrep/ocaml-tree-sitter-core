@@ -1,8 +1,8 @@
 module.exports = grammar({
-  name: "opt_repeat1",
+  name: "name_alias",
   rules: {
     program: $ => optional(
-      $.numbers
+      alias($.numbers, $.thing)
     ),
     numbers: $ => repeat1($.number),
     number: $ => /[0-9]+/

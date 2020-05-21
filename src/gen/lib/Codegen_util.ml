@@ -2,6 +2,8 @@
    Various reusable utilities involved in code generation.
 *)
 
+open Printf
+
 let translate_ident =
   let registry = Protect_ident.create () in
   fun ident -> Protect_ident.translate registry ident
@@ -28,3 +30,77 @@ let fold_righti f xs init_acc =
 (* Create the list [0; 1; ...; n-1] *)
 let enum n =
   Array.init n (fun i -> i) |> Array.to_list
+
+let format_typedef pos def =
+  let open Indent.Types in
+  let is_first = (pos = 0) in
+  let type_ =
+    if is_first then
+      "type"
+    else
+      "and"
+  in
+  match def with
+  | Line first_line :: rest ->
+      Line (sprintf "%s %s" type_ first_line) :: rest
+  | _ ->
+      Line type_ :: def
+
+(* Insert the correct 'type' or 'and' from a list of OCaml
+   type definitions.
+   The first item must be a line without the 'type'.
+*)
+let format_typedefs defs =
+  List.mapi format_typedef defs
+  |> List.flatten
+
+let format_binding ~is_rec ~is_local pos binding =
+  let open Indent.Types in
+  let is_first = (pos = 0) in
+  let let_ =
+    if is_first then (
+      if is_rec then
+        "let rec"
+      else
+        "let"
+    )
+    else (
+      if is_rec then
+        "and"
+      else
+        "let"
+    )
+  in
+  let individual_in =
+    if is_local && not is_rec then
+      [Line "in"]
+    else
+      []
+  in
+  (match binding with
+   | Line first_line :: rest ->
+       Line (sprintf "%s %s" let_ first_line) :: rest
+   | _ ->
+       Line let_ :: binding
+  ) @ individual_in
+
+(* Insert the correct 'let', 'let rec', 'and', 'in' from a list of OCaml
+   bindings.
+   The first item must be a line without the 'let'.
+*)
+let format_bindings ~is_rec ~is_local bindings =
+  let open Indent.Types in
+  match bindings with
+  | [] -> []
+  | bindings ->
+      let final_in =
+        if is_local && is_rec then
+          [Line "in"]
+        else
+          []
+      in
+      [
+        Inline (List.mapi (format_binding ~is_rec ~is_local) bindings
+                |> List.flatten);
+        Inline final_in;
+      ]

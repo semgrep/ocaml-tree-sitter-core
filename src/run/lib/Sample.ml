@@ -48,10 +48,10 @@ module Parse = struct
       )
     in
 
-    let tbl_expression = Combine.Memoize.create () in
-    let tbl_node_statement = Combine.Memoize.create () in
-    let tbl_children_statement = Combine.Memoize.create () in
-    let tbl_node_stmt = Combine.Memoize.create () in
+    let cache_expression = Combine.Memoize.create () in
+    let cache_node_statement = Combine.Memoize.create () in
+    let cache_children_statement = Combine.Memoize.create () in
+    let cache_node_stmt = Combine.Memoize.create () in
 
     let parse_number : AST.number Combine.reader = fun nodes ->
       (
@@ -115,7 +115,7 @@ module Parse = struct
       ) nodes
     in
     let parse_children_statement : AST.statement Combine.reader = fun nodes ->
-      Combine.Memoize.apply tbl_children_statement (
+      Combine.Memoize.apply cache_children_statement (
         (fun nodes ->
            (* (parse_expression &&& parse_leaf_rule ";" &&& parse_end) nodes *)
            let parse_nested =
@@ -133,13 +133,13 @@ module Parse = struct
       ) nodes
     in
     let parse_node_statement : AST.statement Combine.reader =
-      Combine.Memoize.apply tbl_node_statement (
+      Combine.Memoize.apply cache_node_statement (
         Combine.parse_rule "statement" parse_children_statement
       )
     in
     (* alias *)
     let parse_node_stmt : AST.stmt Combine.reader =
-      Combine.Memoize.apply tbl_node_stmt (
+      Combine.Memoize.apply cache_node_stmt (
         Combine.parse_rule "stmt" parse_children_statement
       )
     in

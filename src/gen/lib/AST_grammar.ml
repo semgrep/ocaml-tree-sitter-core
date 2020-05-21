@@ -16,11 +16,9 @@ type alias = {
 
 type rule_body =
   (* atomic (leaves) *)
-  | Symbol of (ident * ident option)
+  | Symbol of (ident * alias option)
      (* reference to a named rule. The optional part is the name shown to us
-        in the parsing result due to an ALIAS.
-        The identifier on the left is a globally-unique rule name, while
-        the optional alias isn't necessarily. *)
+        in the parsing result due to an ALIAS. *)
 
   | String of string
      (* constant string as exposed in the parsing output from tree-sitter.

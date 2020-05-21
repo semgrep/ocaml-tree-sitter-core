@@ -10,7 +10,7 @@ let translate_alias find_alias (alias : Tree_sitter_t.alias) =
     (match alias.content with
      | SYMBOL rule_name ->
          let alias_with_id : alias = find_alias rule_name alias.value in
-         Symbol (alias_with_id.id, Some alias_with_id.name)
+         Symbol (rule_name, Some alias_with_id)
      | _ ->
          failwith
            (sprintf "Unexpected structure for ALIAS node %S" alias.value)

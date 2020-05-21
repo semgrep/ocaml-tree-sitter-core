@@ -7,7 +7,10 @@
    and it could be worth revisiting.
 *)
 
+open Printf
 open AST_grammar
+
+let debug = true
 
 let rec collect_names acc x =
   match x with
@@ -23,9 +26,12 @@ let rec collect_names acc x =
 
 let extract_rule_deps (name, body) =
   let deps = collect_names [] body in
+  if debug then
+    printf "%s -> %s\n%!" name (String.concat " " deps);
   (name, deps)
 
-(* Generic function on top of Tsort.sort_strongly_connected_components *)
+(* Generic function on top of Tsort.sort_strongly_connected_components.
+   Fails with exception if there's no entry for a dependency. *)
 let tsort get_deps elts =
   let deps_data =
     List.map (fun elt ->
@@ -42,7 +48,7 @@ let tsort get_deps elts =
     List.map (fun id ->
       let _id, _deps, self_dep, elt =
         try Hashtbl.find tbl id
-        with Not_found -> assert false
+        with Not_found -> invalid_arg "tsort: found some unknown dependencies"
       in
       (self_dep, elt)
     ) group
