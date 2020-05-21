@@ -18,12 +18,51 @@ type alias = {
 type rule_body =
   (* atomic (leaves) *)
   | Symbol of (ident * alias option)
-     (* reference to a named rule. The optional part is the name shown to us
-        in the parsing result due to an ALIAS. *)
+     (* reference to a named rule. A plain rule name looks like this in
+        grammar.js:
+
+          $.numbers
+
+        here we get:
+
+          Symbol ("numbers", None)
+
+        The optional part is the name shown to us in the parsing result due to
+        a "named ALIAS" wrapping around the rule name.
+
+        grammar.js:
+
+          alias($.numbers, $.items)
+
+        here:
+
+          Symbol ("numbers", Some { id = "items5";
+                                    name = "items" })
+     *)
 
   | String of string
      (* constant string as exposed in the parsing output from tree-sitter.
-        It is either the result of a STRING or an anonymous ALIAS. *)
+        It is either the result of a STRING or an anonymous ALIAS:
+
+        Sample string node in grammar.js:
+
+          "*"
+
+        here:
+
+          String "*"       (* token name, showing up as '"type": "*"' in
+                              tree-sitter output. Happens to be also the
+                              actual token obtained at parsing time. *)
+
+        Sample anonymous alias:
+
+          alias($.complicated_times, "times")
+
+        here:
+
+          String "times"   (* not an actual token, but its name, showing
+                              up as '"type": "times"' in tree-sitter output. *)
+    *)
 
   | Pattern of string
   | Blank

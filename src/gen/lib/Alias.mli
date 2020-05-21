@@ -90,7 +90,7 @@
   The authors of grammars could totally do without named aliases.
   The example grammar would become:
 
-       module.exports = grammar({
+     module.exports = grammar({
        name: "name_alias",
        rules: {
          program: $ => optional(
