@@ -55,31 +55,42 @@ let parse_last parse_elt nodes =
   | Some (_res1, _) -> None
   | None -> None
 
+(* Each time we make forward progress in a repeat, we take a snapshot
+   of the progress at this point: captured elements so far and remaining input
+   nodes.
+*)
+let push elt remaining_nodes stack =
+  let stack_elt =
+    match stack with
+    | (prev_elts, _) :: _ -> (elt :: prev_elts, remaining_nodes)
+    | [] -> assert false
+  in
+  stack_elt :: stack
+
+let rec find_longest_match parse_elt stack nodes =
+  match parse_elt nodes with
+  | None -> stack
+  | Some (elt, remaining_nodes) ->
+      let stack = push elt remaining_nodes stack in
+      find_longest_match parse_elt stack remaining_nodes
+
 (* Repeat with backtracking, starting from longest match.
    We could disable some or all backtracking here.
 *)
 let parse_repeat parse_elt parse_tail nodes =
-  let rec find_longest_match stack nodes =
-    match parse_elt nodes with
-    | None -> stack
-    | Some (elt, remaining_nodes) ->
-        find_longest_match ((elt, remaining_nodes) :: stack) remaining_nodes
-  in
-  let extract_list stack =
-    List.rev_map fst stack
-  in
   let rec backtrack stack =
     match stack with
     | [] -> None
-    | (_elt, nodes) :: remaining_stack ->
+    | (rev_elts, nodes) :: remaining_stack ->
         match parse_tail nodes with
         | Some (tail, nodes) ->
-            let res = (extract_list stack, tail) in
+            let res = (List.rev rev_elts, tail) in
             Some (res, nodes)
         | None ->
             backtrack remaining_stack
   in
-  let matches = find_longest_match [] nodes in
+  let first_snapshot = ([], nodes) in
+  let matches = find_longest_match parse_elt [first_snapshot] nodes in
   backtrack matches
 
 let parse_repeat1 parse_elt parse_tail nodes =

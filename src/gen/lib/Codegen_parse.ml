@@ -8,7 +8,13 @@ open Printf
 open AST_grammar
 open Indent.Types
 
-let debug = false
+let debug = true
+
+let debug_log s =
+  if debug then
+    Line (sprintf "print_endline %S;" s)
+  else
+    Inline []
 
 (* All rule names and other names directly defined in grammar.json
    must go through this translation. For example, it turns
@@ -49,7 +55,7 @@ let parse ~src_file ~json_file : %s.%s option =
   let _parse_leaf_rule type_ =
     Combine.parse_node (fun x ->
       if debug then
-        Printf.printf \"_parse_leaf_rule %%S input:%%S\\n%%!\" type_ x.type_;
+        Printf.printf \"_parse_leaf_rule %%S <- %%S\\n%%!\" type_ x.type_;
 
       if x.type_ = type_ then
         Some (get_loc x, get_token x)
@@ -534,11 +540,12 @@ let is_leaf = function
 
 let gen_rule_cache ~ast_module_name (rule : rule) =
   let rule_name = rule.name in
-  let create = "Combine.Memoize.create () in" in
+  let create = Block [Line "Combine.Memoize.create () in"] in
   let children_cache =
     [
-      Line (sprintf "let cache_children_%s : %s.%s Combine.Memoize.t = %s"
-              (trans rule_name) ast_module_name (trans rule_name) create)
+      Line (sprintf "let cache_children_%s : %s.%s Combine.Memoize.t ="
+              (trans rule_name) ast_module_name (trans rule_name));
+      create;
     ]
   in
   let node_names =
@@ -546,8 +553,9 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
   let node_caches =
     List.map (fun name ->
       Inline [
-        Line (sprintf "let cache_node_%s : %s.%s Combine.Memoize.t = %s"
-                (trans name) ast_module_name (trans name) create);
+        Line (sprintf "let cache_node_%s : %s.%s Combine.Memoize.t ="
+                (trans name) ast_module_name (trans name));
+        create
       ]
     ) node_names
   in
@@ -572,6 +580,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         Line (sprintf "parse_node_%s : %s.%s Combine.reader = fun nodes ->"
                 (trans rule_name)
                 ast_module_name (trans rule_name));
+        debug_log (sprintf "call parse_node_%s" (trans rule_name));
         Block [
           Line (sprintf "Combine.Memoize.apply cache_node_%s"
                   (trans rule_name));
@@ -588,6 +597,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         Line (sprintf "parse_children_%s : %s.%s Combine.reader = fun nodes ->"
                 (trans rule_name)
                 ast_module_name (trans rule_name));
+        debug_log (sprintf "call parse_children_%s" (trans rule_name));
         Block [
           Line (sprintf "Combine.Memoize.apply cache_children_%s ("
                   (trans rule_name));
@@ -603,6 +613,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         Line (sprintf "parse_node_%s : %s.%s Combine.reader = fun nodes ->"
                 (trans id)
                 ast_module_name (trans id));
+        debug_log (sprintf "call parse_node_%s" (trans id));
         Block [
           Line (sprintf "Combine.Memoize.apply cache_node_%s ("
                   (trans id));

@@ -30,7 +30,7 @@ let test_prefix_prefix () =
   assert (add "x_" = "x__");
   assert (add "x_" = "x_2")
 
-let test = "Disambiguate", [
+let test = "Fresh", [
   "simple", `Quick, test_simple;
   "prefix of prefix", `Quick, test_prefix_prefix;
 ]
