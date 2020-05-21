@@ -61,10 +61,37 @@ type rule_body =
         here:
 
           String "times"   (* not an actual token, but its name, showing
-                              up as '"type": "times"' in tree-sitter output. *)
+                              up as "type":"times" in tree-sitter output. *)
     *)
 
   | Pattern of string
+     (* A regexp used here as a name for the pattern.
+
+        Sample pattern node in grammar.js:
+
+          /[a-z]+/
+
+        here:
+
+          Pattern "[a-z]+"  (* shows up as "type":"[a-z]+" in tree-sitter
+                               output. The actual token is extracted from
+                               the source file using location fields. *)
+
+        == Problem ==
+
+        grammar.js:
+
+          choice(/a+/, "a+")
+
+        here:
+
+          Choice [Pattern "a+", String "a+"]
+
+        This presumably results in indistinguishable "type":"a+" fields in the
+        tree-sitter output. This is problem if they must be interpreted
+        differently.
+     *)
+
   | Blank
 
   (* composite (nodes) *)
