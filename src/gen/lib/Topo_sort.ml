@@ -10,7 +10,7 @@
 open Printf
 open AST_grammar
 
-let debug = true
+let debug = false
 
 let rec collect_names acc x =
   match x with
