@@ -27,7 +27,8 @@ open Ocaml_tree_sitter_run
 
 let rec format_body body : Indent.t =
   match body with
-  | Symbol ident -> [Line (translate_ident ident)]
+  | Symbol (ident, None) -> [Line (translate_ident ident)]
+  | Symbol (_ident, Some alias) -> [Line (translate_ident alias)]
   | String s -> [Line (sprintf "(Loc.t * string (* %S *))" s)]
   | Pattern s -> [Line (sprintf "(Loc.t * string (* %S pattern *))" s)]
   | Blank -> [Line "unit (* blank *)"]

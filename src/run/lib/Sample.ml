@@ -17,6 +17,7 @@ module AST = struct
     | `Case2 of (expression * (Loc.t * string (* "+" *)) * expression)
   ]
   type statement = (expression * (Loc.t * string (* ";" *)))
+  type stmt = statement (* alias *)
   type program = statement list (* zero or more *)
 end
 
@@ -37,15 +38,6 @@ module Parse = struct
     let get_token x =
       Src_file.get_token input x.startPosition x.endPosition in
 
-    let _parse_rule type_ parse_children =
-      Combine.parse_node (fun x ->
-        if x.type_ = type_ then
-          parse_children x.children
-        else
-          None
-      )
-    in
-
     (* childless rule, from which we extract location and token. *)
     let _parse_leaf_rule type_ =
       Combine.parse_node (fun x ->
@@ -57,7 +49,9 @@ module Parse = struct
     in
 
     let tbl_expression = Combine.Memoize.create () in
-    let tbl_statement = Combine.Memoize.create () in
+    let tbl_node_statement = Combine.Memoize.create () in
+    let tbl_children_statement = Combine.Memoize.create () in
+    let tbl_node_stmt = Combine.Memoize.create () in
 
     let parse_number : AST.number Combine.reader = fun nodes ->
       (
@@ -70,7 +64,7 @@ module Parse = struct
       ) nodes
     in
     let rec parse_expression nodes =
-      _parse_rule "expression" (fun nodes ->
+      Combine.parse_rule "expression" (fun nodes ->
         let parse_case0 nodes =
           match
             (
@@ -120,30 +114,42 @@ module Parse = struct
                 parse_case2 nodes
       ) nodes
     in
-    let parse_statement nodes =
-      Combine.Memoize.apply tbl_statement (
-        _parse_rule "statement" (fun nodes ->
-          (* (parse_expression &&& parse_leaf_rule ";" &&& parse_end) nodes *)
-          let parse_nested =
-            let parse_elt = parse_expression in
-            let parse_tail =
-              let parse_elt = _parse_leaf_rule ";" in
-              Combine.parse_last parse_elt
-            in
-            Combine.parse_seq parse_elt parse_tail
-          in
-          match parse_nested nodes with
-          | Some ((e1, e2), nodes) -> Some (`Case2 (e1, e2), nodes)
-          | None -> None
+    let parse_children_statement : AST.statement Combine.reader = fun nodes ->
+      Combine.Memoize.apply tbl_children_statement (
+        (fun nodes ->
+           (* (parse_expression &&& parse_leaf_rule ";" &&& parse_end) nodes *)
+           let parse_nested =
+             let parse_elt = parse_expression in
+             let parse_tail =
+               let parse_elt = _parse_leaf_rule ";" in
+               Combine.parse_last parse_elt
+             in
+             Combine.parse_seq parse_elt parse_tail
+           in
+           match parse_nested nodes with
+           | Some ((e1, e2), nodes) -> Some ((e1, e2), nodes)
+           | None -> None
         )
       ) nodes
     in
-    let parse_program nodes =
-      _parse_rule "program" (
+    let parse_node_statement : AST.statement Combine.reader =
+      Combine.Memoize.apply tbl_node_statement (
+        Combine.parse_rule "statement" parse_children_statement
+      )
+    in
+    (* alias *)
+    let parse_node_stmt : AST.stmt Combine.reader =
+      Combine.Memoize.apply tbl_node_stmt (
+        Combine.parse_rule "stmt" parse_children_statement
+      )
+    in
+
+    let parse_node_program = fun nodes ->
+      Combine.parse_rule "program" (
         Combine.parse_repeat
-          parse_statement
+          parse_node_statement
           Combine.parse_end
       ) nodes
     in
-    parse_program [root_node]
+    parse_node_program [root_node]
 end

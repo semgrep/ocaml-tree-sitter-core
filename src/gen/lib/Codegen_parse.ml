@@ -374,10 +374,15 @@ let wrap_left_matcher_result opt_wrap_result matcher_code =
 *)
 let rec gen_seq body (next : next) : next =
   match body with
-  | Symbol s ->
+  | Symbol (rule_name, opt_alias) ->
       (* (symbol, tail) *)
+      let exposed_rule_name =
+        match opt_alias with
+        | None -> rule_name
+        | Some alias -> alias
+      in
       prepend (Fun [
-        Line (sprintf "parse_%s" (trans s))
+        Line (sprintf "parse_%s" (trans exposed_rule_name))
       ]) next
 
   | String s ->
@@ -550,6 +555,8 @@ let gen_rule_parser ~ast_module_name ~pos ~num_rules rule =
       "and"
   in
   let ident = rule.name in
+  if rule.aliases <> [] then
+    failwith "TODO aliases are not supported.";
   let body = rule.body in
   if is_leaf body then
     [
