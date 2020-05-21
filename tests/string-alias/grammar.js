@@ -1,10 +1,9 @@
 module.exports = grammar({
-  name: "opt_repeat1",
+  name: "string_alias",
   rules: {
     program: $ => optional(
-      $.numbers
+      alias(repeat1($.number), '*')
     ),
-    numbers: $ => repeat1($.number),
     number: $ => /[0-9]+/
   }
 });

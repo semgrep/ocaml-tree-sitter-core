@@ -42,7 +42,9 @@ type rule_body = [
   <ocaml repr="classic">
 
 type alias = {
-  value: ident;
+  value: string;
+    (* identifier (named=true) replacing the rule name (content=SYMBOL),
+       or string literal (named=false) returned in the parsing output. *)
   named: bool;
   content: rule_body;
 }

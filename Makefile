@@ -21,6 +21,7 @@ clean:
 
 .PHONY: test
 test: build
+	./_build/default/src/gen/test/test.exe
 	$(MAKE) -C tests
 
 .PHONY: install

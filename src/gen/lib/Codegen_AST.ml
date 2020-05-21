@@ -7,6 +7,8 @@ open AST_grammar
 open Codegen_util
 open Indent.Types
 
+let trans = translate_ident
+
 let preamble grammar =
   [
     Line (
@@ -27,7 +29,8 @@ open Ocaml_tree_sitter_run
 
 let rec format_body body : Indent.t =
   match body with
-  | Symbol ident -> [Line (translate_ident ident)]
+  | Symbol (ident, None) -> [Line (trans ident)]
+  | Symbol (_ident, Some alias) -> [Line (trans alias.id)]
   | String s -> [Line (sprintf "(Loc.t * string (* %S *))" s)]
   | Pattern s -> [Line (sprintf "(Loc.t * string (* %S pattern *))" s)]
   | Blank -> [Line "unit (* blank *)"]
@@ -73,38 +76,36 @@ and format_seq l =
   | [_] -> prod
   | _ -> [Paren ("(", prod, ")")]
 
-let format_rule pos len (rule : rule) : Indent.t =
-  let is_first = (pos = 0) in
-  let is_last = (pos = len - 1) in
-  let type_ =
-    if not is_first then
-      "and"
-    else
-      "type"
+let format_rule (rule : rule) : Indent.t list =
+  let rule_name = rule.name in
+  let rule_def =
+    [
+      Line (sprintf "%s =" (trans rule_name));
+      Block (format_body rule.body);
+    ]
   in
-  let ppx =
-    if is_last then
+  let aliases =
+    List.map (fun alias ->
       [
-        Line "[@@deriving show {with_path = false}]";
+        Line (sprintf "%s = %s" (trans alias.id) (trans rule_name))
       ]
-    else
-      []
+    ) rule.aliases
   in
-  [
-    Line (sprintf "%s %s =" type_ (translate_ident rule.name));
-    Block (format_body rule.body);
-    Inline ppx;
-  ]
+  rule_def :: aliases
+
+let ppx = [
+  Line "[@@deriving show {with_path = false}]";
+  Line "";
+]
 
 let format_types grammar =
   List.map (fun rule_group ->
-    let len = List.length rule_group in
-    List.mapi
-      (fun pos x -> Inline (format_rule pos len x))
-      rule_group
+    (List.map format_rule rule_group
+     |> List.flatten
+     |> Codegen_util.format_typedefs
+    ) @ ppx
   ) grammar.rules
   |> List.flatten
-  |> interleave (Line "")
 
 let generate_dumper grammar =
   [
