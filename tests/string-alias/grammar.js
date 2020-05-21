@@ -2,7 +2,8 @@ module.exports = grammar({
   name: "string_alias",
   rules: {
     program: $ => optional(
-      alias('hello', 'hi')
-    )
+      alias(repeat1($.number), '*')
+    ),
+    number: $ => /[0-9]+/
   }
 });

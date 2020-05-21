@@ -9,7 +9,8 @@ SUCCESS_TESTS = \
   opt-repeat1 \
   arithmetic \
   name-alias \
-  string-alias
+  string-alias \
+  alias-scope
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \

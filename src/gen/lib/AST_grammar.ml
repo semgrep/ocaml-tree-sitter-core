@@ -4,6 +4,7 @@
 
 type ident = string
 
+(* See Alias.mli for explanations on tree-sitter aliases. *)
 type alias = {
   id: ident;
     (* unique name for the alias, suitable for generating type names and
@@ -36,7 +37,11 @@ type rule_body =
 
 type rule = {
   name: ident;
+
   aliases: alias list;
+    (* all the aliases for this rule found in the grammar. The alias object
+       includes a globally-unique ID to be used as an OCaml type name. *)
+
   is_rec: bool;
   body: rule_body;
 }
@@ -45,8 +50,8 @@ type grammar = {
   name: string;
   entrypoint: string;
 
-  (* rules, grouped and sorted in dependency order. *)
   rules: rule list list;
+    (* rules, grouped and sorted in dependency order. *)
 }
 
 (* alias *)
