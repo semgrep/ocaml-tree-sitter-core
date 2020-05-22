@@ -122,3 +122,11 @@ type grammar = {
 
 (* alias *)
 type t = grammar
+
+(* Rules whose name start with an underscore don't produce a node
+   tree-sitter's output but instead insert the children inline.
+
+   See https://tree-sitter.github.io/tree-sitter/creating-parsers#hiding-rules
+*)
+let is_inline rule_name =
+  rule_name <> "" && rule_name.[0] = '_'

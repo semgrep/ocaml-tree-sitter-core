@@ -12,7 +12,7 @@ let debug = false
 let debug_run = true
 
 let debug_log s =
-  if debug then
+  if debug_run then
     Line (sprintf "print_endline %S;" s)
   else
     Inline []
@@ -241,6 +241,7 @@ let match_end = Fun [Line "Combine.parse_end"]
 let match_success = Fun [Line "Combine.parse_success"]
 
 let next_match_end = Next (1, 0, match_end)
+let next_success = Next (1, 0, match_success)
 
 (* Put a matcher in front a sequence of matchers. *)
 let prepend match_elt next =
@@ -386,8 +387,14 @@ let rec gen_seq body (next : next) : next =
         | None -> rule_name
         | Some alias -> alias.id
       in
+      let parser_kind =
+        if AST_grammar.is_inline rule_name then
+          "inline_"
+        else
+          "node_"
+      in
       prepend (Fun [
-        Line (sprintf "parse_node_%s" (trans exposed_rule_name))
+        Line (sprintf "parse_%s%s" parser_kind (trans exposed_rule_name))
       ]) next
 
   | String s ->
@@ -594,16 +601,22 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
     List.map parse_node_binding node_names
 
   else
+    let inline = AST_grammar.is_inline rule_name in
+    let parser_kind, end_sequence =
+      match AST_grammar.is_inline rule_name with
+      | true -> "inline", next_success
+      | false -> "children", next_match_end
+    in
     let parse_children_binding =
       [
-        Line (sprintf "parse_children_%s : %s.%s Combine.reader = fun nodes ->"
-                (trans rule_name)
+        Line (sprintf "parse_%s_%s : %s.%s Combine.reader = fun nodes ->"
+                parser_kind (trans rule_name)
                 ast_module_name (trans rule_name));
         debug_log (sprintf "call parse_children_%s" (trans rule_name));
         Block [
           Line (sprintf "Combine.Memoize.apply cache_children_%s ("
                   (trans rule_name));
-          Block (gen_seq body next_match_end
+          Block (gen_seq body end_sequence
                  |> flatten_seq
                  |> as_fun);
           Line ") nodes"
@@ -627,7 +640,10 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         ];
       ]
     in
-    parse_children_binding :: List.map parse_node_binding node_names
+    if inline then
+      [parse_children_binding]
+    else
+      parse_children_binding :: List.map parse_node_binding node_names
 
 let gen ~ast_module_name grammar =
   let entrypoint = grammar.entrypoint in
