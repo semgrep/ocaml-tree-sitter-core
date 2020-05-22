@@ -575,22 +575,23 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
   in
   let body = rule.body in
   if is_leaf body then
-    let binding =
+    let parse_node_binding (id, name) =
       [
         Line (sprintf "parse_node_%s : %s.%s Combine.reader = fun nodes ->"
-                (trans rule_name)
-                ast_module_name (trans rule_name));
-        debug_log (sprintf "call parse_node_%s" (trans rule_name));
+                (trans id)
+                ast_module_name (trans id));
+        debug_log (sprintf "call parse_node_%s" (trans id));
         Block [
           Line (sprintf "Combine.Memoize.apply cache_node_%s"
-                  (trans rule_name));
+                  (trans id));
           Block [
-            Line (sprintf "(_parse_leaf_rule %S) nodes" rule_name);
+            Line (sprintf "(_parse_leaf_rule %S) nodes" name);
           ]
         ]
       ]
     in
-    [binding]
+    List.map parse_node_binding node_names
+
   else
     let parse_children_binding =
       [
