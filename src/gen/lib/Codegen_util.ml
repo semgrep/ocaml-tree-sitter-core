@@ -104,3 +104,14 @@ let format_bindings ~is_rec ~is_local bindings =
                 |> List.flatten);
         Inline final_in;
       ]
+
+(* Tuareg-mode for emacs gets confused by comments like "*)", breaking syntax
+   highlighting.
+   "(*"
+
+   This inserts a line-break after the slash.
+*)
+let safe_comment =
+  let regexp = Str.regexp "\\*)" in
+  fun s ->
+    Str.global_substitute regexp (fun _ -> "*\\\n  )") s

@@ -32,7 +32,12 @@ let rec format_body body : Indent.t =
   | Symbol (ident, None) -> [Line (trans ident)]
   | Symbol (_ident, Some alias) -> [Line (trans alias.id)]
   | String s -> [Line (sprintf "(Loc.t * string (* %S *))" s)]
-  | Pattern s -> [Line (sprintf "(Loc.t * string (* %S pattern *))" s)]
+  | Pattern s ->
+      let pattern_string =
+        sprintf "%S" s
+        |> Codegen_util.safe_comment
+      in
+      [Line (sprintf "(Loc.t * string (* %s pattern *))" pattern_string)]
   | Blank -> [Line "unit (* blank *)"]
   | Repeat body ->
       [

@@ -9,6 +9,7 @@ open AST_grammar
 open Indent.Types
 
 let debug = false
+let debug_run = true
 
 let debug_log s =
   if debug then
@@ -64,7 +65,7 @@ let parse ~src_file ~json_file : %s.%s option =
     )
   in
 "
-            debug
+            debug_run
             ast_module_name (trans grammar.entrypoint)
          )
   ]
