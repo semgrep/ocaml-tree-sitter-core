@@ -88,7 +88,7 @@ type rule_body =
           Choice [Pattern "a+", String "a+"]
 
         This presumably results in indistinguishable "type":"a+" fields in the
-        tree-sitter output. This is problem if they must be interpreted
+        tree-sitter output. This is a problem if they must be interpreted
         differently.
      *)
 
