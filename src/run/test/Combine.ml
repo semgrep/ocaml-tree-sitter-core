@@ -150,9 +150,22 @@ let test_repeat1 () =
     = Some ((["a"; "a"], ()), [])
   )
 
+let test_opt_repeat1 () =
+  assert (
+    Combine.parse_optional
+      (Combine.parse_repeat1
+         (parse_node "a")
+         Combine.parse_end
+      )
+      Combine.parse_success
+      [a]
+    = Some ((Some (["a"], ()), ()), [])
+  )
+
 let test = "Combine", [
   "seq", `Quick, test_seq;
   "optional", `Quick, test_optional;
   "repeat", `Quick, test_repeat;
   "repeat1", `Quick, test_repeat1;
+  "opt repeat1", `Quick, test_opt_repeat1;
 ]

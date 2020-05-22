@@ -8,7 +8,7 @@ open Printf
 open AST_grammar
 open Indent.Types
 
-let debug = true
+let debug = false
 
 let debug_log s =
   if debug then
