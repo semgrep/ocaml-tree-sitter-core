@@ -30,9 +30,9 @@ let translate find_alias (x : Tree_sitter_t.rule_body) =
   let rec translate x =
     match (x : Tree_sitter_t.rule_body) with
     | SYMBOL ident -> Symbol (ident, None)
-    | STRING s -> String s
-    | PATTERN s -> Pattern s
-    | BLANK -> Blank
+    | STRING name -> String name
+    | PATTERN pat -> Pattern pat
+    | BLANK -> Blank None
     | REPEAT x -> Repeat (translate x)
     | REPEAT1 x -> Repeat1 (translate x)
     | CHOICE [x; BLANK] -> Optional (translate x)
@@ -59,7 +59,7 @@ let rec normalize x =
   | Symbol _
   | String _
   | Pattern _
-  | Blank as x -> x
+  | Blank _ as x -> x
   | Repeat x -> Repeat (normalize x)
   | Repeat1 x -> Repeat1 (normalize x)
   | Choice l -> Choice (List.map normalize l |> flatten_choice)
@@ -84,7 +84,14 @@ and flatten_seq normalized_list =
 
 let make_external_rules externals =
   List.filter_map (function
-    | Tree_sitter_t.SYMBOL name -> Some (name, String name)
+    | Tree_sitter_t.SYMBOL name ->
+        let body =
+          if is_inline name then
+            Blank (Some name)
+          else
+            String name
+        in
+        Some (name, body)
     | Tree_sitter_t.STRING _ -> None (* no need for a rule *)
     | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"
   ) externals

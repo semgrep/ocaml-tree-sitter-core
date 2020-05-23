@@ -10,7 +10,8 @@ SUCCESS_TESTS = \
   arithmetic \
   name-alias \
   string-alias \
-  alias-scope
+  alias-scope \
+  inline-alias
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \

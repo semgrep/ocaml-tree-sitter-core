@@ -38,7 +38,8 @@ let rec format_body body : Indent.t =
         |> Codegen_util.safe_comment
       in
       [Line (sprintf "(Loc.t * string (* %s pattern *))" pattern_string)]
-  | Blank -> [Line "unit (* blank *)"]
+  | Blank None -> [Line "unit (* blank *)"]
+  | Blank (Some ident) -> [Line (sprintf "unit (* %s *)" ident)]
   | Repeat body ->
       [
         Inline (format_body body);

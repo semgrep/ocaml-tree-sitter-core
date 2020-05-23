@@ -6,6 +6,10 @@
 open Tree_sitter_output_t
 
 type 'a reader = node list -> ('a * node list) option
+type 'a children_reader = node list -> 'a option
+
+type ('head_elt, 'head, 'tail) seq_reader =
+  'head_elt reader -> 'tail reader -> ('head * 'tail) reader
 
 let parse_rule type_ parse_children : 'a reader = fun nodes ->
   match nodes with
@@ -13,8 +17,7 @@ let parse_rule type_ parse_children : 'a reader = fun nodes ->
   | node :: nodes ->
       if node.type_ = type_ then
         match parse_children node.children with
-        | Some (res, []) -> Some (res, nodes)
-        | Some (_, _::_) -> assert false
+        | Some res -> Some (res, nodes)
         | None -> None
       else
         None
@@ -49,10 +52,10 @@ let parse_end nodes =
   | [] -> Some ((), [])
   | _ -> None
 
-let parse_last parse_elt nodes =
-  match parse_elt nodes with
-  | Some (res1, []) -> Some (res1, [])
-  | Some (_res1, _) -> None
+let parse_full parse_elt nodes =
+  match parse_seq parse_elt parse_end nodes with
+  | Some ((res, ()), []) -> Some res
+  | Some (_, _::_)
   | None -> None
 
 (* Each time we make forward progress in a repeat, we take a snapshot

@@ -92,7 +92,10 @@ type rule_body =
         differently.
      *)
 
-  | Blank
+  | Blank of ident option
+     (* Matches any sequence without consuming it.
+        It comes with an optional name, which may help understand
+        an AST. *)
 
   (* composite (nodes) *)
   | Repeat of rule_body

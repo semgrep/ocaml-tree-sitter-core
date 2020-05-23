@@ -13,12 +13,38 @@ open Tree_sitter_output_t
 *)
 type 'a reader = node list -> ('a * node list) option
 
+(*
+   The type of a reader that can't be followed by more parsing.
+   This is the generic type for parse_children_XXX functions in generated
+   code.
+*)
+type 'a children_reader = node list -> 'a option
+
+(*
+   A type alias for a reader capable of backtracking.
+
+   By providing the function to read the rest of the input (tail),
+   the reader can try different ways to parse the head until it finds one
+   that allows matching the tail as well.
+
+   For example, parse_optional (provided by this module) has such capability.
+
+     parse_optional parse_int parse_tail : (int, int option, _) reader
+
+   will try to take an int from the input. Even if successfully obtaining
+   'Some 42', it must call parse_tail successfully on the remaining input.
+   If it fails, it rejects the int, using 'None' and then calls parse_tail
+   on the original input sequence, which may succeed.
+*)
+type ('head_elt, 'head, 'tail) seq_reader =
+  'head_elt reader -> 'tail reader -> ('head * 'tail) reader
+
 (* [parse_rule name parse_children] returns a parser that expects a node
    with the given name and parses its children using [parse_children].
    It is illegal for the [parse_children] function to not consume all
    the children.
 *)
-val parse_rule : string -> 'a reader -> 'a reader
+val parse_rule : string -> (node list -> 'a option) -> 'a reader
 
 (* Always fail/succeed without consuming the input. *)
 val parse_fail : 'a reader
@@ -61,23 +87,33 @@ val parse_root : 'a reader -> node -> 'a option
    but it could be anything generated from the list ["e1"; "e2"; "e3"].
 *)
 val parse_seq : 'a reader -> 'tail reader -> ('a * 'tail) reader
+           (* : ('a, 'a, 'tail) seq_reader *)
+
+(* Force a match to extend to the end of the input sequence.
+
+   This is intended to be used in generated code as:
+
+     let parse_children =
+       parse_full_seq parse_inline_thing parse_end
+*)
+val parse_full : 'a reader -> (node list -> 'a option)
 
 (* Match at the end of input. *)
 val parse_end : unit reader
 
-(* Parse the last element of a sequence. *)
-val parse_last : 'a reader -> 'a reader
-
 (* Read zero or more elements of the same kind, then the rest of the
    sequence. Prioritizes longest match first. *)
 val parse_repeat : 'a reader -> 'tail reader -> ('a list * 'tail) reader
+              (* : ('a, 'a list, 'tail) seq_reader *)
 
 (* Try to read one or more elements of the same kind, then the rest of the
    sequence. Prioritizes longest match first. *)
 val parse_repeat1 : 'a reader -> 'tail reader -> ('a list * 'tail) reader
+               (* : ('a, 'a list, 'tail) seq_reader *)
 
 (* Read one or zero element. Prioritizes longest match first. *)
 val parse_optional : 'a reader -> 'tail reader -> ('a option * 'tail) reader
+                (* : ('a, 'a option, 'tail) seq_reader *)
 
 (* Convert the result of a reader. *)
 val map : ('a -> 'b) -> 'a reader -> 'b reader
