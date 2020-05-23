@@ -553,7 +553,7 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
       sprintf "%s.%s" ast_module_name (trans primary_name)
   in
   let inline_cache =
-    create_cache "cache_inline_" (trans primary_name) cache_type in
+    create_cache "cache_inline_" primary_name cache_type in
   let noninline_names =
     let all_ids =
       primary_name :: List.map (fun alias -> alias.id) rule.aliases in
