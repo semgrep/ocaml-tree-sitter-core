@@ -133,3 +133,14 @@ type t = grammar
 *)
 let is_inline rule_name =
   rule_name <> "" && rule_name.[0] = '_'
+
+let is_leaf = function
+  | String _
+  | Pattern _
+  | Blank _ -> true
+  | Symbol _
+  | Repeat _
+  | Repeat1 _
+  | Choice _
+  | Optional _
+  | Seq _ -> false

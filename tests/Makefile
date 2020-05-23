@@ -11,10 +11,12 @@ SUCCESS_TESTS = \
   name-alias \
   string-alias \
   alias-scope \
-  inline-alias
+  inline-alias \
+  unhide-token
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \
+  hide-token \
   csharp \
   java \
   nested \

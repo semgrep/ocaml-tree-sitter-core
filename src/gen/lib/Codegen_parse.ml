@@ -394,7 +394,8 @@ let rec gen_seq body (next : next) : next =
           "node_" ^ trans name
       in
       prepend (Fun [
-        Line (sprintf "parse_%s" parser_name)
+        Line (sprintf "parse_%s (* prim = %s, name = %s *)"
+                parser_name (trans primary_name) (trans name))
       ]) next
 
   | String s ->
@@ -535,36 +536,33 @@ and repeat kind body next =
     printf "result from repeat: %s\n" (show_next res);
   res
 
-let is_leaf = function
-  | String _
-  | Pattern _
-  | Blank _ -> true
-  | Symbol _
-  | Repeat _
-  | Repeat1 _
-  | Choice _
-  | Optional _
-  | Seq _ -> false
-
-let create_cache ~ast_module_name prefix id =
+let create_cache prefix id type_ =
   Inline [
-    Line (sprintf "let %s%s : %s.%s Combine.Memoize.t ="
-            prefix
-            (trans id) ast_module_name (trans id));
+    Line (sprintf "let %s%s : %s Combine.Memoize.t ="
+            prefix (trans id) type_);
     Block [Line "Combine.Memoize.create () in"];
   ]
 
 let gen_rule_cache ~ast_module_name (rule : rule) =
   let primary_name = rule.name in
+  let leaf = is_leaf rule.body in
+  let cache_type =
+    if leaf then
+      "Token.t"
+    else
+      sprintf "%s.%s" ast_module_name (trans primary_name)
+  in
   let inline_cache =
-    create_cache ~ast_module_name "cache_inline_" primary_name in
+    create_cache "cache_inline_" (trans primary_name) cache_type in
   let noninline_names =
     let all_ids =
       primary_name :: List.map (fun alias -> alias.id) rule.aliases in
     List.filter (fun id -> not (AST_grammar.is_inline id)) all_ids
   in
   let node_caches =
-    List.map (create_cache ~ast_module_name "cache_node_") noninline_names
+    List.map
+      (fun id -> create_cache "cache_node_" id cache_type)
+      noninline_names
   in
   [
     inline_cache;
@@ -606,39 +604,37 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
   in
   let body = rule.body in
   if is_leaf body then (
-    (* Generate either parse_inline or parse_node for each name *)
-    let parse_node_binding (id, name) =
-      let inline = AST_grammar.is_inline name in
-      let parser_kind =
-        match inline with
-        | true -> "inline"
-        | false -> "node"
-      in
-      let body =
-        if inline then
-          [
-            Line "Combine.parse_success nodes"
-          ]
-        else
-          [
-            Line (sprintf "Combine.Memoize.apply cache_node_%s"
-                    (trans id));
-            Block [
-              Line (sprintf "(_parse_leaf_rule %S) nodes" name);
-            ]
-          ]
-      in
-      if debug then
-        printf "rule name: %s, parser kind: %s\n%!" name parser_kind;
+    (* Generate parse_inline for the primary rule name.
+       Generate parse_node for each name that needs it. *)
+    let parse_inline_binding =
       [
-        Line (sprintf "parse_%s_%s : %s.%s Combine.reader = fun nodes ->"
-                parser_kind (trans id)
-                ast_module_name (trans id));
-        debug_log (sprintf "call parse_%s_%s" parser_kind (trans id));
-        Block body;
+        Line (sprintf "parse_inline_%s : unit Combine.reader = fun nodes ->"
+                (trans primary_name));
+        Block [
+          debug_log (sprintf "call parse_inline_%s" (trans primary_name));
+          Line "Combine.parse_success nodes";
+        ];
       ]
     in
-    List.map parse_node_binding all_names
+    let parse_node_binding (id, name) =
+      match AST_grammar.is_inline name with
+      | true -> None
+      | false ->
+          Some [
+            Line (sprintf "parse_node_%s : Token.t Combine.reader = \
+                           fun nodes ->"
+                    (trans id));
+            Block [
+              debug_log (sprintf "call parse_node_%s" (trans id));
+              Line (sprintf "Combine.Memoize.apply cache_node_%s" (trans id));
+              Block [
+                Line (sprintf "(_parse_leaf_rule %S) nodes" name);
+              ]
+            ]
+          ]
+    in
+    let parse_node_bindings = List.filter_map parse_node_binding all_names in
+    [parse_inline_binding] @ parse_node_bindings
   )
   else
     (* Generate parse_inline and parse_children for the primary rule name.
