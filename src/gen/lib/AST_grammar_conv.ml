@@ -44,8 +44,8 @@ let translate find_alias (x : Tree_sitter_t.rule_body) =
     | PREC_RIGHT (_opt_prio, x) -> translate x
     | FIELD (_name, x) -> translate x (* TODO not sure about ignoring this *)
     | ALIAS alias -> translate_alias find_alias alias
-    | IMMEDIATE_TOKEN x -> translate x (* TODO check what this is *)
-    | TOKEN x -> translate x
+    | IMMEDIATE_TOKEN _body -> String "immediate token"
+    | TOKEN _body -> String "token"
   in
   translate x
 
