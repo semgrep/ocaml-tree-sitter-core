@@ -10,6 +10,7 @@ let safe_run f =
   try f ()
   with e ->
     let trace = Printexc.get_backtrace () in
+    flush stdout;
     eprintf "Error: exception %s\n%s\n%!"
       (Printexc.to_string e)
       trace;
@@ -18,6 +19,7 @@ let safe_run f =
 let parse_and_dump ~src_file ~json_file parse_file dump_tree =
   match parse_file ~src_file ~json_file with
   | None ->
+      flush stdout;
       eprintf "Cannot interpret file %s\n%!" json_file;
       exit 1
   | Some ast ->

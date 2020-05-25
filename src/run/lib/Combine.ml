@@ -2,6 +2,8 @@
    Generic functions for combining parsers
 *)
 
+open Printf
+
 (* Type definitions for the input tree. See Tree_sitter_output.atd. *)
 open Tree_sitter_output_t
 
@@ -10,6 +12,35 @@ type 'a children_reader = node list -> 'a option
 
 type ('head_elt, 'head, 'tail) seq_reader =
   'head_elt reader -> 'tail reader -> ('head * 'tail) reader
+
+let trace_indent = ref 0
+
+let show_node node =
+  node.type_
+
+let show_nodes nodes =
+  match nodes with
+  | [] -> "[]"
+  | [node] -> sprintf "[%s]" (show_node node)
+  | node :: _ -> sprintf "[%s ...]" (show_node node)
+
+let make_indent n =
+  String.init n (fun i ->
+    if i mod 4 = 0 then
+      '|'
+    else
+      ' '
+  )
+
+let trace name f nodes =
+  let indent = make_indent !trace_indent in
+  printf "%s%s <- %s\n" indent name (show_nodes nodes);
+  trace_indent := !trace_indent + 2;
+  let res = f nodes in
+  trace_indent := !trace_indent - 2;
+  printf "%s%s -> %s\n"
+    indent name (if res = None then "fail" else "OK");
+  res
 
 let parse_rule type_ parse_children : 'a reader = fun nodes ->
   match nodes with

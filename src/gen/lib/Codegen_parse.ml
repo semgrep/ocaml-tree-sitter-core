@@ -9,7 +9,21 @@ open AST_grammar
 open Indent.Types
 
 let debug = false
-let debug_run = false
+let debug_run = true
+
+(* Emit code that wraps around a reader (any function of type _ -> _ option)
+   if runtime tracing is enabled.
+*)
+let trace name (reader : Indent.t) =
+  if debug_run then
+    [
+      Paren (
+        sprintf "fun nodes -> Combine.trace %S (" name,
+        reader
+        , ") nodes");
+    ]
+  else
+    reader
 
 let debug_log s =
   if debug_run then
@@ -32,8 +46,6 @@ let preamble ~ast_module_name grammar =
 (* Disable warnings against unused variables *)
 [@@@warning \"-26-27\"]
 
-let debug = %B
-
 open Ocaml_tree_sitter_run
 open Tree_sitter_output_t
 let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
@@ -55,9 +67,6 @@ let parse ~src_file ~json_file : %s.%s option =
      We extract its location and source code (token). *)
   let _parse_leaf_rule type_ =
     Combine.parse_node (fun x ->
-      if debug then
-        Printf.printf \"_parse_leaf_rule %%S <- %%S\\n%%!\" type_ x.type_;
-
       if x.type_ = type_ then
         Some (get_loc x, get_token x)
       else
@@ -65,7 +74,6 @@ let parse ~src_file ~json_file : %s.%s option =
     )
   in
 "
-            debug_run
             ast_module_name (trans grammar.entrypoint)
          )
   ]
@@ -607,30 +615,36 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
     (* Generate parse_inline for the primary rule name.
        Generate parse_node for each name that needs it. *)
     let parse_inline_binding =
+      let fun_name = "parse_inline_" ^ trans primary_name in
       [
-        Line (sprintf "parse_inline_%s : unit Combine.reader = fun nodes ->"
-                (trans primary_name));
-        Block [
-          debug_log (sprintf "call parse_inline_%s" (trans primary_name));
-          Line "Combine.parse_success nodes";
-        ];
+        Line (sprintf "%s : unit Combine.reader =" fun_name);
+        Block (trace fun_name [
+          Line "(fun nodes ->";
+          Block [
+            Line "Combine.parse_success nodes";
+          ];
+          Line ")";
+        ])
       ]
     in
     let parse_node_binding (id, name) =
       match AST_grammar.is_inline name with
       | true -> None
       | false ->
+          let fun_name = "parse_node_" ^ trans id in
           Some [
-            Line (sprintf "parse_node_%s : Token.t Combine.reader = \
-                           fun nodes ->"
-                    (trans id));
-            Block [
-              debug_log (sprintf "call parse_node_%s" (trans id));
-              Line (sprintf "Combine.Memoize.apply cache_node_%s" (trans id));
+            Line (sprintf "%s : Token.t Combine.reader ="
+                    fun_name);
+            Block (trace fun_name [
+              Line "(fun nodes ->";
               Block [
-                Line (sprintf "(_parse_leaf_rule %S) nodes" name);
-              ]
-            ]
+                Line (sprintf "Combine.Memoize.apply cache_node_%s" (trans id));
+                Block [
+                  Line (sprintf "(_parse_leaf_rule %S) nodes" name);
+                ]
+              ];
+              Line ")";
+            ])
           ]
     in
     let parse_node_bindings = List.filter_map parse_node_binding all_names in
@@ -640,52 +654,63 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
     (* Generate parse_inline and parse_children for the primary rule name.
        Generate parse_node for each name that needs it. *)
     let parse_inline_binding =
+      let fun_name = sprintf "parse_inline_%s" (trans primary_name) in
       [
-        Line (sprintf "parse_inline_%s \
-                       : %s.%s Combine.reader = fun nodes ->"
-                (trans primary_name)
+        Line (sprintf "%s : %s.%s Combine.reader ="
+                fun_name
                 ast_module_name (trans primary_name));
-        debug_log (sprintf "call parse_inline_%s" (trans primary_name));
-        Block [
-          Line (sprintf "Combine.Memoize.apply cache_inline_%s ("
-                  (trans primary_name));
-          Block (gen_seq body next_success
-                 |> flatten_seq
-                 |> as_fun);
-          Line ") nodes"
-        ]
+        Block (trace fun_name [
+          Line "(fun nodes ->";
+          Block [
+            Line (sprintf "Combine.Memoize.apply cache_inline_%s ("
+                    (trans primary_name));
+            Block (gen_seq body next_success
+                   |> flatten_seq
+                   |> as_fun);
+            Line ") nodes"
+          ];
+          Line ")"
+        ])
       ]
     in
     let parse_children_binding =
+      let fun_name = sprintf "parse_children_%s" (trans primary_name) in
       [
-        Line (sprintf "parse_children_%s : %s.%s Combine.children_reader = fun nodes ->"
-                (trans primary_name)
+        Line (sprintf "%s : %s.%s Combine.children_reader ="
+                fun_name
                 ast_module_name (trans primary_name));
-        debug_log (sprintf "call parse_children_%s" (trans primary_name));
-        Block [
-          Line (sprintf "Combine.parse_full parse_inline_%s nodes"
-                  (trans primary_name));
-        ]
+        Block (trace fun_name [
+          Line "(fun nodes ->";
+          Block [
+            Line (sprintf "Combine.parse_full parse_inline_%s nodes"
+                    (trans primary_name));
+          ];
+          Line ")"
+        ])
       ]
     in
     let parse_node_binding (id, name) =
       if AST_grammar.is_inline name then
         None
       else
+        let fun_name = sprintf "parse_node_%s" (trans id) in
         Some [
-          Line (sprintf "parse_node_%s : %s.%s Combine.reader = fun nodes ->"
-                  (trans id)
+          Line (sprintf "%s : %s.%s Combine.reader ="
+                  fun_name
                   ast_module_name (trans id));
-          debug_log (sprintf "call parse_node_%s" (trans id));
-          Block [
-            Line (sprintf "Combine.Memoize.apply cache_node_%s ("
-                    (trans id));
+          Block (trace fun_name [
+            Line "(fun nodes ->";
             Block [
-              Line (sprintf "Combine.parse_rule %S parse_children_%s"
-                      (trans name) (trans primary_name));
+              Line (sprintf "Combine.Memoize.apply cache_node_%s ("
+                      (trans id));
+              Block [
+                Line (sprintf "Combine.parse_rule %S parse_children_%s"
+                        (trans name) (trans primary_name));
+              ];
+              Line ") nodes";
             ];
-            Line ") nodes";
-          ];
+            Line ")"
+          ])
         ]
     in
     let parse_node_functions = List.filter_map parse_node_binding all_names in

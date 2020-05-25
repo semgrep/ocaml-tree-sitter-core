@@ -56,6 +56,14 @@ val parse_node : (node -> 'a option) -> 'a reader
 (* Read a single rule, typically the root of the json input. *)
 val parse_root : 'a reader -> node -> 'a option
 
+(* Trace a function so as print:
+   - when it gets called
+   - a peek into its input
+   - when it returns
+   - the return status (success/failure)
+*)
+val trace : string -> (node list -> 'a option) -> (node list -> 'a option)
+
 (* Parse the first thing in the sequence then everything else in the
    sequence.
 
