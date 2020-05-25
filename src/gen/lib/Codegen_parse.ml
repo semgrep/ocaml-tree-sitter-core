@@ -705,7 +705,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
                       (trans id));
               Block [
                 Line (sprintf "Combine.parse_rule %S parse_children_%s"
-                        (trans name) (trans primary_name));
+                        name (trans primary_name));
               ];
               Line ") nodes";
             ];
