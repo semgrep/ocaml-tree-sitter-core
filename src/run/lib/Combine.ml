@@ -106,7 +106,12 @@ let rec find_longest_match parse_elt stack nodes =
   | None -> stack
   | Some (elt, remaining_nodes) ->
       let stack = push elt remaining_nodes stack in
-      find_longest_match parse_elt stack remaining_nodes
+      if remaining_nodes == nodes (* physical equality *) then
+        (* nothing was consumed, return just one element instead of looping
+           forever. *)
+        stack
+      else
+        find_longest_match parse_elt stack remaining_nodes
 
 (* Repeat with backtracking, starting from longest match.
    We could disable some or all backtracking here.
