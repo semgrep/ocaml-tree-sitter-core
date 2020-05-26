@@ -53,9 +53,6 @@ val parse_success : unit reader
 (* Create a reader of a single input node. *)
 val parse_node : (node -> 'a option) -> 'a reader
 
-(* Read a single rule, typically the root of the json input. *)
-val parse_root : 'a reader -> node -> 'a option
-
 (* Trace a function so as print:
    - when it gets called
    - a peek into its input
@@ -63,6 +60,11 @@ val parse_root : 'a reader -> node -> 'a option
    - the return status (success/failure)
 *)
 val trace : string -> (node list -> 'a option) -> (node list -> 'a option)
+
+(* More specific version of 'trace', which shows the remaining input
+   upon returning.
+*)
+val trace_reader : string -> 'a reader -> 'a reader
 
 (* Parse the first thing in the sequence then everything else in the
    sequence.
@@ -136,3 +138,11 @@ module Memoize : sig
   val create : unit -> 'a t
   val apply : 'a t -> 'a reader -> 'a reader
 end
+
+(* Read a single rule, typically the root of the json input.
+
+   Additionally, remove all nodes whose 'type' field is mentioned in the
+   'extras' blacklist. This is meant to remove comments and such, which
+   may occur anywhere without matching a rule.
+*)
+val parse_root : extras:string list -> 'a reader -> node -> 'a option

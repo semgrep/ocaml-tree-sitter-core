@@ -1,5 +1,8 @@
 PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
 
+# Where tree-sitter-ruby was installed (via npm)
+TS_RUBY = $(PROJECT_ROOT)/node_modules/tree-sitter-ruby
+
 # Use the ruby parser installed from tree-sitter-ruby
 # because I don't know how to build it. FIXME
 #
@@ -11,7 +14,9 @@ all:
 	  | ydump > examples/ex2.rb.json
 	./tree-sitter-ruby.js examples/hello.rb.src \
 	  | ydump > examples/hello.rb.json
+	./tree-sitter-ruby.js examples/comment.rb.src \
+	  | ydump > examples/comment.rb.json
 	mkdir -p src
-	ydump $(PROJECT_ROOT)/node_modules/tree-sitter-ruby/src/grammar.json \
-          > src/grammar.json
+	ydump $(TS_RUBY)/src/grammar.json > src/grammar.json
+	cp $(TS_RUBY)/src/node-types.json src/
 	$(PROJECT_ROOT)/scripts/generate-test-part2

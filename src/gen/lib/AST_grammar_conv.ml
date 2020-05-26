@@ -130,6 +130,13 @@ let tsort_rules find_rule_aliases rules =
       { name; aliases; is_rec; body }) group
   ) sorted
 
+let filter_extras bodies =
+  List.filter_map (fun (x : Tree_sitter_t.rule_body) ->
+    match x with
+    | SYMBOL name -> Some name
+    | _ -> None
+  ) bodies
+
 let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
   let entrypoint =
     (* assuming the grammar's entrypoint is the first rule in grammar.json *)
@@ -141,8 +148,10 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
   let grammar_rules = translate_rules find_alias x.rules in
   let all_rules = make_external_rules x.externals @ grammar_rules in
   let sorted_rules = tsort_rules find_rule_aliases all_rules in
+  let extras = filter_extras x.extras in
   {
     name = x.name;
     entrypoint;
     rules = sorted_rules;
+    extras;
   }

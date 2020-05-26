@@ -12,7 +12,8 @@ SUCCESS_TESTS = \
   string-alias \
   alias-scope \
   inline-alias \
-  unhide-token
+  unhide-token \
+  extras
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \

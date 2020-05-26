@@ -18,11 +18,31 @@ let trace_indent = ref 0
 let show_node node =
   node.type_
 
+let list_head n xs =
+  let rec head n acc xs =
+    if n <= 0 then
+      (acc, xs)
+    else
+      match xs with
+      | x :: xs -> head (n - 1) (x :: acc) xs
+      | [] -> (acc, [])
+  in
+  let rev_head, tail = head n [] xs in
+  (List.rev rev_head, tail)
+
 let show_nodes nodes =
   match nodes with
   | [] -> "[]"
-  | [node] -> sprintf "[%s]" (show_node node)
-  | node :: _ -> sprintf "[%s ...]" (show_node node)
+  | _ ->
+      let head, tail = list_head 4 nodes in
+      let ellipsis =
+        match tail with
+        | [] -> ""
+        | _ -> " ..."
+      in
+      sprintf "[%s%s]"
+        (List.map show_node head |> String.concat " ")
+        ellipsis
 
 let make_indent n =
   String.init n (fun i ->
@@ -32,15 +52,28 @@ let make_indent n =
       ' '
   )
 
-let trace name f nodes =
+let trace_gen show_remaining_input name f nodes =
   let indent = make_indent !trace_indent in
   printf "%s%s <- %s\n" indent name (show_nodes nodes);
   trace_indent := !trace_indent + 2;
   let res = f nodes in
   trace_indent := !trace_indent - 2;
-  printf "%s%s -> %s\n"
-    indent name (if res = None then "fail" else "OK");
+  printf "%s%s -> %s%s\n"
+    indent name (if res = None then "fail" else "OK")
+    (show_remaining_input nodes res);
   res
+
+let trace name f nodes = trace_gen (fun _input_nodes _res -> "") name f nodes
+
+let show_remaining_nodes nodes res =
+  let remaining_nodes =
+    match res with
+    | None -> nodes
+    | Some (_, nodes) -> nodes
+  in
+  " " ^ show_nodes remaining_nodes
+
+let trace_reader name f nodes = trace_gen show_remaining_nodes name f nodes
 
 let parse_rule type_ parse_children : 'a reader = fun nodes ->
   match nodes with
@@ -64,11 +97,6 @@ let parse_node : (node -> 'a option) -> 'a reader = fun f nodes ->
        | None -> None
       )
   | [] -> None
-
-let parse_root parse_elt node =
-  match parse_elt [node] with
-  | None -> None
-  | Some (res, _nodes) -> Some res
 
 let parse_seq parse_elt1 parse_tail nodes =
   match parse_elt1 nodes with
@@ -200,3 +228,30 @@ module Memoize = struct
       Tbl.replace tbl nodes res;
       res
 end
+
+let rec filter_nodes keep nodes =
+  List.filter_map (filter_node keep) nodes
+
+and filter_node keep node =
+  if keep node then
+    Some { node with children = filter_nodes keep node.children }
+  else
+    None
+
+let make_keep ~blacklist =
+  let tbl = Hashtbl.create 100 in
+  List.iter (fun s -> Hashtbl.replace tbl s ()) blacklist;
+  let keep node =
+    not (Hashtbl.mem tbl node.type_)
+  in
+  keep
+
+let remove_extras ~extras =
+  let keep = make_keep ~blacklist:extras in
+  fun nodes -> filter_nodes keep nodes
+
+let parse_root ~extras parse_elt node =
+  let input_nodes = remove_extras ~extras [node] in
+  match parse_elt input_nodes with
+  | None -> None
+  | Some (res, _nodes) -> Some res

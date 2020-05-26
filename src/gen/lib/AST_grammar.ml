@@ -121,6 +121,10 @@ type grammar = {
 
   rules: rule list list;
     (* rules, grouped and sorted in dependency order. *)
+
+  extras: string list;
+    (* node names that don't belong to any rule and an occur anywhere,
+       such as comments. *)
 }
 
 (* alias *)
