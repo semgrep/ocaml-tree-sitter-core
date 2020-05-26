@@ -8,14 +8,7 @@ TS_RUBY = $(PROJECT_ROOT)/node_modules/tree-sitter-ruby
 #
 .PHONY: all
 all:
-	./tree-sitter-ruby.js examples/ex1.rb.src \
-	  | ydump > examples/ex1.rb.json
-	./tree-sitter-ruby.js examples/ex2.rb.src \
-	  | ydump > examples/ex2.rb.json
-	./tree-sitter-ruby.js examples/hello.rb.src \
-	  | ydump > examples/hello.rb.json
-	./tree-sitter-ruby.js examples/comment.rb.src \
-	  | ydump > examples/comment.rb.json
+	./run-examples-part1
 	mkdir -p src
 	ydump $(TS_RUBY)/src/grammar.json > src/grammar.json
 	cp $(TS_RUBY)/src/node-types.json src/
