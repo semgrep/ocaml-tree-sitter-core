@@ -95,7 +95,8 @@ type rule_body =
   | Blank of ident option
      (* Matches any sequence without consuming it.
         It comes with an optional name, which may help understand
-        an AST. *)
+        an AST. Such named zero-length sequences come from hidden tokens
+        (whose name starts with an underscore). *)
 
   (* composite (nodes) *)
   | Repeat of rule_body
@@ -123,7 +124,7 @@ type grammar = {
     (* rules, grouped and sorted in dependency order. *)
 
   extras: string list;
-    (* node names that don't belong to any rule and an occur anywhere,
+    (* node names that don't belong to any rule and can occur anywhere,
        such as comments. *)
 }
 
