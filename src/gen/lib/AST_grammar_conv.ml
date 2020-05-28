@@ -134,6 +134,10 @@ let filter_extras bodies =
   List.filter_map (fun (x : Tree_sitter_t.rule_body) ->
     match x with
     | SYMBOL name -> Some name
+    | STRING name ->
+        (* Results in tree-sitter parse error at the moment.
+           Presumably not super useful. *)
+        Some name
     | _ -> None
   ) bodies
 
