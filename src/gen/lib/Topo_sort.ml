@@ -19,9 +19,8 @@ let rec collect_names acc x =
   | Optional x -> collect_names acc x
   | Choice l
   | Seq l -> List.fold_left (fun acc x -> collect_names acc x) acc l
-  | Symbol (name, _alias) -> name :: acc
-  | String _
-  | Pattern _
+  | Symbol name -> name :: acc
+  | Token _
   | Blank _ -> acc
 
 let extract_rule_deps (name, body) =

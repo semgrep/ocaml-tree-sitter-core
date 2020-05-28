@@ -8,11 +8,6 @@ SUCCESS_TESTS = \
   optional-seq \
   opt-repeat1 \
   arithmetic \
-  name-alias \
-  string-alias \
-  alias-scope \
-  inline-alias \
-  unhide-token \
   extras
 
 ALL_TESTS = \
