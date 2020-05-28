@@ -21,7 +21,6 @@ ALL_TESTS = \
   csharp \
   java \
   nested \
-  ruby \
   rust \
   scala \
   typescript

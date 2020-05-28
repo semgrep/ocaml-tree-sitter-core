@@ -3,6 +3,10 @@
 # Remove aliases and unhide hidden rules, for easier support by
 # ocaml-tree-sitter.
 #
+# Warning: this is based on fragile regexps. It can easily fail.
+# A good solution would be a system of find-and-replace that's aware of
+# javascript syntax...
+#
 set -eu -o pipefail
 
 usage() {

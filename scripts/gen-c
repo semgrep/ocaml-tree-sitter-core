@@ -1,0 +1,22 @@
+#! /usr/bin/env bash
+#
+# Generate C parsers with tree-sitter.
+#
+set -eu
+
+project_root=$(git rev-parse --show-toplevel)
+tree_sitter="$project_root"/node_modules/.bin/tree-sitter
+
+error() {
+  cat >&2 <<EOF
+Error: $*
+EOF
+  exit 1
+}
+
+test -x "$tree_sitter" || error "missing executable $tree_sitter"
+
+# Generate C source code for the grammar.
+# Also generate 'grammar.json' used by the OCaml code generator.
+#
+"$tree_sitter" generate

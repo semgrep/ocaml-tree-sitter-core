@@ -1,0 +1,32 @@
+#! /usr/bin/env bash
+#
+# Generate OCaml parsers.
+#
+set -eu -o pipefail
+
+project_root=$(git rev-parse --show-toplevel)
+ocaml_tree_sitter="$project_root"/bin/ocaml-tree-sitter
+
+error() {
+  cat >&2 <<EOF
+Error: $*
+EOF
+  exit 1
+}
+
+test -x "$ocaml_tree_sitter" || error "missing executable $ocaml_tree_sitter"
+
+# Generate the OCaml code needed to parse the examples/*.out json files.
+#
+mkdir -p ocaml-src
+"$ocaml_tree_sitter" src/grammar.json -d ocaml-src
+
+cat > ocaml-src/dune <<EOF
+(executable
+  (public_name parse)
+  (name Main)
+  (preprocess (pps ppx_deriving.show))
+  (libraries ocaml-tree-sitter.run)
+)
+EOF
+touch ocaml-src/parse.opam

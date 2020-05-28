@@ -1,15 +1,32 @@
 PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
+DUNE_BIN = $(PROJECT_ROOT)/bin
+NODE_BIN = $(PROJECT_ROOT)/node_modules/.bin
+SCRIPTS = $(PROJECT_ROOT)/scripts
 
-# Where tree-sitter-ruby was installed (via npm)
-TS_RUBY = $(PROJECT_ROOT)/node_modules/tree-sitter-ruby
+.PHONY: build
+build:
+	$(MAKE) prep
+	$(MAKE) gen-c
+	$(MAKE) gen-ocaml
+	$(MAKE) build-c
+	$(MAKE) build-ocaml
 
-# Use the ruby parser installed from tree-sitter-ruby
-# because I don't know how to build it. FIXME
-#
-.PHONY: all
-all:
-	./run-examples-part1
-	mkdir -p src
-	ydump $(TS_RUBY)/src/grammar.json > src/grammar.json
-	cp $(TS_RUBY)/src/node-types.json src/
-	$(PROJECT_ROOT)/scripts/generate-test-part2
+.PHONY: prep
+prep:
+	$(SCRIPTS)/prep-lang
+
+.PHONY: gen-c
+gen-c:
+	$(SCRIPTS)/gen-c
+
+.PHONY: gen-ocaml
+gen-ocaml:
+	$(SCRIPTS)/gen-ocaml
+
+.PHONY: build-c
+build-c:
+	$(SCRIPTS)/build-c
+
+.PHONY: build-ocaml
+build-ocaml:
+	$(SCRIPTS)/build-ocaml

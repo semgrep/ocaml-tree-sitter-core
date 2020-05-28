@@ -32,12 +32,3 @@ if [[ -f orig/scanner.cc ]]; then
 elif [[ -f orig/scanner.c ]]; then
   cp orig/scanner.c src/
 fi
-
-# Generate C source code for the grammar.
-# Also generate 'grammar.json' used by the OCaml code generator.
-#
-"$tree_sitter" generate
-
-# Compile the C code.
-#
-"$node_gyp" rebuild
