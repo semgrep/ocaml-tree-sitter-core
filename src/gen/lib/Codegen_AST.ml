@@ -31,9 +31,15 @@ let rec format_body body : Indent.t =
   match body with
   | Symbol (ident, None) -> [Line (trans ident)]
   | Symbol (_ident, Some alias) -> [Line (trans alias.id)]
-  | String s -> [Line (sprintf "(Loc.t * string (* %S *))" s)]
-  | Pattern s -> [Line (sprintf "(Loc.t * string (* %S pattern *))" s)]
-  | Blank -> [Line "unit (* blank *)"]
+  | String s -> [Line (sprintf "(Token.t (* %S *))" s)]
+  | Pattern s ->
+      let pattern_string =
+        sprintf "%S" s
+        |> Codegen_util.safe_comment
+      in
+      [Line (sprintf "(Token.t (* %s pattern *))" pattern_string)]
+  | Blank None -> [Line "unit (* blank *)"]
+  | Blank (Some ident) -> [Line (sprintf "unit (* %s *)" ident)]
   | Repeat body ->
       [
         Inline (format_body body);
@@ -78,20 +84,37 @@ and format_seq l =
 
 let format_rule (rule : rule) : Indent.t list =
   let rule_name = rule.name in
-  let rule_def =
-    [
-      Line (sprintf "%s =" (trans rule_name));
-      Block (format_body rule.body);
-    ]
-  in
-  let aliases =
-    List.map (fun alias ->
+  let body = rule.body in
+  if is_leaf body then
+    let all_names =
+      rule_name :: List.map (fun alias -> alias.id) rule.aliases
+    in
+    let mkdef name =
+      if AST_grammar.is_inline name then
+        [
+          Line (sprintf "%s = unit" (trans name));
+        ]
+      else
+        [
+          Line (sprintf "%s = Token.t" (trans name));
+        ]
+    in
+    List.map mkdef all_names
+  else
+    let rule_def =
       [
-        Line (sprintf "%s = %s" (trans alias.id) (trans rule_name))
+        Line (sprintf "%s =" (trans rule_name));
+        Block (format_body rule.body);
       ]
-    ) rule.aliases
-  in
-  rule_def :: aliases
+    in
+    let aliases =
+      List.map (fun alias ->
+        [
+          Line (sprintf "%s = %s" (trans alias.id) (trans rule_name))
+        ]
+      ) rule.aliases
+    in
+    rule_def :: aliases
 
 let ppx = [
   Line "[@@deriving show {with_path = false}]";

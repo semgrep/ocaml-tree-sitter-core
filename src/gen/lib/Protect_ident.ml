@@ -83,6 +83,7 @@ let ocaml_builtin_types = [
   "bytes";
   "list";
   "array";
+  "option";
 ]
 
 let ocaml_reserved = ocaml_keywords @ ocaml_builtin_types

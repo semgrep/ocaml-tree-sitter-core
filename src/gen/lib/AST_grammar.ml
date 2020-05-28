@@ -92,7 +92,11 @@ type rule_body =
         differently.
      *)
 
-  | Blank
+  | Blank of ident option
+     (* Matches any sequence without consuming it.
+        It comes with an optional name, which may help understand
+        an AST. Such named zero-length sequences come from hidden tokens
+        (whose name starts with an underscore). *)
 
   (* composite (nodes) *)
   | Repeat of rule_body
@@ -118,7 +122,30 @@ type grammar = {
 
   rules: rule list list;
     (* rules, grouped and sorted in dependency order. *)
+
+  extras: string list;
+    (* node names that don't belong to any rule and can occur anywhere,
+       such as comments. *)
 }
 
 (* alias *)
 type t = grammar
+
+(* Rules whose name start with an underscore don't produce a node
+   tree-sitter's output but instead insert the children inline.
+
+   See https://tree-sitter.github.io/tree-sitter/creating-parsers#hiding-rules
+*)
+let is_inline rule_name =
+  rule_name <> "" && rule_name.[0] = '_'
+
+let is_leaf = function
+  | String _
+  | Pattern _
+  | Blank _ -> true
+  | Symbol _
+  | Repeat _
+  | Repeat1 _
+  | Choice _
+  | Optional _
+  | Seq _ -> false

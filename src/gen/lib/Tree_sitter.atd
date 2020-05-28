@@ -36,8 +36,14 @@ type rule_body = [
   | PREC_RIGHT of (int nullable * rule_body)
   | ALIAS of alias
   | FIELD of (ident * rule_body)
-  | IMMEDIATE_TOKEN of rule_body (* presumably must contain a token *)
+
+  | IMMEDIATE_TOKEN of rule_body
+      (* should parse a constant string or a pattern? *)
+
   | TOKEN of rule_body
+      (* may obey a complex parsing rule but is exposed in the parser output
+         as a node without children, i.e. a token. *)
+
 ] <json adapter.ocaml="Json_rule_adapter"> (* see Json_rule_adapter.ml *)
   <ocaml repr="classic">
 

@@ -22,7 +22,7 @@ let rec collect_names acc x =
   | Symbol (name, _alias) -> name :: acc
   | String _
   | Pattern _
-  | Blank -> acc
+  | Blank _ -> acc
 
 let extract_rule_deps (name, body) =
   let deps = collect_names [] body in

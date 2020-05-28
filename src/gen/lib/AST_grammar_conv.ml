@@ -30,9 +30,9 @@ let translate find_alias (x : Tree_sitter_t.rule_body) =
   let rec translate x =
     match (x : Tree_sitter_t.rule_body) with
     | SYMBOL ident -> Symbol (ident, None)
-    | STRING s -> String s
-    | PATTERN s -> Pattern s
-    | BLANK -> Blank
+    | STRING name -> String name
+    | PATTERN pat -> Pattern pat
+    | BLANK -> Blank None
     | REPEAT x -> Repeat (translate x)
     | REPEAT1 x -> Repeat1 (translate x)
     | CHOICE [x; BLANK] -> Optional (translate x)
@@ -44,8 +44,8 @@ let translate find_alias (x : Tree_sitter_t.rule_body) =
     | PREC_RIGHT (_opt_prio, x) -> translate x
     | FIELD (_name, x) -> translate x (* TODO not sure about ignoring this *)
     | ALIAS alias -> translate_alias find_alias alias
-    | IMMEDIATE_TOKEN x -> translate x (* TODO check what this is *)
-    | TOKEN x -> translate x
+    | IMMEDIATE_TOKEN _body -> String "immediate token"
+    | TOKEN _body -> String "token"
   in
   translate x
 
@@ -59,7 +59,7 @@ let rec normalize x =
   | Symbol _
   | String _
   | Pattern _
-  | Blank as x -> x
+  | Blank _ as x -> x
   | Repeat x -> Repeat (normalize x)
   | Repeat1 x -> Repeat1 (normalize x)
   | Choice l -> Choice (List.map normalize l |> flatten_choice)
@@ -84,7 +84,14 @@ and flatten_seq normalized_list =
 
 let make_external_rules externals =
   List.filter_map (function
-    | Tree_sitter_t.SYMBOL name -> Some (name, String name)
+    | Tree_sitter_t.SYMBOL name ->
+        let body =
+          if is_inline name then
+            Blank (Some name)
+          else
+            String name
+        in
+        Some (name, body)
     | Tree_sitter_t.STRING _ -> None (* no need for a rule *)
     | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"
   ) externals
@@ -123,6 +130,17 @@ let tsort_rules find_rule_aliases rules =
       { name; aliases; is_rec; body }) group
   ) sorted
 
+let filter_extras bodies =
+  List.filter_map (fun (x : Tree_sitter_t.rule_body) ->
+    match x with
+    | SYMBOL name -> Some name
+    | STRING name ->
+        (* Results in tree-sitter parse error at the moment.
+           Presumably not super useful. *)
+        Some name
+    | _ -> None
+  ) bodies
+
 let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
   let entrypoint =
     (* assuming the grammar's entrypoint is the first rule in grammar.json *)
@@ -134,8 +152,10 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
   let grammar_rules = translate_rules find_alias x.rules in
   let all_rules = make_external_rules x.externals @ grammar_rules in
   let sorted_rules = tsort_rules find_rule_aliases all_rules in
+  let extras = filter_extras x.extras in
   {
     name = x.name;
     entrypoint;
     rules = sorted_rules;
+    extras;
   }
