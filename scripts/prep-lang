@@ -32,3 +32,11 @@ if [[ -f orig/scanner.cc ]]; then
 elif [[ -f orig/scanner.c ]]; then
   cp orig/scanner.c src/
 fi
+
+# This file is created incorrectly by 'tree-sitter generate' if it doesn't
+# exist, i.e. the optional scanner.c or scanner.cc must be added to the
+# list of C sources.
+#
+if [[ -f orig/binding.gyp ]]; then
+  cp orig/binding.gyp binding.gyp
+fi

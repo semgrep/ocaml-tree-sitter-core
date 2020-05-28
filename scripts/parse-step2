@@ -1,0 +1,17 @@
+#! /usr/bin/env bash
+#
+# Run OCaml parsers on the json output of tree-sitter in examples/
+#
+set -eu -o pipefail
+
+parser=./ocaml-src/_build/install/default/bin/parse
+
+# Run the parser from json to ocaml AST
+#
+if [[ -d examples ]]; then
+  for json in $(ls examples/*.json || :); do
+    src=${json%.json}.src
+    ast=${json%.json}.ast
+    "$parser" "$src" "$json" 2>&1 | tee "$ast"
+  done
+fi
