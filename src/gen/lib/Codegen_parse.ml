@@ -411,34 +411,22 @@ let wrap_left_matcher_result opt_wrap_result matcher_code =
 *)
 let rec gen_seq body (next : next) : next =
   match body with
-  | Symbol (primary_name, opt_alias) ->
+  | Symbol name ->
       (* (symbol, tail) *)
-      let name =
-        match opt_alias with
-        | None -> primary_name
-        | Some alias -> alias.id
-      in
       let parser_name =
         if AST_grammar.is_inline name then
-          "inline_" ^ trans primary_name
+          "inline_" ^ trans name
         else
           "node_" ^ trans name
       in
       prepend (Fun [
-        Line (sprintf "parse_%s (* prim = %s, name = %s *)"
-                parser_name (trans primary_name) (trans name))
+        Line (sprintf "parse_%s" parser_name)
       ]) next
 
-  | String s ->
+  | Token { name; _ } ->
       (* (string, tail) *)
       prepend (Fun [
-        Line (sprintf "_parse_leaf_rule %S" s)
-      ]) next
-
-  | Pattern s ->
-      (* (pattern, tail) *)
-      prepend (Fun [
-        Line (sprintf "_parse_leaf_rule %S" s) (* does this happen? *)
+        Line (sprintf "_parse_leaf_rule %S" name)
       ]) next
 
   | Blank _ ->
@@ -586,8 +574,7 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
   let inline_cache =
     create_cache "cache_inline_" primary_name cache_type in
   let noninline_names =
-    let all_ids =
-      primary_name :: List.map (fun alias -> alias.id) rule.aliases in
+    let all_ids = [primary_name] in
     List.filter (fun id -> not (AST_grammar.is_inline id)) all_ids
   in
   let node_caches =
@@ -628,17 +615,13 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
      with '_'. There's no need for a dedicated parse_inline_ALIAS.
 *)
 let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
-  let primary_name = rule.name in
-  let all_names =
-    (primary_name, primary_name)
-    :: List.map (fun alias -> (alias.id, alias.name)) rule.aliases
-  in
+  let name = rule.name in
   let body = rule.body in
   if is_leaf body then (
     (* Generate parse_inline for the primary rule name.
        Generate parse_node for each name that needs it. *)
     let parse_inline_binding =
-      let fun_name = "parse_inline_" ^ trans primary_name in
+      let fun_name = "parse_inline_" ^ trans name in
       [
         Line (sprintf "%s : unit Combine.reader =" fun_name);
         Block (trace_reader fun_name [
@@ -650,43 +633,44 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         ])
       ]
     in
-    let parse_node_binding (id, name) =
-      match AST_grammar.is_inline name with
-      | true -> None
-      | false ->
-          let fun_name = "parse_node_" ^ trans id in
-          Some [
-            Line (sprintf "%s : Token.t Combine.reader ="
-                    fun_name);
-            Block (trace_reader fun_name [
-              Line "(fun nodes ->";
-              Block [
-                Line (sprintf "Combine.Memoize.apply cache_node_%s" (trans id));
-                Block [
-                  Line (sprintf "(_parse_leaf_rule %S) nodes" name);
-                ]
-              ];
-              Line ")";
-            ])
-          ]
+    let parse_node_binding =
+      let fun_name = "parse_node_" ^ trans name in
+      [
+        Line (sprintf "%s : Token.t Combine.reader ="
+                fun_name);
+        Block (trace_reader fun_name [
+          Line "(fun nodes ->";
+          Block [
+            Line (sprintf "Combine.Memoize.apply cache_node_%s" (trans name));
+            Block [
+              Line (sprintf "(_parse_leaf_rule %S) nodes" name);
+            ]
+          ];
+          Line ")";
+        ])
+      ]
     in
-    let parse_node_bindings = List.filter_map parse_node_binding all_names in
+    let parse_node_bindings =
+      match AST_grammar.is_inline name with
+      | true -> []
+      | false -> [parse_node_binding]
+    in
     [parse_inline_binding] @ parse_node_bindings
   )
   else
     (* Generate parse_inline and parse_children for the primary rule name.
        Generate parse_node for each name that needs it. *)
     let parse_inline_binding =
-      let fun_name = sprintf "parse_inline_%s" (trans primary_name) in
+      let fun_name = sprintf "parse_inline_%s" (trans name) in
       [
         Line (sprintf "%s : %s.%s Combine.reader ="
                 fun_name
-                ast_module_name (trans primary_name));
+                ast_module_name (trans name));
         Block (trace_reader fun_name [
           Line "(fun nodes ->";
           Block [
             Line (sprintf "Combine.Memoize.apply cache_inline_%s ("
-                    (trans primary_name));
+                    (trans name));
             Block (gen_seq body next_success
                    |> flatten_seq
                    |> as_fun);
@@ -697,52 +681,52 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
       ]
     in
     let parse_children_binding =
-      let fun_name = sprintf "parse_children_%s" (trans primary_name) in
+      let fun_name = sprintf "parse_children_%s" (trans name) in
       [
         Line (sprintf "%s : %s.%s Combine.children_reader ="
                 fun_name
-                ast_module_name (trans primary_name));
+                ast_module_name (trans name));
         Block (trace fun_name [
           Line "(fun nodes ->";
           Block [
             Line (sprintf "Combine.parse_full parse_inline_%s nodes"
-                    (trans primary_name));
+                    (trans name));
           ];
           Line ")"
         ])
       ]
     in
-    let parse_node_binding (id, name) =
-      if AST_grammar.is_inline name then
-        None
-      else
-        let fun_name = sprintf "parse_node_%s" (trans id) in
-        Some [
-          Line (sprintf "%s : %s.%s Combine.reader ="
-                  fun_name
-                  ast_module_name (trans id));
-          Block (trace_reader fun_name [
-            Line "(fun nodes ->";
+    let parse_node_binding =
+      let fun_name = sprintf "parse_node_%s" (trans name) in
+      [
+        Line (sprintf "%s : %s.%s Combine.reader ="
+                fun_name
+                ast_module_name (trans name));
+        Block (trace_reader fun_name [
+          Line "(fun nodes ->";
+          Block [
+            Line (sprintf "Combine.Memoize.apply cache_node_%s ("
+                    (trans name));
             Block [
-              Line (sprintf "Combine.Memoize.apply cache_node_%s ("
-                      (trans id));
-              Block [
-                Line (sprintf "Combine.parse_rule %S parse_children_%s"
-                        name (trans primary_name));
-              ];
-              Line ") nodes";
+              Line (sprintf "Combine.parse_rule %S parse_children_%s"
+                      name (trans name));
             ];
-            Line ")"
-          ])
-        ]
+            Line ") nodes";
+          ];
+          Line ")"
+        ])
+      ]
     in
-    let parse_node_functions = List.filter_map parse_node_binding all_names in
-    match parse_node_functions with
-    | [] ->
+    let parse_node_bindings =
+      match AST_grammar.is_inline name with
+      | true -> None
+      | false -> Some parse_node_binding
+    in
+    match parse_node_bindings with
+    | None ->
         [parse_inline_binding]
-    | _ ->
-        [parse_inline_binding; parse_children_binding]
-        @ parse_node_functions
+    | Some parse_node_binding ->
+        [parse_inline_binding; parse_children_binding; parse_node_binding]
 
 let gen ~ast_module_name grammar =
   let entrypoint = grammar.entrypoint in

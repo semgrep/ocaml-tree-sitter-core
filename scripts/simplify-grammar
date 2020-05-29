@@ -1,0 +1,90 @@
+#! /usr/bin/env bash
+#
+# Remove aliases and unhide hidden rules, for easier support by
+# ocaml-tree-sitter.
+#
+# Warning: this is based on fragile regexps. It can easily fail.
+# A good solution would be a system of find-and-replace that's aware of
+# javascript syntax...
+#
+set -eu -o pipefail
+
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") < grammar.js.orig > grammar.js
+
+Remove aliases and unhide hidden rules for support by ocaml-tree-sitter.
+This relies on fragile assumptions. Please check the output.
+EOF
+}
+
+# Replace
+#   alias($.foo, $.bar)
+# by
+#   $.foo
+#
+remove_aliases() {
+  # A single-quoted string, double-quoted string, or anything not containing
+  # parentheses or commas. May start with spaces.
+  # Captures the whole thing as one group.
+  #
+  name="\( *'[^']\+'\|\"[^\"]\+\"\|[^(),]\+\)"
+
+  sed -e "s/\([^a-zA-Z_.]\)alias($name,$name)/\1\2/g"
+}
+
+# Remove leading underscores from symbols. These are responsible for
+# making AST nodes hidden (omitted) from the parser's output.
+#
+# Replace
+#    _method:
+# by
+#    method:
+#
+# and replace
+#   $._method
+# by
+#   $.method
+#
+remove_leading_underscores() {
+  sed -e 's/\([ .]\)[_]\([a-z]\)/\1\2/g'
+}
+
+# Remove the supertypes declaration, which we don't need but must contain
+# symbols that start with an underscore.
+#
+# Remove:
+#
+#   supertypes: $ => [
+#     $.statement,
+#     $.arg,
+#     $.method_name,
+#     $.variable,
+#     $.primary,
+#     $.lhs,
+#   ]
+#
+remove_supertypes() {
+  # Remove group of lines starting from a line matching pattern $start,
+  # and ending with with the first line that matches $end.
+  #
+  start='^ *supertypes:'
+  end='\]'
+
+  # /START/     # start the match at a line that matches START
+  # {           # start block
+  #   :a        # set the label 'a'
+  #   N         # read next line, add to the captured lines
+  #   /END/!    # if not matching END...
+  #   ba        # then go to 'a'
+  #   d         # otherwise delete the captured lines
+  # }           # end block
+  sed -e /"$start"'/{:a;N;/'"$end"'/!ba;d}'
+}
+
+if [[ $# != 0 ]]; then
+  usage 2>&1
+  exit 1
+fi
+
+remove_aliases | remove_leading_underscores | remove_supertypes

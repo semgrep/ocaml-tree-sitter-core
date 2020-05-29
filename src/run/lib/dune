@@ -1,9 +1,10 @@
 (library
  (public_name ocaml-tree-sitter.run)
  (name ocaml_tree_sitter_run)
- (preprocess (pps ppx_deriving.show ppx_deriving.ord))
+ (preprocess (pps ppx_sexp_conv))
  (libraries
    atdgen-runtime
+   sexplib
  )
 )
 

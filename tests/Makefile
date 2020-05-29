@@ -8,11 +8,6 @@ SUCCESS_TESTS = \
   optional-seq \
   opt-repeat1 \
   arithmetic \
-  name-alias \
-  string-alias \
-  alias-scope \
-  inline-alias \
-  unhide-token \
   extras
 
 ALL_TESTS = \
@@ -21,7 +16,6 @@ ALL_TESTS = \
   csharp \
   java \
   nested \
-  ruby \
   rust \
   scala \
   typescript

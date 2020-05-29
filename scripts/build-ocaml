@@ -1,0 +1,10 @@
+#! /usr/bin/env bash
+#
+# Compile generated ocaml parsers.
+#
+set -eu -o pipefail
+
+(
+  cd ocaml-src
+  dune build --root .
+)

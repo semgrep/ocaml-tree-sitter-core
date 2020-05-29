@@ -20,6 +20,7 @@ let preamble grammar =
    entrypoint: %s
 *)
 
+open! Sexplib.Conv
 open Ocaml_tree_sitter_run
 "
         grammar.name
@@ -29,15 +30,20 @@ open Ocaml_tree_sitter_run
 
 let rec format_body body : Indent.t =
   match body with
-  | Symbol (ident, None) -> [Line (trans ident)]
-  | Symbol (_ident, Some alias) -> [Line (trans alias.id)]
-  | String s -> [Line (sprintf "(Token.t (* %S *))" s)]
-  | Pattern s ->
+  | Symbol ident -> [Line (trans ident)]
+  | Token { name = _; description = Constant cst } ->
+      [Line (sprintf "Token.t (* %S *)" cst)]
+  | Token { name = _; description = Pattern pat } ->
       let pattern_string =
-        sprintf "%S" s
+        sprintf "%S" pat
         |> Codegen_util.safe_comment
       in
-      [Line (sprintf "(Token.t (* %s pattern *))" pattern_string)]
+      [Line (sprintf "Token.t (* %s pattern *)" pattern_string)]
+  | Token { name = _; description = Token } ->
+      [Line "Token.t (* complex token *)"]
+  | Token { name = _; description = External } ->
+      [Line "Token.t (* external *)"]
+
   | Blank None -> [Line "unit (* blank *)"]
   | Blank (Some ident) -> [Line (sprintf "unit (* %s *)" ident)]
   | Repeat body ->
@@ -82,49 +88,32 @@ and format_seq l =
   | [_] -> prod
   | _ -> [Paren ("(", prod, ")")]
 
-let format_rule (rule : rule) : Indent.t list =
-  let rule_name = rule.name in
+let format_rule (rule : rule) : Indent.t =
+  let name = rule.name in
   let body = rule.body in
   if is_leaf body then
-    let all_names =
-      rule_name :: List.map (fun alias -> alias.id) rule.aliases
-    in
-    let mkdef name =
-      if AST_grammar.is_inline name then
-        [
-          Line (sprintf "%s = unit" (trans name));
-        ]
-      else
-        [
-          Line (sprintf "%s = Token.t" (trans name));
-        ]
-    in
-    List.map mkdef all_names
-  else
-    let rule_def =
+    if AST_grammar.is_inline name then
       [
-        Line (sprintf "%s =" (trans rule_name));
-        Block (format_body rule.body);
+        Line (sprintf "%s = unit" (trans name));
       ]
-    in
-    let aliases =
-      List.map (fun alias ->
-        [
-          Line (sprintf "%s = %s" (trans alias.id) (trans rule_name))
-        ]
-      ) rule.aliases
-    in
-    rule_def :: aliases
+    else
+      [
+        Line (sprintf "%s = Token.t" (trans name));
+      ]
+  else
+    [
+      Line (sprintf "%s =" (trans name));
+      Block (format_body rule.body);
+    ]
 
 let ppx = [
-  Line "[@@deriving show {with_path = false}]";
+  Line "[@@deriving sexp_of]";
   Line "";
 ]
 
 let format_types grammar =
   List.map (fun rule_group ->
     (List.map format_rule rule_group
-     |> List.flatten
      |> Codegen_util.format_typedefs
     ) @ ppx
   ) grammar.rules
@@ -135,8 +124,8 @@ let generate_dumper grammar =
     Line "";
     Line (sprintf "let dump root =");
     Block [
-      Line (sprintf "print_endline (show_%s root)"
-              grammar.entrypoint);
+      Line (sprintf "sexp_of_%s root" grammar.entrypoint);
+      Line (sprintf "|> Print_sexp.to_stdout;");
     ]
   ]
 

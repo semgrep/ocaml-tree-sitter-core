@@ -14,6 +14,7 @@ clean:
 	rm -r bin
 	dune clean
 	make -C tests clean
+	make -C lang clean
 
 .PHONY: distclean
 	# remove everything that's git-ignored
@@ -24,6 +25,8 @@ test: build
 	./_build/default/src/gen/test/test.exe
 	./_build/default/src/run/test/test.exe
 	$(MAKE) -C tests
+	$(MAKE) -C lang build
+	$(MAKE) -C lang test
 
 .PHONY: install
 install:

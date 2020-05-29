@@ -4,68 +4,16 @@
 
 type ident = string
 
-(* See Alias.mli for explanations on tree-sitter aliases. *)
-type alias = {
-  id: ident;
-    (* unique name for the alias, suitable for generating type names and
-       function names. *)
-
-  name: ident;
-    (* original name of the alias, which may not be unique.
-       This is what's exposed in the tree-sitter parser output. *)
-}
-
-type rule_body =
-  (* atomic (leaves) *)
-  | Symbol of (ident * alias option)
-     (* reference to a named rule. A plain rule name looks like this in
-        grammar.js:
-
-          $.numbers
-
-        here we get:
-
-          Symbol ("numbers", None)
-
-        The optional part is the name shown to us in the parsing result due to
-        a "named ALIAS" wrapping around the rule name.
-
-        grammar.js:
-
-          alias($.numbers, $.items)
-
-        here:
-
-          Symbol ("numbers", Some { id = "items5";
-                                    name = "items" })
-     *)
-
-  | String of string
-     (* constant string as exposed in the parsing output from tree-sitter.
-        It is either the result of a STRING or an anonymous ALIAS:
-
-        Sample string node in grammar.js:
-
-          "*"
-
-        here:
-
-          String "*"       (* token name, showing up as '"type": "*"' in
-                              tree-sitter output. Happens to be also the
-                              actual token obtained at parsing time. *)
-
-        Sample anonymous alias:
-
-          alias($.complicated_times, "times")
-
-        here:
-
-          String "times"   (* not an actual token, but its name, showing
-                              up as "type":"times" in tree-sitter output. *)
-    *)
+type token_description =
+  | Constant of string
+      (* A constant string defining a token.
+         It is used as the name for the pattern if it's not the right-hand side
+         of a named rule. *)
 
   | Pattern of string
-     (* A regexp used here as a name for the pattern.
+      (* A regexp defining a set of valid tokens.
+         It is used as the name for the pattern if it's not the right-hand side
+         of a named rule.
 
         Sample pattern node in grammar.js:
 
@@ -92,8 +40,60 @@ type rule_body =
         differently.
      *)
 
+  | Token
+      (* derived from a token() or token.immediate() construct.
+         It may be derived from complex rules (omitted here) which result in
+         a single token. *)
+
+  | External
+      (* a symbol declared in the 'externals' list and produced by an external
+         C parser. *)
+
+type token = {
+  name: string;
+    (* the node 'type' in tree-sitter's output.
+
+       It is the enclosing rule name or alias, if there's one.
+       Otherwise it's the 'value' field.
+
+       The token(seq(...)) construct can result in a token without a name.
+       We treat these as errors. See the '/tests/token' example.
+
+       grammar.js:
+         times: $ => "*"
+       name: "times"
+
+       grammar.js:
+         repeat($.times)
+       name of the repeated element: "times"
+
+       grammar.js:
+         repeat("*")
+       name of the repeated element: "*"
+
+       grammar.js:
+         alias("*", "star")
+       name: "star"
+
+       grammar.js:
+         alias("*", $.star)
+       name: "star"
+
+       grammar.js:
+         alias($.times, $.star)
+       name: "star"
+    *)
+
+  description: token_description;
+    (* informational *)
+}
+
+type rule_body =
+  (* atomic (leaves) *)
+  | Symbol of ident
+  | Token of token
   | Blank of ident option
-     (* Matches any sequence without consuming it.
+     (* matches any sequence without consuming it.
         It comes with an optional name, which may help understand
         an AST. Such named zero-length sequences come from hidden tokens
         (whose name starts with an underscore). *)
@@ -107,11 +107,6 @@ type rule_body =
 
 type rule = {
   name: ident;
-
-  aliases: alias list;
-    (* all the aliases for this rule found in the grammar. The alias object
-       includes a globally-unique ID to be used as an OCaml type name. *)
-
   is_rec: bool;
   body: rule_body;
 }
@@ -140,8 +135,7 @@ let is_inline rule_name =
   rule_name <> "" && rule_name.[0] = '_'
 
 let is_leaf = function
-  | String _
-  | Pattern _
+  | Token _
   | Blank _ -> true
   | Symbol _
   | Repeat _

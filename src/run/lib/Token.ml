@@ -3,4 +3,6 @@
 *)
 
 type t = Loc.t * string
-[@@deriving show {with_path = false}]
+
+let sexp_of_t (_loc, tok) =
+  Sexplib.Sexp.Atom tok
