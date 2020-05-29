@@ -20,6 +20,7 @@ let preamble grammar =
    entrypoint: %s
 *)
 
+open! Sexplib.Conv
 open Ocaml_tree_sitter_run
 "
         grammar.name
@@ -106,7 +107,7 @@ let format_rule (rule : rule) : Indent.t =
     ]
 
 let ppx = [
-  Line "[@@deriving show {with_path = false}]";
+  Line "[@@deriving sexp_of]";
   Line "";
 ]
 
@@ -123,8 +124,8 @@ let generate_dumper grammar =
     Line "";
     Line (sprintf "let dump root =");
     Block [
-      Line (sprintf "print_endline (show_%s root)"
-              grammar.entrypoint);
+      Line (sprintf "sexp_of_%s root" grammar.entrypoint);
+      Line (sprintf "|> Print_sexp.to_stdout;");
     ]
   ]
 
