@@ -1,4 +1,5 @@
 /bin
+tmp
 
 # Dune build data
 /_build

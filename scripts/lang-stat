@@ -1,0 +1,101 @@
+#! /usr/bin/env bash
+#
+# Fetch git projects from a list and run our parser on the files for
+# a language of interest.
+#
+set -eu -o pipefail
+
+progname=$(basename "$0")
+
+usage() {
+  cat <<EOF
+Usage: $progname PROJECTS_FILE EXTENSIONS_FILE
+
+For each project specified by a git URL in PROJECTS_FILE, run the local
+parser on all the files of the project whose extension matches one of the
+extensions in EXTENSIONS_FILE.
+
+Example: $progname projects.txt extensions.txt
+EOF
+}
+
+error() {
+  echo "Error: $*" >&2
+  exit 1
+}
+
+[[ "${BASH_VERSION%%.*}" -ge 4 ]] || error "requires bash >= 4"
+
+if [[ $# != 2 ]]; then
+  usage 2>&1
+  exit 1
+fi
+
+projects_file="$1"
+extensions_file="$2"
+
+# Read lines into array after removing comments and blank lines.
+readarray -t urls < <(grep -v '^ *\(#\| *$\)' "$projects_file")
+readarray -t extensions < <(grep -v '^ *\(#\| *$\)' "$extensions_file")
+
+csv=stat.csv
+
+# CSV header
+cat > "$csv" <<EOF
+"Project URL","Parse attempts","Parse failures","Lines of code"
+EOF
+
+tree_sitter_parser=$(pwd)/tree-sitter-parser.js
+ocaml_parser=$(pwd)/ocaml-src/_build/install/default/bin/parse
+
+parse() {
+  (
+    cd tmp
+    json=out.json
+    ast=out.ast
+    "$tree_sitter_parser" "$input" | ydump > "$json"
+    "$ocaml_parser" "$input" "$json" > /dev/null
+  ) > tmp/parse.log 2>&1
+}
+
+handle_project() {
+  echo "Fetch $url."
+  (
+    cd tmp
+    rm -rf repo
+    rm -f inputs
+    git clone --depth 1 "$url" repo
+    for ext in "${extensions[@]}"; do
+      if [[ -n "$ext" ]]; then
+        find repo -name "*$ext" >> inputs
+      fi
+    done
+  )
+  readarray -t inputs < <(cat tmp/inputs)
+  num_files=${#inputs[@]}
+  echo "Found $num_files files."
+  errors=0
+  line_count=0
+  for input in "${inputs[@]}"; do
+    echo -n "$input"
+    file_line_count=$(wc -l "tmp/$input" | cut -f1 -d' ')
+    echo -n " ($file_line_count lines)"
+    line_count=$(( line_count + file_line_count ))
+    if parse; then
+      echo "  OK"
+    else
+      errors=$(( errors + 1 ))
+      echo "  ERROR"
+    fi
+  done
+  echo "$url,$num_files,$errors,$line_count" >> "$csv"
+}
+
+mkdir -p tmp
+for url in "${urls[@]}"; do
+  (
+    handle_project || "Failed on $url"
+  ) 2>&1 | tee tmp/lang-stat.log
+done
+
+echo "Result file: $csv"

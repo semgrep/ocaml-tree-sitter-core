@@ -52,6 +52,10 @@ parse-step1:
 parse-step2:
 	$(SCRIPTS)/parse-step2
 
+.PHONY: stat
+stat:
+	$(SCRIPTS)/lang-stat projects.txt extensions.txt
+
 .PHONY: clean
 clean:
 	git clean -dfX
