@@ -71,6 +71,8 @@ let gen_extras grammar =
 let preamble ~ast_module_name grammar =
   [
     Line constant_header;
+    Line (sprintf "let debug = %B" debug_run);
+    Line "";
     Inline (gen_extras grammar);
     Line (sprintf "\
 let parse ~src_file ~json_file : %s.%s option =
@@ -82,6 +84,9 @@ let parse ~src_file ~json_file : %s.%s option =
       json_file
     |> Combine.assign_unique_ids
   in
+
+  if debug then
+    Tree_sitter_dump.to_stdout [root_node];
 
   let get_token x =
     Src_file.get_token src x.startPosition x.endPosition in
