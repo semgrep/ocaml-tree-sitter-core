@@ -94,7 +94,7 @@ handle_project() {
 mkdir -p tmp
 for url in "${urls[@]}"; do
   (
-    handle_project || "Failed on $url"
+    handle_project || echo "Failed on $url"
   ) 2>&1 | tee tmp/lang-stat.log
 done
 
