@@ -82,7 +82,8 @@ let parse_rule type_ parse_children : 'a reader = fun nodes ->
       if node.type_ = type_ then
         match parse_children node.children with
         | Some res -> Some (res, nodes)
-        | None -> None
+        | None ->
+            Tree_sitter_output.fail node "Cannot parse the children nodes"
       else
         None
 
