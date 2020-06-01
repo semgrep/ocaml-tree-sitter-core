@@ -62,55 +62,55 @@ module Parse = struct
         _parse_leaf_rule "variable"
       ) nodes
     in
-    let rec parse_inline_expression : AST.expression Combine.reader =
+    let rec parse_inline_expression _parse_tail
+      : (AST.expression * _) Combine.reader =
       fun nodes ->
-        let parse_tail = Combine.parse_success in
-        let parse_case0 nodes =
+        let parse_case0 _parse_tail nodes =
           match
             (
-              Combine.parse_seq parse_node_variable parse_tail
+              Combine.parse_seq parse_node_variable _parse_tail
             )
               nodes
           with
-          | Some ((res, ()), nodes) -> Some ((`Case0 res), nodes)
+          | Some ((res, tail), nodes) -> Some ((`Case0 res, tail), nodes)
           | None -> None
         in
-        let parse_case1 nodes =
+        let parse_case1 _parse_tail nodes =
           match
             (
-              Combine.parse_seq parse_node_number parse_tail
+              Combine.parse_seq parse_node_number _parse_tail
             )
               nodes
           with
-          | Some ((res, ()), nodes) -> Some ((`Case1 res), nodes)
+          | Some ((res, tail), nodes) -> Some ((`Case1 res, tail), nodes)
           | None -> None
         in
-        let parse_case2 nodes =
+        let parse_case2 _parse_tail nodes =
           match
             (
-              let parse_tail =
-                let parse_tail =
-                  Combine.parse_seq parse_node_expression parse_tail
+              let _parse_tail =
+                let _parse_tail =
+                  Combine.parse_seq parse_node_expression _parse_tail
                 in
-                Combine.parse_seq (_parse_leaf_rule "+") parse_tail
+                Combine.parse_seq (_parse_leaf_rule "+") _parse_tail
               in
-              Combine.parse_seq parse_node_expression parse_tail
+              Combine.parse_seq parse_node_expression _parse_tail
             ) nodes
           with
-          | Some ((e0, (e1, (e2, ()))), nodes) ->
-              Some ((`Case2 (e0, e1, e2)), nodes)
+          | Some ((e0, (e1, (e2, tail))), nodes) ->
+              Some ((`Case2 (e0, e1, e2), tail), nodes)
           | None ->
               None
         in
-        match parse_case0 nodes with
+        match parse_case0 _parse_tail nodes with
         | Some _ as res -> res
         | None ->
-            match parse_case1 nodes with
+            match parse_case1 _parse_tail nodes with
             | Some _ as res -> res
             | None ->
-                parse_case2 nodes
-    and parse_children_expression : _ Combine.children_reader = fun nodes ->
-      Combine.parse_full parse_inline_expression nodes
+                parse_case2 _parse_tail nodes
+    and parse_children_expression : _ Combine.full_seq_reader = fun nodes ->
+      Combine.parse_full_seq parse_inline_expression nodes
     and parse_node_expression = fun nodes ->
       Combine.Memoize.apply cache_node_expression (
         Combine.parse_rule "expression" parse_children_expression
@@ -121,27 +121,24 @@ module Parse = struct
     let cache_node_statement = Combine.Memoize.create () in
     let cache_node_stmt = Combine.Memoize.create () in
 
-    let parse_inline_statement : AST.statement Combine.reader =
+    let parse_inline_statement _parse_tail
+      : (AST.statement * _) Combine.reader =
       fun nodes ->
-        Combine.Memoize.apply cache_inline_statement (
-          (fun nodes ->
-             match
-               Combine.parse_seq
-                 parse_node_expression
-                 (
-                   Combine.parse_seq
-                     (_parse_leaf_rule ";")
-                     Combine.parse_success
-                 )
-                 nodes
-             with
-             | Some ((e1, (e2, ())), nodes) -> Some ((e1, e2), nodes)
-             | None -> None
-          )
-        ) nodes
+        match
+          Combine.parse_seq
+            parse_node_expression
+            (
+              Combine.parse_seq
+                (_parse_leaf_rule ";")
+                _parse_tail
+            )
+            nodes
+        with
+        | Some ((e1, (e2, tail)), nodes) -> Some (((e1, e2), tail), nodes)
+        | None -> None
     in
-    let parse_children_statement : _ Combine.children_reader = fun nodes ->
-      Combine.parse_full parse_inline_statement nodes
+    let parse_children_statement : _ Combine.full_seq_reader = fun nodes ->
+      Combine.parse_full_seq parse_inline_statement nodes
     in
     (* normal rule (not inline, not an alias) *)
     let parse_node_statement : AST.statement Combine.reader = fun nodes ->
@@ -156,9 +153,9 @@ module Parse = struct
       ) nodes
     in
     (* inline alias *)
-    let parse_inline__thing : AST._thing Combine.reader =
+    let parse_inline__thing _parse_tail : (AST._thing * _) Combine.reader =
       fun nodes ->
-        parse_inline_statement nodes
+        parse_inline_statement _parse_tail nodes
     in
 
     let parse_node_program = fun nodes ->

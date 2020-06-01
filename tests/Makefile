@@ -8,7 +8,11 @@ SUCCESS_TESTS = \
   optional-seq \
   opt-repeat1 \
   arithmetic \
-  extras
+  extras \
+  backtrack-opt \
+  backtrack-repeat \
+  backtrack-choice \
+  backtrack-multi
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \

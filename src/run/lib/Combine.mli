@@ -18,7 +18,7 @@ type 'a reader = node list -> ('a * node list) option
    This is the generic type for parse_children_XXX functions in generated
    code.
 *)
-type 'a children_reader = node list -> 'a option
+type 'a full_seq_reader = node list -> 'a option
 
 (*
    A type alias for a reader capable of backtracking.
@@ -104,9 +104,15 @@ val parse_seq : 'a reader -> 'tail reader -> ('a * 'tail) reader
    This is intended to be used in generated code as:
 
      let parse_children =
-       parse_full_seq parse_inline_thing parse_end
+       parse_full_seq parse_inline_thing
+
+   It turns a seq_reader into a full_seq_reader:
+
+     ('a, 'a, unit) seq_reader -> 'a full_seq_reader
 *)
-val parse_full : 'a reader -> (node list -> 'a option)
+val parse_full_seq :
+  (unit reader -> ('head * unit) reader) ->
+  (node list -> 'head option)
 
 (* Match at the end of input. *)
 val parse_end : unit reader

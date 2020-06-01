@@ -11,8 +11,13 @@ let safe_run f =
   with e ->
     let trace = Printexc.get_backtrace () in
     flush stdout;
-    eprintf "Error: exception %s\n%s\n%!"
-      (Printexc.to_string e)
+    let msg =
+      match e with
+      | Failure msg -> msg
+      | e -> sprintf "exception %s" (Printexc.to_string e)
+    in
+    eprintf "Error: %s\n%s\n%!"
+      msg
       trace;
     exit 1
 

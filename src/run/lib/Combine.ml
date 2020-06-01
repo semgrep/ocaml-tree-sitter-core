@@ -8,7 +8,7 @@ open Printf
 open Tree_sitter_output_t
 
 type 'a reader = node list -> ('a * node list) option
-type 'a children_reader = node list -> 'a option
+type 'a full_seq_reader = node list -> 'a option
 
 type ('head_elt, 'head, 'tail) seq_reader =
   'head_elt reader -> 'tail reader -> ('head * 'tail) reader
@@ -82,7 +82,8 @@ let parse_rule type_ parse_children : 'a reader = fun nodes ->
       if node.type_ = type_ then
         match parse_children node.children with
         | Some res -> Some (res, nodes)
-        | None -> None
+        | None ->
+            Tree_sitter_output.fail node "Cannot parse the children nodes"
       else
         None
 
@@ -111,10 +112,10 @@ let parse_end nodes =
   | [] -> Some ((), [])
   | _ -> None
 
-let parse_full parse_elt nodes =
-  match parse_seq parse_elt parse_end nodes with
+let parse_full_seq parse_inline nodes =
+  match parse_inline parse_end nodes with
   | Some ((res, ()), []) -> Some res
-  | Some (_, _::_)
+  | Some (_, (_::_)) -> invalid_arg "Combine.parse_full_seq"
   | None -> None
 
 (* Each time we make forward progress in a repeat, we take a snapshot
@@ -169,17 +170,21 @@ let parse_repeat1 parse_elt parse_tail nodes =
       | Some ((repeat_tail, res2), nodes) ->
           Some ((elt :: repeat_tail, res2), nodes)
 
-let parse_optional parse_elt parse_tail nodes =
-  match parse_elt nodes with
+let parse_optional parse_elt parse_tail orig_nodes =
+  match parse_elt orig_nodes with
   | None ->
-      (match parse_tail nodes with
-       | None -> None
+      (match parse_tail orig_nodes with
        | Some (tail, nodes) -> Some ((None, tail), nodes)
+       | None -> None
       )
-  | Some (elt, nodes) ->
-      match parse_tail nodes with
-      | None -> None
+  | Some (elt, remaining_nodes) ->
+      match parse_tail remaining_nodes with
       | Some (tail, nodes) -> Some ((Some elt, tail), nodes)
+      | None ->
+          (match parse_tail orig_nodes with
+           | Some (tail, nodes) -> Some ((Some elt, tail), nodes)
+           | None -> None
+          )
 
 let map f parse_elt nodes =
   match parse_elt nodes with
