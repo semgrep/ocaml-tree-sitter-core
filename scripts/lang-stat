@@ -53,7 +53,7 @@ parse() {
     cd tmp
     json=out.json
     ast=out.ast
-    "$tree_sitter_parser" "$input" | ydump > "$json"
+    "$tree_sitter_parser" "$input" > "$json"
     "$ocaml_parser" "$input" "$json" > /dev/null
   ) > tmp/parse.log 2>&1
 }
