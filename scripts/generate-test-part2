@@ -47,6 +47,7 @@ if [[ -d examples ]]; then
   for json in $(ls examples/*.json || :); do
     src=${json%.json}.src
     ast=${json%.json}.ast
+    echo "--- $src"
     ./parse-part2 "$src" "$json" 2>&1 | tee "$ast"
   done
 fi

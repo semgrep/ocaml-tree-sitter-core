@@ -2,6 +2,8 @@
    Code generator for the AST.ml file.
 
    This produces code similar to what's found in ../../run/lib/Sample.ml
+
+   TODO: explain the problem and the solution in a document.
 *)
 
 open Printf
@@ -85,8 +87,12 @@ let parse ~src_file ~json_file : %s.%s option =
     |> Combine.assign_unique_ids
   in
 
-  if debug then
+  if debug then (
+    Printf.printf \"input from tree-sitter:\\n\";
     Tree_sitter_dump.to_stdout [root_node];
+    flush stdout;
+    Printf.printf \"ocaml-tree-sitter trace:\\n\"
+  );
 
   let get_token x =
     Src_file.get_token src x.startPosition x.endPosition in
@@ -275,9 +281,11 @@ let map_next_incr f next =
 
 let match_end = Fun [Line "Combine.parse_end"]
 let match_success = Fun [Line "Combine.parse_success"]
+let match_tail = Fun [Line "_parse_tail"]
 
 let next_match_end = Next (1, 0, match_end)
 let next_success = Next (1, 0, match_success)
+let next_tail = Next (1, 1, match_tail)
 
 (* Put a matcher in front a sequence of matchers. *)
 let prepend match_elt next =
@@ -365,6 +373,23 @@ let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
             Nothing
           else
             Next (num_captured, num_keep, match_seq)
+
+(*
+   Flatten the full sequence minus one element, and eliminate the ignored
+   tail:
+
+     (e1, (e2, (e3, ignored_tail))) -> ((e1, e2), e3)
+*)
+let flatten_seq_with_tail ?wrap_tuple next =
+  if debug then
+    printf "flatten_seq_with_tail next:%s\n" (show_next next);
+  let num_elts =
+    match next with
+    | Nothing -> 0
+    | Next (_num_captured, num_keep, _code) -> num_keep - 1
+  in
+  let next = flatten_seq_head ?wrap_tuple num_elts next in
+  force_next next
 
 (*
    Flatten the full sequence and eliminate the ignored tail.
@@ -576,21 +601,13 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
     else
       sprintf "%s.%s" ast_module_name (trans primary_name)
   in
-  let inline_cache =
-    create_cache "cache_inline_" primary_name cache_type in
   let noninline_names =
     let all_ids = [primary_name] in
     List.filter (fun id -> not (AST_grammar.is_inline id)) all_ids
   in
-  let node_caches =
-    List.map
-      (fun id -> create_cache "cache_node_" id cache_type)
-      noninline_names
-  in
-  [
-    inline_cache;
-    Inline node_caches;
-  ]
+  List.map
+    (fun id -> create_cache "cache_" id cache_type)
+    noninline_names
 
 (*
    Generate a list of bindings, without 'let', 'and' etc.
@@ -599,11 +616,9 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
    We create 3 kinds of functions:
 
    * parse_inline_TYPE:
-     - cached
      - called by parse_children_TYPE, which ensures it consumes the whole input
      - called by inline rules, whose name starts with '_'
    * parse_children_TYPE:
-     - not cached
      - calls parse_inline_TYPE
    * parse_node_TYPE:
      - cached
@@ -646,7 +661,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         Block (trace_reader fun_name [
           Line "(fun nodes ->";
           Block [
-            Line (sprintf "Combine.Memoize.apply cache_node_%s" (trans name));
+            Line (sprintf "Combine.Memoize.apply cache_%s" (trans name));
             Block [
               Line (sprintf "(_parse_leaf_rule %S) nodes" name);
             ]
@@ -668,33 +683,26 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
     let parse_inline_binding =
       let fun_name = sprintf "parse_inline_%s" (trans name) in
       [
-        Line (sprintf "%s : %s.%s Combine.reader ="
+        Line (sprintf "%s _parse_tail : (%s.%s * _) Combine.reader ="
                 fun_name
                 ast_module_name (trans name));
         Block (trace_reader fun_name [
-          Line "(fun nodes ->";
-          Block [
-            Line (sprintf "Combine.Memoize.apply cache_inline_%s ("
-                    (trans name));
-            Block (gen_seq body next_success
-                   |> flatten_seq
-                   |> as_fun);
-            Line ") nodes"
-          ];
-          Line ")"
+          Block (gen_seq body next_tail
+                 |> flatten_seq_with_tail
+                 |> as_fun);
         ])
       ]
     in
     let parse_children_binding =
       let fun_name = sprintf "parse_children_%s" (trans name) in
       [
-        Line (sprintf "%s : %s.%s Combine.children_reader ="
+        Line (sprintf "%s : %s.%s Combine.full_seq_reader ="
                 fun_name
                 ast_module_name (trans name));
         Block (trace fun_name [
           Line "(fun nodes ->";
           Block [
-            Line (sprintf "Combine.parse_full parse_inline_%s nodes"
+            Line (sprintf "Combine.parse_full_seq parse_inline_%s nodes"
                     (trans name));
           ];
           Line ")"
@@ -710,7 +718,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         Block (trace_reader fun_name [
           Line "(fun nodes ->";
           Block [
-            Line (sprintf "Combine.Memoize.apply cache_node_%s ("
+            Line (sprintf "Combine.Memoize.apply cache_%s ("
                     (trans name));
             Block [
               Line (sprintf "Combine.parse_rule %S parse_children_%s"
@@ -766,9 +774,20 @@ let gen ~ast_module_name grammar =
     Inline (preamble ~ast_module_name grammar);
     Block [
       Inline rule_defs;
-      Line (sprintf "Combine.parse_root ~extras parse_node_%s root_node"
-              (trans entrypoint));
-    ]
+      Line "let result =";
+      Block [
+        Line (sprintf "Combine.parse_root ~extras parse_node_%s root_node;"
+                (trans entrypoint));
+      ];
+      Line "in";
+    ];
+    Line "if debug then (";
+    Block [
+      Line "Printf.printf \"---\n\";";
+      Line "flush stdout";
+    ];
+    Line ");";
+    Line "result"
   ]
 
 let generate ~ast_module_name grammar =
