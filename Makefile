@@ -6,7 +6,7 @@ build:
 .PHONY: setup
 setup:
 	./scripts/install-tree-sitter
-	# TODO: install opam packages
+	opam install --deps-only -y .
 
 # Keep things like node_modules that are worth keeping around
 .PHONY: clean
