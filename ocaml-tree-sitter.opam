@@ -16,6 +16,7 @@ depends: [
   "cmdliner"
   "dune" {>= "2.1"}
   "ocaml"
+  "ppx_deriving"
   "tsort" {>= "2.0"}
 ]
 

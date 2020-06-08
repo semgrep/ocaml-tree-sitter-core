@@ -92,11 +92,8 @@ type rule_body =
   (* atomic (leaves) *)
   | Symbol of ident
   | Token of token
-  | Blank of ident option
-     (* matches any sequence without consuming it.
-        It comes with an optional name, which may help understand
-        an AST. Such named zero-length sequences come from hidden tokens
-        (whose name starts with an underscore). *)
+  | Blank
+     (* matches any sequence without consuming it. *)
 
   (* composite (nodes) *)
   | Repeat of rule_body
@@ -126,17 +123,9 @@ type grammar = {
 (* alias *)
 type t = grammar
 
-(* Rules whose name start with an underscore don't produce a node
-   tree-sitter's output but instead insert the children inline.
-
-   See https://tree-sitter.github.io/tree-sitter/creating-parsers#hiding-rules
-*)
-let is_inline rule_name =
-  rule_name <> "" && rule_name.[0] = '_'
-
 let is_leaf = function
   | Token _
-  | Blank _ -> true
+  | Blank -> true
   | Symbol _
   | Repeat _
   | Repeat1 _

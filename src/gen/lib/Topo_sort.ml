@@ -21,7 +21,7 @@ let rec collect_names acc x =
   | Seq l -> List.fold_left (fun acc x -> collect_names acc x) acc l
   | Symbol name -> name :: acc
   | Token _
-  | Blank _ -> acc
+  | Blank -> acc
 
 let extract_rule_deps (name, body) =
   let deps = collect_names [] body in

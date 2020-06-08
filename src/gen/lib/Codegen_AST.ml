@@ -44,8 +44,7 @@ let rec format_body body : Indent.t =
   | Token { name = _; description = External } ->
       [Line "Token.t (* external *)"]
 
-  | Blank None -> [Line "unit (* blank *)"]
-  | Blank (Some ident) -> [Line (sprintf "unit (* %s *)" ident)]
+  | Blank -> [Line "unit (* blank *)"]
   | Repeat body ->
       [
         Inline (format_body body);
@@ -92,14 +91,9 @@ let format_rule (rule : rule) : Indent.t =
   let name = rule.name in
   let body = rule.body in
   if is_leaf body then
-    if AST_grammar.is_inline name then
-      [
-        Line (sprintf "%s = unit" (trans name));
-      ]
-    else
-      [
-        Line (sprintf "%s = Token.t" (trans name));
-      ]
+    [
+      Line (sprintf "%s = Token.t" (trans name));
+    ]
   else
     [
       Line (sprintf "%s =" (trans name));

@@ -443,14 +443,8 @@ let rec gen_seq body (next : next) : next =
   match body with
   | Symbol name ->
       (* (symbol, tail) *)
-      let parser_name =
-        if AST_grammar.is_inline name then
-          "inline_" ^ trans name
-        else
-          "node_" ^ trans name
-      in
       prepend (Fun [
-        Line (sprintf "parse_%s" parser_name)
+        Line (sprintf "parse_node_%s" (trans name))
       ]) next
 
   | Token { name; _ } ->
@@ -459,7 +453,7 @@ let rec gen_seq body (next : next) : next =
         Line (sprintf "_parse_leaf_rule %S" name)
       ]) next
 
-  | Blank _ ->
+  | Blank ->
       (* tail *)
       prepend (Fun [
         Line "Combine.parse_success";
@@ -601,13 +595,7 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
     else
       sprintf "%s.%s" ast_module_name (trans primary_name)
   in
-  let noninline_names =
-    let all_ids = [primary_name] in
-    List.filter (fun id -> not (AST_grammar.is_inline id)) all_ids
-  in
-  List.map
-    (fun id -> create_cache "cache_" id cache_type)
-    noninline_names
+  [create_cache "cache_" primary_name cache_type]
 
 (*
    Generate a list of bindings, without 'let', 'and' etc.
@@ -670,12 +658,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         ])
       ]
     in
-    let parse_node_bindings =
-      match AST_grammar.is_inline name with
-      | true -> []
-      | false -> [parse_node_binding]
-    in
-    [parse_inline_binding] @ parse_node_bindings
+    [parse_inline_binding; parse_node_binding]
   )
   else
     (* Generate parse_inline and parse_children for the primary rule name.
@@ -730,16 +713,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         ])
       ]
     in
-    let parse_node_bindings =
-      match AST_grammar.is_inline name with
-      | true -> None
-      | false -> Some parse_node_binding
-    in
-    match parse_node_bindings with
-    | None ->
-        [parse_inline_binding]
-    | Some parse_node_binding ->
-        [parse_inline_binding; parse_children_binding; parse_node_binding]
+    [parse_inline_binding; parse_children_binding; parse_node_binding]
 
 let gen ~ast_module_name grammar =
   let entrypoint = grammar.entrypoint in
