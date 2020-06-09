@@ -16,14 +16,14 @@ depends: [
   "cmdliner"
   "dune" {>= "2.1"}
   "ocaml"
-  "str"
+  "ppx_deriving"
   "tsort" {>= "2.0"}
 ]
 
-synopsis: ""
+synopsis: "Code generator for parsing the output of tree-sitter parsers"
 
 description: """
-ocaml-tree-sitter translates a tree-sitter json grammar to OCaml code
+Ocaml-tree-sitter translates a tree-sitter json grammar to OCaml code
 for recovering a full AST from the output for a tree-sitter parser.
 """
 

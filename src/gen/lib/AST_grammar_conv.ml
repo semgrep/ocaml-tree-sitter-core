@@ -40,7 +40,7 @@ let translate_constant opt_rule_name cst =
 let translate_token opt_rule_name body =
   match name_of_body opt_rule_name body with
   | Some name -> Token { name; description = Token }
-  | None -> Blank None
+  | None -> Blank
 
 (*
    Unlike string constants, patterns without a name are omitted from
@@ -49,7 +49,7 @@ let translate_token opt_rule_name body =
 let translate_pattern opt_rule_name pat =
   match opt_rule_name with
   | Some name -> Token { name; description = Pattern pat }
-  | None -> Blank None
+  | None -> Blank
 
 (*
    Simple translation without normalization. Get rid of PREC_*
@@ -77,44 +77,44 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
     | PATTERN pat -> translate_pattern rule_name pat
     | IMMEDIATE_TOKEN body
     | TOKEN body -> translate_token rule_name body
-    | BLANK -> Blank None
+    | BLANK -> Blank
     | REPEAT x -> Repeat (translate x)
     | REPEAT1 x -> Repeat1 (translate x)
     | CHOICE [x; BLANK] -> Optional (translate x)
-    | CHOICE l -> Choice (List.map translate l)
+    | CHOICE l -> Choice (translate_choice rule_name l)
     | SEQ l -> Seq (List.map translate l)
     | PREC (_prio, x) -> translate x
     | PREC_DYNAMIC (_prio, x) -> translate x
     | PREC_LEFT (_opt_prio, x) -> translate x
     | PREC_RIGHT (_opt_prio, x) -> translate x
-    | FIELD (_name, x) -> translate x (* TODO not sure about ignoring this *)
+    | FIELD (_name, x) -> translate x
     | ALIAS _alias -> failwith "aliases are not supported"
+
+  and translate_choice opt_rule_name cases =
+    let translated_cases = List.map translate cases in
+    Case_name.assign opt_rule_name translated_cases
   in
   translate ~rule_name x
 
 (*
    Algorithm: convert the nodes of tree from unnormalized to normalized,
-   starting from the leaves. This ensures that the argument of flatten_choice
-   or flatten_seq is already fully normalized.
+   starting from the leaves. This ensures that the argument of flatten_seq
+   is already fully normalized.
+
+   We no longer flatten choices because they're rarely nested anyway,
+   and it would require re-generating case names so as to avoid ambiguities.
 *)
 let rec normalize x =
   match x with
   | Symbol _
   | Token _
-  | Blank _ as x -> x
+  | Blank as x -> x
   | Repeat x -> Repeat (normalize x)
   | Repeat1 x -> Repeat1 (normalize x)
-  | Choice l -> Choice (List.map normalize l |> flatten_choice)
+  | Choice l ->
+      Choice (List.map (fun (name, body) -> (name, normalize body)) l)
   | Optional x -> Optional (normalize x)
   | Seq l -> Seq (List.map normalize l |> flatten_seq)
-
-and flatten_choice normalized_list =
-  normalized_list
-  |> List.map (function
-    | Choice l -> l
-    | other -> [other]
-  )
-  |> List.flatten
 
 and flatten_seq normalized_list =
   normalized_list
@@ -127,12 +127,7 @@ and flatten_seq normalized_list =
 let make_external_rules externals =
   List.filter_map (function
     | Tree_sitter_t.SYMBOL name ->
-        let body =
-          if is_inline name then
-            Blank (Some name)
-          else
-            Token { name; description = External }
-        in
+        let body = Token { name; description = External } in
         Some (name, body)
     | Tree_sitter_t.STRING _ -> None (* no need for a rule *)
     | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"

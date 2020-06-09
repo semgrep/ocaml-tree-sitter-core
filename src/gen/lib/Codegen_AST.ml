@@ -44,8 +44,7 @@ let rec format_body body : Indent.t =
   | Token { name = _; description = External } ->
       [Line "Token.t (* external *)"]
 
-  | Blank None -> [Line "unit (* blank *)"]
-  | Blank (Some ident) -> [Line (sprintf "unit (* %s *)" ident)]
+  | Blank -> [Line "unit (* blank *)"]
   | Repeat body ->
       [
         Inline (format_body body);
@@ -56,10 +55,10 @@ let rec format_body body : Indent.t =
         Inline (format_body body);
         Block [Line "list (* one or more *)"]
       ]
-  | Choice body_list ->
+  | Choice case_list ->
       [
         Line "[";
-        Inline (format_choice body_list);
+        Inline (format_choice case_list);
         Line "]"
       ]
   | Optional body ->
@@ -71,8 +70,7 @@ let rec format_body body : Indent.t =
       format_seq body_list
 
 and format_choice l =
-  List.mapi (fun i body ->
-    let name = sprintf "Case%i" i in
+  List.map (fun (name, body) ->
     Block [
       Line (sprintf "| `%s of" name);
       Block [Block (format_body body)];
@@ -92,14 +90,9 @@ let format_rule (rule : rule) : Indent.t =
   let name = rule.name in
   let body = rule.body in
   if is_leaf body then
-    if AST_grammar.is_inline name then
-      [
-        Line (sprintf "%s = unit" (trans name));
-      ]
-    else
-      [
-        Line (sprintf "%s = Token.t" (trans name));
-      ]
+    [
+      Line (sprintf "%s = Token.t" (trans name));
+    ]
   else
     [
       Line (sprintf "%s =" (trans name));

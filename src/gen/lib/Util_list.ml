@@ -13,6 +13,19 @@ let deduplicate l =
     )
   ) l
 
+let is_deduplicated l =
+  let tbl = Hashtbl.create 100 in
+  try
+    List.iter (fun k ->
+      if Hashtbl.mem tbl k then
+        raise Exit
+      else
+        Hashtbl.add tbl k ()
+    ) l;
+    true
+  with Exit ->
+    false
+
 let group_by_key kv_list =
   let tbl = Hashtbl.create 100 in
   List.iter (fun (k, v) ->

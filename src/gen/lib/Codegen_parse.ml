@@ -158,20 +158,21 @@ let as_body = function
       ]
   | Body code -> code
 
-let gen_lazy_or num_cases =
-  assert (num_cases > 0);
-  let rec gen i =
-    if i = num_cases - 1 then
-      [ Line (sprintf "_parse_case%i nodes" i) ]
-    else
-      [
-        Line (sprintf "match _parse_case%i nodes with" i);
-        Line "| Some _ as res -> res";
-        Line "| None ->";
-        Block [Block (gen (i + 1))];
-      ]
+let gen_lazy_or cases =
+  let rec gen cases =
+    match cases with
+    | [] -> assert false
+    | [(name, _)] ->
+        [ Line (sprintf "_parse_%s nodes" name) ]
+    | (name, _) :: cases ->
+        [
+          Line (sprintf "match _parse_%s nodes with" name);
+          Line "| Some _ as res -> res";
+          Line "| None ->";
+          Block [Block (gen cases)];
+        ]
   in
-  gen 0
+  gen cases
 
 let as_sequence body =
   match body with
@@ -443,14 +444,8 @@ let rec gen_seq body (next : next) : next =
   match body with
   | Symbol name ->
       (* (symbol, tail) *)
-      let parser_name =
-        if AST_grammar.is_inline name then
-          "inline_" ^ trans name
-        else
-          "node_" ^ trans name
-      in
       prepend (Fun [
-        Line (sprintf "parse_%s" parser_name)
+        Line (sprintf "parse_node_%s" (trans name))
       ]) next
 
   | Token { name; _ } ->
@@ -459,7 +454,7 @@ let rec gen_seq body (next : next) : next =
         Line (sprintf "_parse_leaf_rule %S" name)
       ]) next
 
-  | Blank _ ->
+  | Blank ->
       (* tail *)
       prepend (Fun [
         Line "Combine.parse_success";
@@ -527,10 +522,10 @@ and gen_choice cases next0 =
   match next0 with
   | Nothing ->
       Next (1, 1, Body [
-        Inline (List.mapi (fun i case ->
-          Inline (gen_parse_case i case Nothing)
+        Inline (List.map (fun case ->
+          Inline (gen_parse_case case Nothing)
         ) cases);
-        Inline (gen_lazy_or (List.length cases));
+        Inline (gen_lazy_or cases);
       ])
   | Next _ ->
       let choice_matcher =
@@ -539,10 +534,10 @@ and gen_choice cases next0 =
           Line "let _parse_tail =";
           Block (force_next next0 |> as_fun);
           Line "in";
-          Inline (List.mapi (fun i case ->
-            Inline (gen_parse_case i case next)
+          Inline (List.map (fun case ->
+            Inline (gen_parse_case case next)
           ) cases);
-          Inline (gen_lazy_or (List.length cases));
+          Inline (gen_lazy_or cases);
         ]
       in
       map_next_incr (fun _code -> choice_matcher) next0
@@ -552,11 +547,11 @@ and gen_choice cases next0 =
     res
   )
 
-and gen_parse_case i body next =
+and gen_parse_case (name, body) next =
   let bodies = as_sequence body in
-  let wrap_tuple tuple = sprintf "`Case%i %s" i tuple in
+  let wrap_tuple tuple = sprintf "`%s %s" name tuple in
   [
-    Line (sprintf "let _parse_case%i nodes =" i);
+    Line (sprintf "let _parse_%s nodes =" name);
     Block (gen_seqn_head ~wrap_tuple bodies next |> force_next |> as_body);
     Line "in";
   ]
@@ -601,13 +596,7 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
     else
       sprintf "%s.%s" ast_module_name (trans primary_name)
   in
-  let noninline_names =
-    let all_ids = [primary_name] in
-    List.filter (fun id -> not (AST_grammar.is_inline id)) all_ids
-  in
-  List.map
-    (fun id -> create_cache "cache_" id cache_type)
-    noninline_names
+  [create_cache "cache_" primary_name cache_type]
 
 (*
    Generate a list of bindings, without 'let', 'and' etc.
@@ -670,12 +659,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         ])
       ]
     in
-    let parse_node_bindings =
-      match AST_grammar.is_inline name with
-      | true -> []
-      | false -> [parse_node_binding]
-    in
-    [parse_inline_binding] @ parse_node_bindings
+    [parse_inline_binding; parse_node_binding]
   )
   else
     (* Generate parse_inline and parse_children for the primary rule name.
@@ -730,16 +714,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
         ])
       ]
     in
-    let parse_node_bindings =
-      match AST_grammar.is_inline name with
-      | true -> None
-      | false -> Some parse_node_binding
-    in
-    match parse_node_bindings with
-    | None ->
-        [parse_inline_binding]
-    | Some parse_node_binding ->
-        [parse_inline_binding; parse_children_binding; parse_node_binding]
+    [parse_inline_binding; parse_children_binding; parse_node_binding]
 
 let gen ~ast_module_name grammar =
   let entrypoint = grammar.entrypoint in

@@ -1,6 +1,5 @@
 SUCCESS_TESTS = \
   seq \
-  repeat \
   choice \
   choice-seq \
   repeat-choice \
@@ -16,10 +15,8 @@ SUCCESS_TESTS = \
 
 ALL_TESTS = \
   $(SUCCESS_TESTS) \
-  hide-token \
   csharp \
   java \
-  nested \
   rust \
   scala \
   typescript
