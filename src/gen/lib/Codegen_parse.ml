@@ -158,20 +158,21 @@ let as_body = function
       ]
   | Body code -> code
 
-let gen_lazy_or num_cases =
-  assert (num_cases > 0);
-  let rec gen i =
-    if i = num_cases - 1 then
-      [ Line (sprintf "_parse_case%i nodes" i) ]
-    else
-      [
-        Line (sprintf "match _parse_case%i nodes with" i);
-        Line "| Some _ as res -> res";
-        Line "| None ->";
-        Block [Block (gen (i + 1))];
-      ]
+let gen_lazy_or cases =
+  let rec gen cases =
+    match cases with
+    | [] -> assert false
+    | [(name, _)] ->
+        [ Line (sprintf "_parse_%s nodes" name) ]
+    | (name, _) :: cases ->
+        [
+          Line (sprintf "match _parse_%s nodes with" name);
+          Line "| Some _ as res -> res";
+          Line "| None ->";
+          Block [Block (gen cases)];
+        ]
   in
-  gen 0
+  gen cases
 
 let as_sequence body =
   match body with
@@ -521,10 +522,10 @@ and gen_choice cases next0 =
   match next0 with
   | Nothing ->
       Next (1, 1, Body [
-        Inline (List.mapi (fun i case ->
-          Inline (gen_parse_case i case Nothing)
+        Inline (List.map (fun case ->
+          Inline (gen_parse_case case Nothing)
         ) cases);
-        Inline (gen_lazy_or (List.length cases));
+        Inline (gen_lazy_or cases);
       ])
   | Next _ ->
       let choice_matcher =
@@ -533,10 +534,10 @@ and gen_choice cases next0 =
           Line "let _parse_tail =";
           Block (force_next next0 |> as_fun);
           Line "in";
-          Inline (List.mapi (fun i case ->
-            Inline (gen_parse_case i case next)
+          Inline (List.map (fun case ->
+            Inline (gen_parse_case case next)
           ) cases);
-          Inline (gen_lazy_or (List.length cases));
+          Inline (gen_lazy_or cases);
         ]
       in
       map_next_incr (fun _code -> choice_matcher) next0
@@ -546,11 +547,11 @@ and gen_choice cases next0 =
     res
   )
 
-and gen_parse_case i body next =
+and gen_parse_case (name, body) next =
   let bodies = as_sequence body in
-  let wrap_tuple tuple = sprintf "`Case%i %s" i tuple in
+  let wrap_tuple tuple = sprintf "`%s %s" name tuple in
   [
-    Line (sprintf "let _parse_case%i nodes =" i);
+    Line (sprintf "let _parse_%s nodes =" name);
     Block (gen_seqn_head ~wrap_tuple bodies next |> force_next |> as_body);
     Line "in";
   ]

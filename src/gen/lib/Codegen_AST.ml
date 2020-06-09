@@ -55,10 +55,10 @@ let rec format_body body : Indent.t =
         Inline (format_body body);
         Block [Line "list (* one or more *)"]
       ]
-  | Choice body_list ->
+  | Choice case_list ->
       [
         Line "[";
-        Inline (format_choice body_list);
+        Inline (format_choice case_list);
         Line "]"
       ]
   | Optional body ->
@@ -70,8 +70,7 @@ let rec format_body body : Indent.t =
       format_seq body_list
 
 and format_choice l =
-  List.mapi (fun i body ->
-    let name = sprintf "Case%i" i in
+  List.map (fun (name, body) ->
     Block [
       Line (sprintf "| `%s of" name);
       Block [Block (format_body body)];

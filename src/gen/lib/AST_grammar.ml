@@ -98,7 +98,10 @@ type rule_body =
   (* composite (nodes) *)
   | Repeat of rule_body
   | Repeat1 of rule_body
-  | Choice of rule_body list
+  | Choice of (ident * rule_body) list
+     (* (name, type) where the name is the name of the ocaml constructor
+        suitable for use a classic or polymorphic variant, e.g. "Exp_int". *)
+
   | Optional of rule_body
   | Seq of rule_body list
 
