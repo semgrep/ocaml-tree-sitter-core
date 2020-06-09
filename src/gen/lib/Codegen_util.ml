@@ -31,29 +31,6 @@ let fold_righti f xs init_acc =
 let enum n =
   Array.init n (fun i -> i) |> Array.to_list
 
-let format_typedef pos def =
-  let open Indent.Types in
-  let is_first = (pos = 0) in
-  let type_ =
-    if is_first then
-      "type"
-    else
-      "and"
-  in
-  match def with
-  | Line first_line :: rest ->
-      Line (sprintf "%s %s" type_ first_line) :: rest
-  | _ ->
-      Line type_ :: def
-
-(* Insert the correct 'type' or 'and' from a list of OCaml
-   type definitions.
-   The first item must be a line without the 'type'.
-*)
-let format_typedefs defs =
-  List.mapi format_typedef defs
-  |> List.flatten
-
 let format_binding ~is_rec ~is_local pos binding =
   let open Indent.Types in
   let is_first = (pos = 0) in
