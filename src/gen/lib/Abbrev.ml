@@ -110,8 +110,6 @@ let table =
     Hashtbl.replace tbl
       (String.lowercase_ascii orig) (String.lowercase_ascii abbr);
     Hashtbl.replace tbl
-      (String.uppercase_ascii orig) (String.uppercase_ascii abbr);
-    Hashtbl.replace tbl
       (String.capitalize_ascii orig) (String.capitalize_ascii abbr);
   ) list;
   tbl
