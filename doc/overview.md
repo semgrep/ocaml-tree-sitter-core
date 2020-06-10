@@ -2,7 +2,7 @@ ocaml-tree-sitter overview
 ==
 
 [tree-sitter](https://tree-sitter.github.io/tree-sitter/) generates C
-parsers from grammars specified in json via javascript, with optional
+parsers from grammars specified in json via JavaScript, with optional
 help from custom C code.
 
 The tree-sitter project also comes with grammars for a variety of
@@ -44,23 +44,24 @@ Like steps (1) and (2), steps (4) and (5) consist in code generation
 and compilation, which is done once and for all for the target
 language.
 
-Most of the work in the ocaml-tree-sitter consists in translating a
+Most of the work in the ocaml-tree-sitter project consists in translating a
 grammar specification (`grammar.json`) into:
 
 * a convenient, OCaml-friendly, stable AST type
-* a parser that interprets tree-sitter parser output into such AST
+* a parser that interprets tree-sitter's parser output into such AST
 
 Code organization
 --
 
-* `scripts`: various shell scripts used for building, testing, etc.
-* `src`: OCaml source code
-* `src/gen`: source code in charge of code generation
-* `src/run`: runtime library to linked against generated parsers
-* `tests`: small tests, each involving generating a parser and running
-           it on one or more inputs
-* `lang`: parsers for real programming languages derived from
-          tree-sitter subprojects e.g. tree-sitter-ruby
+* [`/scripts`](../scripts): various shell scripts used for building,
+  testing, etc.
+* [`/src`](../src): OCaml source code
+* [`/src/gen`](../src/gen): source code in charge of code generation
+* [`/src/run`](../src/run): runtime library to linked against generated parsers
+* [`/tests`](../src/tests): small tests, each involving generating a
+  parser and running it on one or more inputs
+* [`/lang`](../lang): parsers for real programming languages derived from
+  tree-sitter subprojects e.g. tree-sitter-ruby
 
 Deep dive
 --
