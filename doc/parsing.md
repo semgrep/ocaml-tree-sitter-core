@@ -5,8 +5,9 @@ Introduction to the problem
 --
 
 Ideally, the result of tree-sitter parsing should be an AST that can
-be used directly. It is not the case because the json output of such
-parsers only return a node per rule name.
+be used directly. It is not the case because the json output we get
+only has nodes for named rules, lacking details on which path was
+taken within a rule.
 
 The following grammar is unproblematic:
 
@@ -14,7 +15,7 @@ The following grammar is unproblematic:
 sum: $ => seq($.number, '+', $.number)
 ```
 
-The above translates to the OCaml type:
+The above translates to the OCaml type definition
 
 ```ocaml
 type sum = number * Token.t * number
@@ -79,7 +80,7 @@ Solution and trade-offs
 
 We just saw that the parsing result of tree-sitter doesn't include
 nodes for the different kinds of repeats (`optional()`, `repeat()`,
-`repeat1()). It also doesn't indicate which branch of a `choice()` was
+`repeat1()`). It also doesn't indicate which branch of a `choice()` was
 matched.
 
 For example, we could have something like this:
