@@ -1,6 +1,8 @@
 ocaml-tree-sitter overview
 ==
 
+This document is targeted at technical contributors.
+
 [tree-sitter](https://tree-sitter.github.io/tree-sitter/) generates C
 parsers from grammars specified in json via JavaScript, with optional
 help from custom C code.
