@@ -6,6 +6,7 @@ SUCCESS_TESTS = \
   repeat-optional \
   optional-seq \
   opt-repeat1 \
+  recurse \
   arithmetic \
   extras \
   backtrack-opt \
