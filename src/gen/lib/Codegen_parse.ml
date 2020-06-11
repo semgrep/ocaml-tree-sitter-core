@@ -10,14 +10,14 @@ open Printf
 open AST_grammar
 open Indent.Types
 
-let debug = false
-let debug_run = true
+let debug_gen = false
+let debug_trace = ref true
 
 (* Emit code that wraps around a parsing function
    if runtime tracing is enabled.
 *)
 let trace_gen trace_fun name (reader : Indent.t) =
-  if debug_run then
+  if !debug_trace then
     [
       Paren (
         sprintf "fun nodes -> Combine.%s %S (" trace_fun name,
@@ -36,7 +36,7 @@ let trace_reader name reader =
   trace_gen "trace_reader" name reader
 
 let debug_log s =
-  if debug_run then
+  if !debug_trace then
     Line (sprintf "print_endline %S;" s)
   else
     Inline []
@@ -73,7 +73,7 @@ let gen_extras grammar =
 let preamble ~ast_module_name grammar =
   [
     Line constant_header;
-    Line (sprintf "let debug = %B" debug_run);
+    Line (sprintf "let debug = ref %B" !debug_trace);
     Line "";
     Inline (gen_extras grammar);
     Line (sprintf "\
@@ -87,7 +87,7 @@ let parse ~src_file ~json_file : %s.%s option =
     |> Combine.assign_unique_ids
   in
 
-  if debug then (
+  if !debug then (
     Printf.printf \"input from tree-sitter:\\n\";
     Tree_sitter_dump.to_stdout [root_node];
     flush stdout;
@@ -322,7 +322,7 @@ let prepend match_elt next =
                                        ^^^^^^^^ single result
 *)
 let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
-  if debug then
+  if debug_gen then
     printf "flatten_seq_head next:%s discard:%B\n" (show_next next) discard;
   assert (num_elts >= 0);
   match num_elts, wrap_tuple with
@@ -348,7 +348,7 @@ let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
             in
             gen_flat_tuple ~head_len:num_elts ~len wrap_tuple
           in
-          if debug then
+          if debug_gen then
             printf "flatten:%i, total:%i, keep:%i  %s -> %s\n"
               num_elts num_captured num_keep
               nested_tuple_pat wrapped_result;
@@ -382,7 +382,7 @@ let flatten_seq_head ?wrap_tuple ?(discard = false) num_elts next =
      (e1, (e2, (e3, ignored_tail))) -> ((e1, e2), e3)
 *)
 let flatten_seq_with_tail ?wrap_tuple next =
-  if debug then
+  if debug_gen then
     printf "flatten_seq_with_tail next:%s\n" (show_next next);
   let num_elts =
     match next with
@@ -396,7 +396,7 @@ let flatten_seq_with_tail ?wrap_tuple next =
    Flatten the full sequence and eliminate the ignored tail.
 *)
 let flatten_seq ?wrap_tuple next =
-  if debug then
+  if debug_gen then
     printf "flatten_seq next:%s\n" (show_next next);
   let num_elts =
     match next with
@@ -542,7 +542,7 @@ and gen_choice cases next0 =
       in
       map_next_incr (fun _code -> choice_matcher) next0
 ) |> (fun res ->
-    if debug then
+    if debug_gen then
       printf "gen_choice returns next:%s\n" (show_next res);
     res
   )
@@ -576,7 +576,7 @@ and repeat kind body next =
     ]
   in
   let res = map_next_incr repeat_matcher next in
-  if debug then
+  if debug_gen then
     printf "result from repeat: %s\n" (show_next res);
   res
 
@@ -756,7 +756,7 @@ let gen ~ast_module_name grammar =
       ];
       Line "in";
     ];
-    Line "if debug then (";
+    Line "if !debug then (";
     Block [
       Line "Printf.printf \"---\n\";";
       Line "flush stdout";

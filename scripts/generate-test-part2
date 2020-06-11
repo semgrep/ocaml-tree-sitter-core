@@ -19,7 +19,7 @@ test -x "$ocaml_tree_sitter" || error "missing executable $ocaml_tree_sitter"
 # Generate the OCaml code needed to parse the examples/*.out json files.
 #
 mkdir -p ocaml-src
-"$ocaml_tree_sitter" src/grammar.json -d ocaml-src
+"$ocaml_tree_sitter" --trace src/grammar.json -d ocaml-src
 
 # Compile the OCaml files into an executable that takes a json file
 # and dumps the OCaml AST in some arbitrary format suitable for human review.
