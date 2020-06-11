@@ -137,4 +137,7 @@ and turning it into the appropriate OCaml AST node is done by
 generated code. This is the code in `Parse.ml`, which is plain and
 straightforward to understand. It is recommended to run the tests with
 `make test` and then inspect the generated code for a simple example
-under `tests`.
+under `tests`. We also maintain a handwritten example of such code as it
+should be generated. This is the file
+[`Sample.ml`](../src/run/lib/Sample.ml). It goes through typechecking
+and serves as a model when making changes in the generated code.
