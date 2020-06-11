@@ -144,29 +144,25 @@ open Ocaml_tree_sitter_run
     grammar.name
     grammar.entrypoint
 
-let rec format_type_ident resolve ident =
-  match resolve ident with
-  | None -> assert false
-  | Some (Symbol ident) ->
-      format_type_ident resolve ident
-  | Some (Token tok) ->
-      let name = tok.name in
-      let type_ =
-        match tok.description with
-        | Constant cst -> sprintf "Token.t (* %S *)" cst
-        | Pattern _pat -> sprintf "%s (*tok*)" (trans name)
-        | Token -> sprintf "%s (*tok*)" (trans name)
-        | External -> sprintf "%s (*tok*)" (trans name)
-      in
-      Fmt.atom type_
-  | Some _ ->
-      Fmt.atom (trans ident)
+let format_inlined_token (tok : token) =
+  let name = tok.name in
+  let type_ =
+    match tok.description with
+    | Constant cst -> sprintf "Token.t (* %S *)" cst
+    | Pattern _pat -> sprintf "%s (*tok*)" (trans name)
+    | Token -> sprintf "%s (*tok*)" (trans name)
+    | External -> sprintf "%s (*tok*)" (trans name)
+  in
+  Fmt.atom type_
 
 let format_body resolve body =
-  let rec format_body body : E.t =
+  let rec format_body
+      ?(is_root = false)
+      ?(is_variant_arg = false)
+      body : E.t =
     match body with
     | Symbol ident ->
-        format_type_ident resolve ident
+        format_type_ident ~is_variant_arg resolve ident
     | Token { name = _; description = Constant cst } ->
         Fmt.atom (sprintf "Token.t (* %S *)" cst)
     | Token { name = _; description = Pattern pat } ->
@@ -186,19 +182,41 @@ let format_body resolve body =
     | Repeat1 body ->
         Fmt.type_app (format_body body) "list (* one or more *)"
     | Choice case_list ->
-        Fmt.poly_variant (format_choice case_list)
+        Fmt.poly_variant (format_choice ~is_root case_list)
     | Optional body ->
         Fmt.type_app (format_body body) "option"
     | Seq body_list ->
         Fmt.product (format_seq body_list)
 
-  and format_choice l =
-    List.map (fun (name, body) -> (name, Some (format_body body))) l
+  and format_choice ~is_root l =
+    List.map (fun (name, body) ->
+      (name, Some (format_body ~is_variant_arg:is_root body))
+    ) l
 
   and format_seq l =
     List.map format_body l
+
+  (*
+     Inline symbols that refer to tokens or tuples.
+
+     Tuples are inlined only under the following conditions:
+     - must be the argument of a variant
+     - variant must be at the root of the rule, i.e. not anonymous
+     - may not be referenced more than once
+   *)
+  and format_type_ident ~is_variant_arg resolve ident =
+    match resolve ident with
+    | None -> assert false
+    | Some (Symbol ident) ->
+        format_type_ident ~is_variant_arg resolve ident
+    | Some (Token tok) ->
+        format_inlined_token tok
+    | Some ((Seq _) as seq) when is_variant_arg ->
+        format_body seq
+    | Some _ ->
+        Fmt.atom (trans ident)
   in
-  format_body body
+  format_body ~is_root:true body
 
 let format_rule resolve (rule : rule) =
   (trans rule.name, format_body resolve rule.body)
@@ -213,10 +231,14 @@ let resolver grammar =
   let tbl = Hashtbl.create 100 in
   List.iter (fun rule_group ->
     List.iter (fun (rule : rule) ->
-      Hashtbl.add tbl rule.name rule.body
+      let name = rule.name in
+      assert (not (Hashtbl.mem tbl name));
+      Hashtbl.add tbl name rule.body
     ) rule_group
   ) grammar.rules;
-  fun name -> Hashtbl.find_opt tbl name
+  fun name ->
+    printf "resolve %s\n%!" name;
+    Hashtbl.find_opt tbl name
 
 let format_types grammar =
   let resolve = resolver grammar in
