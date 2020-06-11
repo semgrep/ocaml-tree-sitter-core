@@ -1,9 +1,7 @@
 # ocaml-tree-sitter
 
-Generate OCaml parsers
-
- code to read tree-sitter Concrete Syntax Trees and convert
-them to an OCaml AST for further processing.
+Generate OCaml parsers based on
+[tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.
 
 ## Installation
 
