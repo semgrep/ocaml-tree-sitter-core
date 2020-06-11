@@ -59,11 +59,12 @@ Code organization
   testing, etc.
 * [`/src`](../src): OCaml source code
 * [`/src/gen`](../src/gen): source code in charge of code generation
-* [`/src/run`](../src/run): runtime library to linked against generated parsers
+* [`/src/run`](../src/run): runtime library for generated parsers
 * [`/tests`](../src/tests): small tests, each involving generating a
   parser and running it on one or more inputs
 * [`/lang`](../lang): parsers for real programming languages derived from
-  tree-sitter subprojects e.g. tree-sitter-ruby
+  tree-sitter subprojects e.g.
+  [tree-sitter-ruby](https://github.com/tree-sitter/tree-sitter-ruby)
 
 Deep dive
 --
