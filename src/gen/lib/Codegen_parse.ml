@@ -67,7 +67,8 @@ let gen_extras grammar =
   [
     Line "let extras = [";
     Block items;
-    Line "]"
+    Line "]";
+    Line ""
   ]
 
 let preamble ~ast_module_name grammar =
@@ -755,14 +756,14 @@ let gen ~ast_module_name grammar =
                 (trans entrypoint));
       ];
       Line "in";
+      Line "if !debug then (";
+      Block [
+        Line "Printf.printf \"---\n\";";
+        Line "flush stdout";
+      ];
+      Line ");";
+      Line "result"
     ];
-    Line "if !debug then (";
-    Block [
-      Line "Printf.printf \"---\n\";";
-      Line "flush stdout";
-    ];
-    Line ");";
-    Line "result"
   ]
 
 let generate ~ast_module_name grammar =

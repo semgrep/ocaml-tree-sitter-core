@@ -109,7 +109,7 @@ module Fmt = struct
   let top_sequence l =
     E.List (("", "", "", Style.vert_seq), l)
 
-  let typedef pos (name, rhs) =
+  let typedef pos (used, name, rhs) =
     let is_first = (pos = 0) in
     let type_ =
       if is_first then
@@ -117,7 +117,11 @@ module Fmt = struct
       else
         "and"
     in
-    def (sprintf "%s %s =" type_ name) rhs
+    let comment =
+      if used then ""
+      else " (* inlined *)"
+    in
+    def (sprintf "%s %s%s =" type_ name comment) rhs
 
   (* Insert the correct 'type' or 'and' from a list of OCaml
      type definitions.
@@ -144,29 +148,49 @@ open Ocaml_tree_sitter_run
     grammar.name
     grammar.entrypoint
 
-let rec format_type_ident resolve ident =
-  match resolve ident with
-  | None -> assert false
-  | Some (Symbol ident) ->
-      format_type_ident resolve ident
-  | Some (Token tok) ->
-      let name = tok.name in
-      let type_ =
-        match tok.description with
-        | Constant cst -> sprintf "Token.t (* %S *)" cst
-        | Pattern _pat -> sprintf "%s (*tok*)" (trans name)
-        | Token -> sprintf "%s (*tok*)" (trans name)
-        | External -> sprintf "%s (*tok*)" (trans name)
-      in
-      Fmt.atom type_
-  | Some _ ->
-      Fmt.atom (trans ident)
+(*
+   Iterate over rule names occurring in a rule body.
+*)
+let rec iter_ident f body =
+  match body with
+  | Symbol ident -> f ident
+  | Token _ -> ()
+  | Blank -> ()
+  | Repeat body -> iter_ident f body
+  | Repeat1 body -> iter_ident f body
+  | Choice cases -> List.iter (fun (_name, body) -> iter_ident f body) cases
+  | Optional body -> iter_ident f body
+  | Seq body_list -> List.iter (iter_ident f) body_list
 
-let format_body resolve body =
-  let rec format_body body : E.t =
+let format_inlined_token ~mark_used_after_inlining (tok : token) =
+  let name = tok.name in
+  let type_ =
+    match tok.description with
+    | Constant cst -> sprintf "Token.t (* %S *)" cst
+    | Pattern _pat ->
+        mark_used_after_inlining name;
+        sprintf "%s (*tok*)" (trans name)
+    | Token ->
+        mark_used_after_inlining name;
+        sprintf "%s (*tok*)" (trans name)
+    | External ->
+        mark_used_after_inlining name;
+        sprintf "%s (*tok*)" (trans name)
+  in
+  Fmt.atom type_
+
+let format_body
+    ~resolve
+    ~get_times_used_before_inlining
+    ~mark_used_after_inlining
+    body =
+  let rec format_body
+      ?(is_root = false)
+      ?(is_variant_arg = false)
+      body : E.t =
     match body with
     | Symbol ident ->
-        format_type_ident resolve ident
+        format_type_ident ~is_variant_arg ident
     | Token { name = _; description = Constant cst } ->
         Fmt.atom (sprintf "Token.t (* %S *)" cst)
     | Token { name = _; description = Pattern pat } ->
@@ -186,22 +210,77 @@ let format_body resolve body =
     | Repeat1 body ->
         Fmt.type_app (format_body body) "list (* one or more *)"
     | Choice case_list ->
-        Fmt.poly_variant (format_choice case_list)
+        Fmt.poly_variant (format_choice ~is_root case_list)
     | Optional body ->
         Fmt.type_app (format_body body) "option"
     | Seq body_list ->
         Fmt.product (format_seq body_list)
 
-  and format_choice l =
-    List.map (fun (name, body) -> (name, Some (format_body body))) l
+  and format_choice ~is_root l =
+    List.map (fun (name, body) ->
+      (name, Some (format_body ~is_variant_arg:is_root body))
+    ) l
 
   and format_seq l =
     List.map format_body l
-  in
-  format_body body
 
-let format_rule resolve (rule : rule) =
-  (trans rule.name, format_body resolve rule.body)
+  (*
+     Inline symbols that refer to tokens or tuples.
+
+     Tuples are inlined only under the following conditions:
+     - must be the argument of a variant
+     - variant must be at the root of the rule, i.e. not anonymous*
+     - may not be referenced more than once
+
+     *we can't inline arguments of variants without precautions due to
+     cases like this:
+
+       type things = (
+           thing
+         * [
+             | `Things of things
+             | `Nothing of unit
+           ]
+       )
+
+     which would become
+
+       type things = (
+           thing
+         * [
+             | `Things of (thing * [ `Things of ... | `Nothing of unit ])
+             | `Nothing of unit
+           ]
+       )
+
+     with infinite recursion.
+   *)
+  and format_type_ident ~is_variant_arg ident =
+    match resolve ident with
+    | None -> assert false
+    | Some (Token tok) ->
+        format_inlined_token ~mark_used_after_inlining tok
+    | Some ((Seq _) as seq)
+      when is_variant_arg
+        && get_times_used_before_inlining ident <= 1 ->
+        format_body seq
+    | Some _ ->
+        mark_used_after_inlining ident;
+        Fmt.atom (trans ident)
+  in
+  format_body ~is_root:true body
+
+let format_rule
+    ~resolve
+    ~get_times_used_before_inlining
+    ~mark_used_after_inlining
+    (rule : rule) =
+  (rule.name,
+   format_body
+     ~resolve
+     ~get_times_used_before_inlining
+     ~mark_used_after_inlining
+     rule.body)
 
 let ppx =
   Fmt.top_sequence [
@@ -209,24 +288,117 @@ let ppx =
     Fmt.atom ""
   ]
 
+(* Look up a rule definition. *)
 let resolver grammar =
   let tbl = Hashtbl.create 100 in
   List.iter (fun rule_group ->
     List.iter (fun (rule : rule) ->
-      Hashtbl.add tbl rule.name rule.body
+      let name = rule.name in
+      assert (not (Hashtbl.mem tbl name));
+      Hashtbl.add tbl name rule.body
     ) rule_group
   ) grammar.rules;
-  fun name -> Hashtbl.find_opt tbl name
+  fun name ->
+    Hashtbl.find_opt tbl name
 
-let format_types grammar =
+(* Resolve a rule name into something that's not a rule name. *)
+let recursive_resolver grammar =
   let resolve = resolver grammar in
-  List.map (fun rule_group ->
-    let defs = List.map (format_rule resolve) rule_group in
+  fun orig_ident ->
+    let rec aux ident =
+      match resolve ident with
+      | None -> None
+      | Some (Symbol ident) ->
+          if ident = orig_ident then
+            failwith (sprintf "Cyclic definition for rule %s" ident)
+          else
+            aux ident
+      | Some _ as res -> res
+    in
+    aux orig_ident
+
+let usage_tracker () =
+  let used = Hashtbl.create 100 in
+  let mark_used name =
+    let count =
+      try Hashtbl.find used name
+      with Not_found -> 0
+    in
+    Hashtbl.replace used name (count + 1)
+  in
+  let get_times_used name =
+    try Hashtbl.find used name
+    with Not_found -> 0
+  in
+  mark_used, get_times_used
+
+(*
+   This is used to determine if a type name is used only once,
+   when considering whether it should be inlined.
+*)
+let count_uses grammar_rules =
+  let mark_used, get_times_used = usage_tracker () in
+  List.iter (fun rule_group ->
+    List.iter (fun rule ->
+      iter_ident mark_used rule.body
+    ) rule_group
+  ) grammar_rules;
+  get_times_used
+
+(*
+   1. Identify names that are used at most once, becoming candidates
+      for inlining.
+   2. Format the right-hand side of type definitions, replacing
+      some type names with their value (inlining).
+   3. Move the type definitions that are unused to the bottom of the file
+      since they're not useful to the human reader. We keep them so they
+      can be used as type annotations by the generated parsers.
+*)
+let format_types grammar =
+  let get_times_used_before_inlining = count_uses grammar.rules in
+  let resolve = recursive_resolver grammar in
+  let mark_used_after_inlining, get_definitive_times_used = usage_tracker () in
+  mark_used_after_inlining grammar.entrypoint;
+  let semi_formatted_defs =
+    List.map (fun rule_group ->
+      List.map
+        (format_rule
+           ~resolve
+           ~get_times_used_before_inlining
+           ~mark_used_after_inlining)
+        rule_group
+    ) grammar.rules
+  in
+  let reordered_defs =
+    let unused = ref [] in
+    let used_defs =
+      List.filter_map (fun def_group ->
+        let used_defs =
+          List.filter_map
+            (fun ((name, _formatted_body) as def) ->
+               if get_definitive_times_used name = 0 then (
+                 unused := [(false, def)] :: !unused;
+                 None
+               )
+               else
+                 Some (true, def)
+            ) def_group
+        in
+        match used_defs with
+        | [] -> None
+        | l -> Some l
+      ) semi_formatted_defs
+    in
+    used_defs @ List.rev !unused
+  in
+  List.map (fun def_group ->
+    let def_group =
+      List.map (fun (used, (name, x)) -> (used, trans name, x)) def_group in
     Fmt.top_sequence [
-      Fmt.recursive_typedefs defs;
+      Fmt.recursive_typedefs def_group;
       ppx
     ]
-  ) grammar.rules
+  ) reordered_defs
   |> Fmt.top_sequence
 
 let generate_dumper grammar =
