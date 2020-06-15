@@ -24,3 +24,13 @@ installed or used by a wide audience.
 
 * [Contributor documentation](doc/overview.md)
 * No user documentation exists at this time.
+
+## License
+
+This is free software with contributors from multiple organizations.
+
+- The OCaml code developed specifically for this project is
+  distributed under the terms of the [GNU GPL v3](LICENSE).
+- tree-sitter grammars for major programming languages were imported
+  from their respective projects, and we try to keep them in sync.
+  They come with their own license.
