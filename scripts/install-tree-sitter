@@ -2,6 +2,8 @@
 #
 # Steps for installing the tree-sitter tools used in the project.
 #
+# TODO: add instructions to install the C library and headers
+#
 set -eu
 
 project_root=$(git rev-parse --show-toplevel)

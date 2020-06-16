@@ -1,3 +1,5 @@
+PROJECT_ROOT = $(shell pwd)
+
 .PHONY: build
 build:
 	dune build
