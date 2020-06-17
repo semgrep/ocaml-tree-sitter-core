@@ -31,10 +31,6 @@
 #include <caml/mlvalues.h>
 #include <caml/threads.h>
 
-// External syntaxes
-TSLanguage *tree_sitter_json();
-TSLanguage *tree_sitter_c();
-
 typedef struct _parser {
   TSParser *parser;
 } parser_W;
@@ -80,34 +76,6 @@ static struct custom_operations TSNode_custom_ops = {
   hash : custom_hash_default,
   serialize : custom_serialize_default,
   deserialize : custom_deserialize_default
-};
-
-CAMLprim value octs_parser_new_json(value unit) {
-  CAMLparam0();
-  CAMLlocal1(v);
-
-  parser_W parserWrapper;
-  TSParser *parser = ts_parser_new();
-  parserWrapper.parser = parser;
-
-  v = caml_alloc_custom(&parser_custom_ops, sizeof(parser_W), 0, 1);
-  memcpy(Data_custom_val(v), &parserWrapper, sizeof(parser_W));
-  ts_parser_set_language(parser, tree_sitter_json());
-  CAMLreturn(v);
-};
-
-CAMLprim value octs_parser_new_c(value unit) {
-  CAMLparam0();
-  CAMLlocal1(v);
-
-  parser_W parserWrapper;
-  TSParser *parser = ts_parser_new();
-  parserWrapper.parser = parser;
-
-  v = caml_alloc_custom(&parser_custom_ops, sizeof(parser_W), 0, 1);
-  memcpy(Data_custom_val(v), &parserWrapper, sizeof(parser_W));
-  ts_parser_set_language(parser, tree_sitter_c());
-  CAMLreturn(v);
 };
 
 const char *octs_read(void *payload, uint32_t byte_offset, TSPoint position,
