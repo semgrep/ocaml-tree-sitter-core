@@ -6,6 +6,7 @@
 (library
   (public_name ocaml-tree-sitter.bindings)
   (name ocaml_tree_sitter_bindings)
+  (libraries atdgen-runtime)
   (foreign_stubs
     (language c)
     (names bindings)
@@ -19,3 +20,15 @@
 (rule
  (targets c_flags.sexp c_library_flags.sexp)
  (action  (run ./config/discover.exe)))
+
+; atdgen preprocessing for json support
+(rule
+ (targets Tree_sitter_output_j.ml Tree_sitter_output_j.mli)
+ (deps    Tree_sitter_output.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+; atdgen preprocessing for json support
+(rule
+ (targets Tree_sitter_output_t.ml Tree_sitter_output_t.mli)
+ (deps    Tree_sitter_output.atd)
+ (action  (run atdgen -t %{deps})))

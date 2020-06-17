@@ -3,7 +3,7 @@
 *)
 
 open Ocaml_tree_sitter_run
-open Tree_sitter_output_t
+open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
 
 let dummy_pos = { row = 0; column = 0 }
 
@@ -14,8 +14,8 @@ let new_id =
 let create_node type_ children = {
   type_;
   children;
-  startPosition = dummy_pos;
-  endPosition = dummy_pos;
+  start_pos = dummy_pos;
+  end_pos = dummy_pos;
   id = new_id ();
 }
 

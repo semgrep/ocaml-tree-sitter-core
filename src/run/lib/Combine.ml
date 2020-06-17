@@ -5,7 +5,7 @@
 open Printf
 
 (* Type definitions for the input tree. See Tree_sitter_output.atd. *)
-open Tree_sitter_output_t
+open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
 
 type 'a reader = node list -> ('a * node list) option
 type 'a full_seq_reader = node list -> 'a option
@@ -83,7 +83,7 @@ let parse_rule type_ parse_children : 'a reader = fun nodes ->
         match parse_children node.children with
         | Some res -> Some (res, nodes)
         | None ->
-            Tree_sitter_output.fail node "Cannot parse the children nodes"
+            Tree_sitter_error.fail node "Cannot parse the children nodes"
       else
         None
 

@@ -3,7 +3,7 @@
 *)
 
 open Printf
-open Tree_sitter_output_t
+open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
 
 let extend_indent s =
   if String.length s mod 4 = 0 then

@@ -3,17 +3,7 @@
  (name ocaml_tree_sitter_run)
  (preprocess (pps ppx_sexp_conv))
  (libraries
-   atdgen-runtime
+   ocaml-tree-sitter.bindings
    sexplib
  )
 )
-
-(rule
- (targets Tree_sitter_output_j.ml Tree_sitter_output_j.mli)
- (deps    Tree_sitter_output.atd)
- (action  (run atdgen -j -j-std %{deps})))
-
-(rule
- (targets Tree_sitter_output_t.ml Tree_sitter_output_t.mli)
- (deps    Tree_sitter_output.atd)
- (action  (run atdgen -t %{deps})))

@@ -12,7 +12,7 @@ type ts_tree
 type ts_node
 type ts_parser
 
-type ts_point = {
+type ts_point = Tree_sitter_output_t.position = {
   row: int;
   column: int;
 }

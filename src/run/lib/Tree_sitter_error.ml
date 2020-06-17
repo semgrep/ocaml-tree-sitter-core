@@ -3,7 +3,7 @@
 *)
 
 open Printf
-open Tree_sitter_output_t
+open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
 
 (* Take an error message and prepend the location information,
    in a human-readable and possibly computer-readable format (TODO check with
@@ -12,8 +12,8 @@ open Tree_sitter_output_t
    TODO: include file name in messages.
 *)
 let prepend_msg node msg =
-  let start = node.startPosition in
-  let end_ = node.endPosition in
+  let start = node.start_pos in
+  let end_ = node.end_pos in
   if start.row = end_.row then
     sprintf "Line %i, characters %i-%i:\n%s"
       start.row start.column end_.column msg
