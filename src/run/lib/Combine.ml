@@ -196,17 +196,6 @@ let map_fst f parse_elt nodes =
   | None -> None
   | Some ((a, b), nodes) -> Some ((f a, b), nodes)
 
-let assign_unique_ids root_node =
-  let counter = ref (-1) in
-  let create_id () = incr counter; !counter in
-  let rec map node =
-    let id = create_id () in
-    assert (id >= 0);
-    let children = List.map map node.children in
-    { node with id; children }
-  in
-  map root_node
-
 module Node_list = struct
   type t = node list
 

@@ -404,7 +404,7 @@ let format_types grammar =
 let generate_dumper grammar =
   sprintf "\
 
-let dump root =
+let dump_tree root =
   sexp_of_%s root
   |> Print_sexp.to_stdout
 "

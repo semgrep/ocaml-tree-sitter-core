@@ -2,8 +2,6 @@
    Code generator for the AST.ml file.
 
    This produces code similar to what's found in ../../run/lib/Sample.ml
-
-   TODO: explain the problem and the solution in a document.
 *)
 
 open Printf
@@ -63,7 +61,11 @@ let get_loc x = Loc.({ start = x.start_pos; end_ = x.end_pos })
 let declare_externals lang = sprintf "\
 external create_parser :
   unit -> Tree_sitter_API.ts_parser = \"octs_create_parser_%s\"
+
 let ts_parser = create_parser ()
+
+let parse_source_file src_file =
+  Tree_sitter_parsing.parse_source_file ts_parser src_file
 "
     lang
 
@@ -87,15 +89,10 @@ let preamble ~ast_module_name grammar =
     Line "";
     Inline (gen_extras grammar);
     Line (sprintf "\
-let parse ~src_file ~json_file : %s.%s option =
-  let src = Src_file.load src_file in
-
-  let root_node =
-    Atdgen_runtime.Util.Json.from_file
-      Tree_sitter_output_j.read_node
-      json_file
-    |> Combine.assign_unique_ids
-  in
+let parse_input_tree input_tree : %s.%s option =
+  let root_node = Tree_sitter_parsing.root input_tree in
+  let src = Tree_sitter_parsing.src input_tree in
+  let get_token x = Src_file.get_token src x.start_pos x.end_pos in
 
   if !debug then (
     Printf.printf \"input from tree-sitter:\\n\";

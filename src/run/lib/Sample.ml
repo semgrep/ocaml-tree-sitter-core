@@ -26,18 +26,24 @@ module Parse = struct
   open Tree_sitter_bindings.Tree_sitter_output_t
   let get_loc x = Loc.({ start = x.start_pos; end_ = x.end_pos})
 
-  let parse ~src_file ~json_file =
-    let input = Src_file.load src_file in
+  (*
+  external create_parser :
+    unit -> Tree_sitter_API.ts_parser = "octs_create_parser_XXX"
+  *)
 
-    let root_node =
-      Atdgen_runtime.Util.Json.from_file
-        Tree_sitter_bindings.Tree_sitter_output_j.read_node
-        json_file
-      |> Combine.assign_unique_ids
-    in
+  let create_parser () : Tree_sitter_bindings.Tree_sitter_API.ts_parser =
+    failwith "not implemented"
 
+  let ts_parser = create_parser ()
+
+  let parse_source_file src_file =
+    Tree_sitter_parsing.parse_source_file ts_parser src_file
+
+  let parse_input_tree input_tree =
+    let root_node = Tree_sitter_parsing.root input_tree in
+    let src = Tree_sitter_parsing.src input_tree in
     let get_token x =
-      Src_file.get_token input x.start_pos x.end_pos in
+      Src_file.get_token src x.start_pos x.end_pos in
 
     (* childless rule, from which we extract location and token. *)
     let _parse_leaf_rule type_ =

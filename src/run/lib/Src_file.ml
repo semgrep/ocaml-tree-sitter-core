@@ -37,10 +37,17 @@ let read_lines filename =
     List.rev !acc
   )
 
-let load filename =
+let load_file src_file =
   {
-    filename;
-    lines = Array.of_list (read_lines filename);
+    filename = src_file;
+    lines = Array.of_list (read_lines src_file);
+  }
+
+let load_string ?(src_file = "<source>") src_contents =
+  let lines = String.split_on_char '\n' src_contents in
+  {
+    filename = src_file;
+    lines = Array.of_list lines;
   }
 
 let safe_get_row x row =
