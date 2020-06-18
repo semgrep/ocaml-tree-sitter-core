@@ -142,7 +142,7 @@ let preamble grammar =
 *)
 
 open! Sexplib.Conv
-open Ocaml_tree_sitter_run
+open Tree_sitter_run
 
 "
     grammar.name

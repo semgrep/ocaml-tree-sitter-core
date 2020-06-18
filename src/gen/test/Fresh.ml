@@ -3,7 +3,7 @@
 *)
 
 open Printf
-open Ocaml_tree_sitter_gen
+open Tree_sitter_gen
 
 let test_simple () =
   let scope = Fresh.create_scope () in

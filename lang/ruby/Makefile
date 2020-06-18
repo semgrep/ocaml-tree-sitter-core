@@ -2,6 +2,8 @@
 # Generic makefile to build and test a parser for a specific language.
 #
 
+include Makefile.local
+
 PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
 DUNE_BIN = $(PROJECT_ROOT)/bin
 NODE_BIN = $(PROJECT_ROOT)/node_modules/.bin
@@ -34,7 +36,7 @@ gen-c:
 
 .PHONY: gen-ocaml
 gen-ocaml:
-	$(SCRIPTS)/gen-ocaml
+	$(SCRIPTS)/gen-ocaml --lang $(LANG)
 
 .PHONY: build-c
 build-c:

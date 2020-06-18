@@ -23,7 +23,7 @@ module AST = struct
 end
 
 module Parse = struct
-  open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
+  open Tree_sitter_bindings.Tree_sitter_output_t
   let get_loc x = Loc.({ start = x.start_pos; end_ = x.end_pos})
 
   let parse ~src_file ~json_file =
@@ -31,7 +31,7 @@ module Parse = struct
 
     let root_node =
       Atdgen_runtime.Util.Json.from_file
-        Ocaml_tree_sitter_bindings.Tree_sitter_output_j.read_node
+        Tree_sitter_bindings.Tree_sitter_output_j.read_node
         json_file
       |> Combine.assign_unique_ids
     in

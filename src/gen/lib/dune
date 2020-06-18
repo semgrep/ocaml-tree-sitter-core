@@ -1,8 +1,9 @@
 (library
- (public_name ocaml-tree-sitter.gen)
- (name ocaml_tree_sitter_gen)
+ (public_name tree-sitter.gen)
+ (name tree_sitter_gen)
  (preprocess (pps ppx_deriving.show ppx_deriving.ord))
  (libraries
+   unix
    atdgen-runtime
    str
    tsort

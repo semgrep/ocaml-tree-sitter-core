@@ -20,7 +20,6 @@ type ts_point = Tree_sitter_output_t.position = {
 module Parser = struct
   type t = ts_parser
 
-  (* General parser methods *)
   external parse_string :
     ts_parser -> string -> ts_tree = "octs_parser_parse_string"
 

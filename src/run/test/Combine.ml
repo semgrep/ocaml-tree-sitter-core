@@ -2,8 +2,8 @@
    Unit tests for the Combine module.
 *)
 
-open Ocaml_tree_sitter_run
-open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
+open Tree_sitter_run
+open Tree_sitter_bindings.Tree_sitter_output_t
 
 let dummy_pos = { row = 0; column = 0 }
 

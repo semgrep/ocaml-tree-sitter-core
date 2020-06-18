@@ -5,7 +5,7 @@
 open Printf
 
 (* Type definitions for the input tree. See Tree_sitter_output.atd. *)
-open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
+open Tree_sitter_bindings.Tree_sitter_output_t
 
 type 'a reader = node list -> ('a * node list) option
 type 'a full_seq_reader = node list -> 'a option

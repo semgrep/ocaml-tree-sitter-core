@@ -54,9 +54,10 @@ let constant_header = "\
 (* Disable warnings against unused variables *)
 [@@@warning \"-26-27\"]
 
-open Ocaml_tree_sitter_run
+open Tree_sitter_bindings
+open Tree_sitter_run
 open Tree_sitter_output_t
-let get_loc x = Loc.({ start = x.startPosition; end_ = x.endPosition})
+let get_loc x = Loc.({ start = x.start_pos; end_ = x.end_pos })
 "
 
 let gen_extras grammar =
@@ -96,7 +97,7 @@ let parse ~src_file ~json_file : %s.%s option =
   );
 
   let get_token x =
-    Src_file.get_token src x.startPosition x.endPosition in
+    Src_file.get_token src x.start_pos x.end_pos in
 
   (* Parse a single node that has no children.
      We extract its location and source code (token). *)

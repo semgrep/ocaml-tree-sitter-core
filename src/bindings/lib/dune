@@ -4,8 +4,8 @@
 ; 'make && sudo make install'
 ;
 (library
-  (public_name ocaml-tree-sitter.bindings)
-  (name ocaml_tree_sitter_bindings)
+  (public_name tree-sitter.bindings)
+  (name tree_sitter_bindings)
   (libraries atdgen-runtime)
   (foreign_stubs
     (language c)

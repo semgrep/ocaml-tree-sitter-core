@@ -2,7 +2,7 @@
    Generic functions for combining parsers.
 *)
 
-open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
+open Tree_sitter_bindings.Tree_sitter_output_t
 
 (*
    A reader looks into a sequence of symbols (nodes) for a certain pattern,

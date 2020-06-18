@@ -3,7 +3,7 @@
 *)
 
 open Printf
-open Ocaml_tree_sitter_bindings.Tree_sitter_output_t
+open Tree_sitter_bindings.Tree_sitter_output_t
 
 (* Take an error message and prepend the location information,
    in a human-readable and possibly computer-readable format (TODO check with
