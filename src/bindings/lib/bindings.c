@@ -39,26 +39,11 @@ typedef struct _tree {
   TSTree *tree;
 } tree_W;
 
-void finalize_parser(value v) {
-  parser_W *p;
-  p = (parser_W *)Data_custom_val(v);
-  ts_parser_delete(p->parser);
-}
-
 void finalize_tree(value v) {
   tree_W *p;
   p = (tree_W *)Data_custom_val(v);
   ts_tree_delete(p->tree);
 }
-
-static struct custom_operations parser_custom_ops = {
-  identifier : "parser handling",
-  finalize : finalize_parser,
-  compare : custom_compare_default,
-  hash : custom_hash_default,
-  serialize : custom_serialize_default,
-  deserialize : custom_deserialize_default
-};
 
 static struct custom_operations tree_custom_ops = {
   identifier : "tree handling",

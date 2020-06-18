@@ -60,6 +60,13 @@ open Tree_sitter_output_t
 let get_loc x = Loc.({ start = x.start_pos; end_ = x.end_pos })
 "
 
+let declare_externals lang = sprintf "\
+external create_parser :
+  unit -> Tree_sitter_API.ts_parser = \"octs_create_parser_%s\"
+let ts_parser = create_parser ()
+"
+    lang
+
 let gen_extras grammar =
   let items = List.map (fun name ->
     Line (sprintf "%S;" name)
@@ -75,6 +82,7 @@ let gen_extras grammar =
 let preamble ~ast_module_name grammar =
   [
     Line constant_header;
+    Line (declare_externals grammar.name);
     Line (sprintf "let debug = ref %B" !debug_trace);
     Line "";
     Inline (gen_extras grammar);
