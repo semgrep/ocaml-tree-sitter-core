@@ -4,7 +4,7 @@
 *)
 
 open Printf
-open AST_grammar
+open CST_grammar
 
 let string_filter s f =
   let buf = Buffer.create 100 in

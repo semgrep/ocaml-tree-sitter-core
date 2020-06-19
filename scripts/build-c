@@ -7,7 +7,7 @@ set -eu
 
 project_root=$(git rev-parse --show-toplevel)
 
-# Compile the C code into a parser that dumps the AST derived from its input.
+# Compile the C code into a parser that dumps the CST derived from its input.
 #
 npm init -y
 npm install

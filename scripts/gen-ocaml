@@ -9,7 +9,7 @@
 # │   ├── dune
 # │   └── Main.ml
 # ├── lib
-# │   ├── AST.ml
+# │   ├── CST.ml
 # │   ├── dune
 # │   ├── Parse.ml
 # │   ├── parser.c

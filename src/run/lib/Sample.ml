@@ -8,7 +8,7 @@
 (* Disable warnings against unused variables *)
 [@@@warning "-26-27"]
 
-module AST = struct
+module CST = struct
   type number = (Loc.t * string) (* pattern "\\d+" *)
   type variable = (Loc.t * string) (* pattern "\\a\\w*" *)
   type expression = [
@@ -58,7 +58,7 @@ module Parse = struct
     let cache_inline_expression = Combine.Memoize.create () in
     let cache_node_expression = Combine.Memoize.create () in
 
-    let parse_node_number : AST.number Combine.reader = fun nodes ->
+    let parse_node_number : CST.number Combine.reader = fun nodes ->
       (
         _parse_leaf_rule "number"
       ) nodes
@@ -69,7 +69,7 @@ module Parse = struct
       ) nodes
     in
     let rec parse_inline_expression _parse_tail
-      : (AST.expression * _) Combine.reader =
+      : (CST.expression * _) Combine.reader =
       fun nodes ->
         let parse_case0 _parse_tail nodes =
           match
@@ -128,7 +128,7 @@ module Parse = struct
     let cache_node_stmt = Combine.Memoize.create () in
 
     let parse_inline_statement _parse_tail
-      : (AST.statement * _) Combine.reader =
+      : (CST.statement * _) Combine.reader =
       fun nodes ->
         match
           Combine.parse_seq
@@ -147,19 +147,19 @@ module Parse = struct
       Combine.parse_full_seq parse_inline_statement nodes
     in
     (* normal rule (not inline, not an alias) *)
-    let parse_node_statement : AST.statement Combine.reader = fun nodes ->
+    let parse_node_statement : CST.statement Combine.reader = fun nodes ->
       Combine.Memoize.apply cache_node_statement (
         Combine.parse_rule "statement" parse_children_statement
       ) nodes
     in
     (* alias *)
-    let parse_node_stmt : AST.stmt Combine.reader = fun nodes ->
+    let parse_node_stmt : CST.stmt Combine.reader = fun nodes ->
       Combine.Memoize.apply cache_node_stmt (
         Combine.parse_rule "stmt" parse_children_statement
       ) nodes
     in
     (* inline alias *)
-    let parse_inline__thing _parse_tail : (AST._thing * _) Combine.reader =
+    let parse_inline__thing _parse_tail : (CST._thing * _) Combine.reader =
       fun nodes ->
         parse_inline_statement _parse_tail nodes
     in

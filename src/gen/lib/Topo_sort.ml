@@ -8,7 +8,7 @@
 *)
 
 open Printf
-open AST_grammar
+open CST_grammar
 
 let debug = false
 

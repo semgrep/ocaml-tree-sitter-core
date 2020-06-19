@@ -1,9 +1,9 @@
 (*
-   Code generator for the AST.ml file.
+   Code generator for the CST.ml file.
 *)
 
 open Printf
-open AST_grammar
+open CST_grammar
 open Codegen_util
 
 module E = Easy_format

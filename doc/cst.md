@@ -1,8 +1,8 @@
-Generating good AST type definitions
+Generating good CST type definitions
 ==
 
-A generated AST will have to be consulted by a programmer who
-will translate it into something else. This is a list of issues that have
+A generated CST will have to be consulted by a programmer who
+will translate it into an AST. This is a list of issues that have
 to be taken care of to get there. For details, see the implementation.
 
 Name uniqueness
@@ -14,10 +14,10 @@ classic variants don't need to be unique within a module.
 
 * tree-sitter rule names are lowercase alphanumeric identifiers, which
   in general are valid OCaml type identifiers.
-* The only types defined in a generated `AST.ml` file are derived from
+* The only types defined in a generated `CST.ml` file are derived from
   rule names so as to avoid conflicts. For example, the predefined
   token type is in a separate `Token` module rather than being put
-  directly into `AST`.
+  directly into `CST`.
 * OCaml keywords (`if`, `let`, ...) and helper types (`list`,
   `option`) are forbidden to use as types representing rules.
    For this, we append a suffix to the rule name, going through a list
@@ -63,5 +63,5 @@ original grammar. In particular:
   `grammar.js`.
 * Hidden rules, whose name starts with an underscore, are unhidden in
   `grammar.js` by removing the leading underscore. This makes the
-  recovery of the AST from the json output simpler, faster and less
+  recovery of the CST from the json output simpler, faster and less
   ambiguous.

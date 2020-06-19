@@ -57,7 +57,7 @@ let () =
     ast_module_name
 
 let ocaml ?out_dir ~lang grammar =
-  let ast_module_name = "AST" in
+  let ast_module_name = "CST" in
   let parse_module_name = "Parse" in
   let main_module_name = "Main" in
   let ast_file = make_lib_path out_dir (sprintf "%s.ml" ast_module_name) in
@@ -65,7 +65,7 @@ let ocaml ?out_dir ~lang grammar =
   let main_file = make_bin_path out_dir (sprintf "%s.ml" main_module_name) in
   let lib_module_name = sprintf "Tree_sitter_lang_%s" lang in
 
-  let ast_code = Codegen_AST.generate grammar in
+  let ast_code = Codegen_CST.generate grammar in
   let parse_code = Codegen_parse.generate grammar ~ast_module_name in
   let main_code =
     generate_main ~lang ~lib_module_name ~ast_module_name ~parse_module_name in

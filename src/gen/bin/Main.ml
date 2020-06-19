@@ -18,7 +18,7 @@ let codegen config =
     Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
       config.grammar
   in
-  let grammar = AST_grammar_conv.of_tree_sitter tree_sitter_grammar in
+  let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
   Codegen_parse.debug_trace := config.trace;
   Codegen.ocaml ?out_dir:config.out_dir ~lang:config.lang grammar
 

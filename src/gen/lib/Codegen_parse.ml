@@ -1,11 +1,11 @@
 (*
-   Code generator for the AST.ml file.
+   Code generator for the CST.ml file.
 
    This produces code similar to what's found in ../../run/lib/Sample.ml
 *)
 
 open Printf
-open AST_grammar
+open CST_grammar
 open Indent.Types
 
 let debug_gen = false
@@ -440,7 +440,7 @@ let wrap_left_matcher_result opt_wrap_result matcher_code =
 
      (('e1, ('e2, ('e3, ...))) * node list) option
 
-   In the AST, we these nested pairs are represented as a flat tuple.
+   In the CST, we these nested pairs are represented as a flat tuple.
    This flattening is done only where necessary, i.e. at the beginning
    of the sequence:
    - just under a named rule, i.e. for matching the whole sequence of children

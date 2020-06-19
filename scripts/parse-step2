@@ -20,7 +20,7 @@ lang="$1"
 
 parser=./parse-"$lang"
 
-# Run the parser from source to ocaml AST
+# Run the parser from source to ocaml CST
 #
 if [[ -d examples ]]; then
   for src in $(ls examples/*.src || :); do
