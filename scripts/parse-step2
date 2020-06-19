@@ -4,14 +4,27 @@
 #
 set -eu -o pipefail
 
-parser=./ocaml-src/_build/install/default/bin/parse
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") LANG
+Parse sample source files written in language LANG.
+EOF
+}
 
-# Run the parser from json to ocaml AST
+if [[ $# != 1 ]]; then
+  usage >&2
+  exit 1
+fi
+
+lang="$1"
+
+parser=./parse-"$lang"
+
+# Run the parser from source to ocaml AST
 #
 if [[ -d examples ]]; then
-  for json in $(ls examples/*.json || :); do
-    src=${json%.json}.src
-    ast=${json%.json}.ast
-    "$parser" "$src" "$json" 2>&1 | tee "$ast"
+  for src in $(ls examples/*.src || :); do
+    ast=${src%.src}.ast
+    "$parser" "$src" 2>&1 | tee "$ast"
   done
 fi

@@ -60,7 +60,7 @@ format for inspection purposes. If provided, a json dump of the tree-sitter's
 parse tree is loaded from JSON_FILE instead of the source file being
 parsed from scratch.
 %!"
-    lang Sys.argv.(0)
+    Sys.argv.(0) lang
 
 let run ~lang ~parse_source_file ~parse_input_tree ~dump_tree =
   let usage () = usage ~lang () in
