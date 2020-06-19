@@ -21,11 +21,16 @@ EOF
 
 test -x "$tree_sitter" || error "missing executable $tree_sitter"
 test -x "$node_gyp" || error "missing executable $node_gyp"
-test -f "orig/grammar.js" || error "missing orig/grammar.js"
 
 mkdir -p src
 
-"$scripts"/simplify-grammar < orig/grammar.js > grammar.js
+# We need grammar.js in the current folder, without aliases or hidden rules.
+#
+if [[ -f orig/grammar.js ]]; then
+  "$scripts"/simplify-grammar < orig/grammar.js > grammar.js
+else
+  test -f "grammar.js" || error "missing grammar.js or orig/grammar.js"
+fi
 
 if [[ -f orig/scanner.cc ]]; then
   cp orig/scanner.cc src/

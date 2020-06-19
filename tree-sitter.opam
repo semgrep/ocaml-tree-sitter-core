@@ -24,7 +24,7 @@ synopsis: "Code generator for parsing the output of tree-sitter parsers"
 
 description: """
 Ocaml-tree-sitter translates a tree-sitter json grammar to OCaml code
-for recovering a full AST from the output for a tree-sitter parser.
+for recovering a full CST from the output for a tree-sitter parser.
 """
 
 url {

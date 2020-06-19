@@ -1,9 +1,9 @@
 (*
-   Code generator for the AST.ml file.
+   Code generator for the CST.ml file.
 *)
 
 open Printf
-open AST_grammar
+open CST_grammar
 open Codegen_util
 
 module E = Easy_format
@@ -142,7 +142,7 @@ let preamble grammar =
 *)
 
 open! Sexplib.Conv
-open Ocaml_tree_sitter_run
+open Tree_sitter_run
 
 "
     grammar.name
@@ -404,7 +404,7 @@ let format_types grammar =
 let generate_dumper grammar =
   sprintf "\
 
-let dump root =
+let dump_tree root =
   sexp_of_%s root
   |> Print_sexp.to_stdout
 "

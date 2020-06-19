@@ -27,10 +27,13 @@ installed or used by a wide audience.
 
 ## License
 
-This is free software with contributors from multiple organizations.
+ocaml-tree-sitter is free software with contributors from multiple
+organizations. The project is driven by R2C.
 
-- The OCaml code developed specifically for this project is
+- OCaml code developed specifically for this project is
   distributed under the terms of the [GNU GPL v3](LICENSE).
-- tree-sitter grammars for major programming languages were imported
+- The OCaml bindings to tree-sitter's C API were created by Bryan
+  Phelps as part of the reason-tree-sitter project.
+- The tree-sitter grammars for major programming languages were imported
   from their respective projects, and we try to keep them in sync.
-  They come with their own license.
+  Each comes with its own license.

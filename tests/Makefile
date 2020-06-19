@@ -14,10 +14,15 @@ TESTS = \
   backtrack-choice \
   backtrack-multi
 
-# Run all the tests.
+# Build and run all the tests.
 .PHONY: test
 test:
-	../scripts/run-test $(TESTS)
+	set -eu; \
+	for lang in $(TESTS); do \
+	  ./setup $$lang; \
+	  make -C $$lang; \
+	  make -C $$lang test; \
+	done
 
 # Remove all the files that are git-ignored.
 .PHONY: clean

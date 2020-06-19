@@ -3,6 +3,6 @@
   (name Main)
   (libraries
     cmdliner
-    ocaml-tree-sitter.gen
+    tree-sitter.gen
   )
 )

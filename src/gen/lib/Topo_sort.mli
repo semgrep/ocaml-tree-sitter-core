@@ -15,5 +15,5 @@
    The boolean indicates whether the given rule references itself.
 *)
 val sort :
-  (string * AST_grammar.rule_body) list ->
-  (bool * (string * AST_grammar.rule_body)) list list
+  (string * CST_grammar.rule_body) list ->
+  (bool * (string * CST_grammar.rule_body)) list list

@@ -1,0 +1,34 @@
+; Build OCaml bindings to the tree-sitter's C API.
+;
+; tree-sitter can be installed by cloning its git repo, then
+; 'make && sudo make install'
+;
+(library
+  (public_name tree-sitter.bindings)
+  (name tree_sitter_bindings)
+  (libraries atdgen-runtime)
+  (foreign_stubs
+    (language c)
+    (names bindings)
+    (flags -I %{env:TREESITTER_INCLUDE_DIR=/usr/local/include}
+    )
+  )
+  (c_library_flags (-L%{env:TREESITTER_LIBRARY_DIR=/usr/local/lib}
+                    -ltree-sitter))
+)
+
+(rule
+ (targets c_flags.sexp c_library_flags.sexp)
+ (action  (run ./config/discover.exe)))
+
+; atdgen preprocessing for json support
+(rule
+ (targets Tree_sitter_output_j.ml Tree_sitter_output_j.mli)
+ (deps    Tree_sitter_output.atd)
+ (action  (run atdgen -j -j-std %{deps})))
+
+; atdgen preprocessing for json support
+(rule
+ (targets Tree_sitter_output_t.ml Tree_sitter_output_t.mli)
+ (deps    Tree_sitter_output.atd)
+ (action  (run atdgen -t %{deps})))

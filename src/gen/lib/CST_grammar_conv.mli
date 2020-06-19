@@ -1,5 +1,5 @@
 (*
-   Representation of an AST, as derived from a grammar definition.
+   Representation of an CST, as derived from a grammar definition.
    This representation is meant to be straightforward to translate to
    Reason/OCaml type definitions.
 
@@ -18,4 +18,4 @@
    TODO: clarify what we intend to do with this
 *)
 
-val of_tree_sitter : Tree_sitter_t.grammar -> AST_grammar.t
+val of_tree_sitter : Tree_sitter_t.grammar -> CST_grammar.t

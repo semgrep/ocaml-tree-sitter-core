@@ -4,11 +4,11 @@
 
 open Printf
 open Cmdliner
-open Ocaml_tree_sitter_gen
+open Tree_sitter_gen
 
 type config = {
+  lang : string;
   grammar : string;
-  lang : string option;
   out_dir : string option;
   trace : bool;
 }
@@ -18,9 +18,19 @@ let codegen config =
     Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
       config.grammar
   in
-  let grammar = AST_grammar_conv.of_tree_sitter tree_sitter_grammar in
+  let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
   Codegen_parse.debug_trace := config.trace;
-  Codegen.ocaml ?out_dir:config.out_dir ?lang:config.lang grammar
+  Codegen.ocaml ?out_dir:config.out_dir ~lang:config.lang grammar
+
+let lang_term =
+  let info =
+    Arg.info []
+      ~docv:"LANG"
+      ~doc:"$(docv) is the name of the language described by the grammar.
+            If specified, this name will appear in the generated file names.
+            It must be a valid OCaml lowercase identifier."
+  in
+  Arg.required (Arg.pos 0 Arg.(some string) None info)
 
 let grammar_term =
   let info =
@@ -30,17 +40,7 @@ let grammar_term =
             Its name is commonly 'grammar.json'. Try to not confuse it with
             'grammar.js' from which it is typically derived."
   in
-  Arg.value (Arg.pos 0 Arg.file "grammar.json" info)
-
-let lang_term =
-  let info =
-    Arg.info ["lang"; "l"]
-      ~docv:"LANG"
-      ~doc:"$(docv) is the name of the language described by the grammar.
-            If specified, this name will appear in the generated file names.
-            It must be a valid OCaml lowercase identifier."
-  in
-  Arg.value (Arg.opt Arg.(some string) None info)
+  Arg.required (Arg.pos 1 Arg.(some file) None info)
 
 let out_dir_term =
   let info =
@@ -59,12 +59,12 @@ let trace_term =
   Arg.value (Arg.flag info)
 
 let cmdline_term =
-  let combine grammar lang out_dir trace =
-    { grammar; lang; out_dir; trace }
+  let combine lang grammar out_dir trace =
+    { lang; grammar; out_dir; trace }
   in
   Term.(const combine
-        $ grammar_term
         $ lang_term
+        $ grammar_term
         $ out_dir_term
         $ trace_term
        )

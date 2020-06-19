@@ -34,7 +34,7 @@ remove_aliases() {
 }
 
 # Remove leading underscores from symbols. These are responsible for
-# making AST nodes hidden (omitted) from the parser's output.
+# making CST nodes hidden (omitted) from the parser's output.
 #
 # Replace
 #    _method:

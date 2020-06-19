@@ -2,7 +2,7 @@
    Generic functions for combining parsers.
 *)
 
-open Tree_sitter_output_t
+open Tree_sitter_bindings.Tree_sitter_output_t
 
 (*
    A reader looks into a sequence of symbols (nodes) for a certain pattern,
@@ -134,9 +134,6 @@ val parse_optional : 'a reader -> 'tail reader -> ('a option * 'tail) reader
 (* Convert the result of a reader. *)
 val map : ('a -> 'b) -> 'a reader -> 'b reader
 val map_fst : ('a -> 'b) -> ('a * 'c) reader -> ('b * 'c) reader
-
-(* Set the id field of all the nodes of an input tree. *)
-val assign_unique_ids : node -> node
 
 (* Memoization functions designed to cache the result of matching a subtree. *)
 module Memoize : sig

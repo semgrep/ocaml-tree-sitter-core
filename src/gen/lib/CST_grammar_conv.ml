@@ -2,7 +2,7 @@
    Conversion and simplification from type specified in Tree_sitter.atd.
 *)
 
-open AST_grammar
+open CST_grammar
 
 let name_of_body opt_rule_name body =
   match opt_rule_name with

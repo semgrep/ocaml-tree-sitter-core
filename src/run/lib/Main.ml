@@ -1,4 +1,4 @@
-(**
+(*
    Entrypoint for a standalone parser-dumper, to be called by generated
    parsers.
 *)
@@ -21,28 +21,65 @@ let safe_run f =
       trace;
     exit 1
 
-let parse_and_dump ~src_file ~json_file parse_file dump_tree =
-  match parse_file ~src_file ~json_file with
+type input_kind =
+  | Source_file
+  | Json_file of string
+
+(*
+   Obtain tree-sitter's CST either by parsing the source code
+   or loading it from a json file.
+*)
+let load_input_tree ~parse_source_file ~src_file input_kind =
+  match input_kind with
+  | Source_file ->
+      parse_source_file src_file
+  | Json_file json_file ->
+      Tree_sitter_parsing.load_json_file ~src_file ~json_file
+
+let parse_and_dump
+    ~parse_source_file
+    ~src_file
+    ~parse_input_tree
+    ~dump_tree
+    input_kind =
+  let input_tree = load_input_tree ~parse_source_file ~src_file input_kind in
+  match parse_input_tree input_tree with
   | None ->
       flush stdout;
-      eprintf "Cannot interpret file %s\n%!" json_file;
+      eprintf "Cannot interpret json file derived from %s.\n%!" src_file;
       exit 1
   | Some ast ->
       dump_tree ast
 
-let run parse_file dump_tree =
-  match Sys.argv with
-  | [| _; src_file; json_file |] ->
-      safe_run (fun () ->
-        parse_and_dump ~src_file ~json_file parse_file dump_tree
-      )
-  | _ ->
-      eprintf "\
-Usage: %s SRC_FILE JSON_FILE
+let usage ~lang () =
+  eprintf "\
+Usage: %s SRC_FILE [JSON_FILE]
 
-Parse the json output (JSON_FILE) of a json-sitter parser which parsed
-source file SRC_FILE. Then dump a representation of the OCaml abstract syntax
-tree.
+Parse a %s file SRC_FILE and dump the resulting CST in a human-readable
+format for inspection purposes. If provided, a json dump of the tree-sitter's
+parse tree is loaded from JSON_FILE instead of the source file being
+parsed from scratch.
 %!"
-        Sys.argv.(0);
-      exit 1
+    Sys.argv.(0) lang
+
+let run ~lang ~parse_source_file ~parse_input_tree ~dump_tree =
+  let usage () = usage ~lang () in
+  let src_file, input_kind =
+    match Sys.argv with
+    | [| _; "--help" |] ->
+        usage ();
+        exit 0
+    | [| _; src_file |] -> src_file, Source_file
+    | [| _; src_file; json_file |] -> src_file, Json_file json_file
+    | _ ->
+        usage ();
+        exit 1
+  in
+  safe_run (fun () ->
+    parse_and_dump
+      ~parse_source_file
+      ~src_file
+      ~parse_input_tree
+      ~dump_tree
+      input_kind
+  )
