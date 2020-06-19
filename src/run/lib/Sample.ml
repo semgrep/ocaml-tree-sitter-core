@@ -34,10 +34,10 @@ module Parse = struct
   let create_parser () : Tree_sitter_bindings.Tree_sitter_API.ts_parser =
     failwith "not implemented"
 
-  let ts_parser = create_parser ()
+  let ts_parser () = create_parser ()
 
   let parse_source_file src_file =
-    Tree_sitter_parsing.parse_source_file ts_parser src_file
+    Tree_sitter_parsing.parse_source_file (ts_parser ()) src_file
 
   let parse_input_tree input_tree =
     let root_node = Tree_sitter_parsing.root input_tree in

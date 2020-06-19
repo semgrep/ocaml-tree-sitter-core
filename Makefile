@@ -1,3 +1,10 @@
+#
+# Build and install code generators and runtime support for generated parsers.
+#
+# Building and installing support for specific programming languages is done in
+# a second phase, in lang/
+#
+
 PROJECT_ROOT = $(shell pwd)
 
 .PHONY: build

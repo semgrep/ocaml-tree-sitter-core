@@ -10,6 +10,10 @@ SUPPORTED_LANGUAGES = ruby
 build:
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang build; done
 
+.PHONY: install
+install:
+	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang install; done
+
 .PHONY: test
 test:
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang test; done

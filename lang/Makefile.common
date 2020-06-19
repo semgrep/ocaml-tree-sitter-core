@@ -17,6 +17,10 @@ build:
 	$(MAKE) build-c
 	$(MAKE) build-ocaml
 
+.PHONY: install
+install:
+	cd ocaml-src && dune install --root .
+
 # Run the parsers on the collection of input programs in examples/
 #
 .PHONY: test
