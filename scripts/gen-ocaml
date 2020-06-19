@@ -9,15 +9,16 @@
 # │   ├── dune
 # │   └── Main.ml
 # ├── lib
+# │   ├── bindings.c
 # │   ├── CST.ml
 # │   ├── dune
 # │   ├── Parse.ml
+# │   ├── Parse.mli
 # │   ├── parser.c
 # │   ├── scanner.cc
 # │   └── tree_sitter
 # │       └── parser.h
-# └── tree-sitter.opam
-#
+# └── tree-sitter-ruby.opam
 #
 set -eu -o pipefail
 
