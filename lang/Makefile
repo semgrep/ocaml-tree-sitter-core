@@ -18,6 +18,13 @@ install:
 test:
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang test; done
 
+# Place the generated files into their own repo, to be used by an external
+# repo as a submodule.
+#
+.PHONY: release
+release:
+	./release $(SUPPORTED_LANGUAGES)
+
 .PHONY: clean
 clean:
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang clean; done
