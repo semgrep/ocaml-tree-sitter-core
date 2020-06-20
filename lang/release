@@ -7,6 +7,16 @@ set -eu
 
 langs=("$@")
 
+id=$(git rev-parse --short HEAD)
+if [[ -n "$(git status --porcelain)" ]]; then
+  cat 2>&1 <<EOF
+git status is not clean.
+Please add and commit files until 'git status' shows a clean status,
+then retry.
+EOF
+  exit 1
+fi
+
 if [[ ! -d ocaml-tree-sitter-lang ]]; then
   git clone git@github.com:returntocorp/ocaml-tree-sitter-lang.git
 fi
@@ -17,6 +27,8 @@ repo="ocaml-tree-sitter-lang"
 # Copy the files that we find.
 #
 for lang in "${langs[@]}"; do
+  make -C "$lang" clean
+  make -C "$lang" gen
   if [[ -d "$lang"/ocaml-src ]]; then
     dst="$repo"/"$lang"
     mkdir -p "$dst"
@@ -33,16 +45,6 @@ for lang in "${langs[@]}"; do
     fi
   fi
 done
-
-id=$(git rev-parse --short HEAD)
-if [[ -n "$(git status --porcelain)" ]]; then
-  cat 2>&1 <<EOF
-git status is not clean.
-Please add and commit files until 'git status' shows a clean status,
-then retry.
-EOF
-  exit 1
-fi
 
 (
   cd "$repo"
