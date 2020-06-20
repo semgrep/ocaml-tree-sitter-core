@@ -20,7 +20,8 @@ for lang in "${langs[@]}"; do
   if [[ -d "$lang"/ocaml-src ]]; then
     dst="$repo"/"$lang"
     mkdir -p "$dst"
-    cp -a "$lang"/ocaml-src/* "$dst"
+    cp -a "$lang"/ocaml-src/lib "$dst"
+    cp -a "$lang"/ocaml-src/bin "$dst"
     if [[ -d "$lang"/orig ]]; then
       mkdir -p "$dst"/orig
     fi
