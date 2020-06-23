@@ -11,12 +11,38 @@ set -eu -o pipefail
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") < grammar.js.orig > grammar.js
+Usage: $(basename "$0") [OPTIONS] < grammar.js.orig > grammar.js
 
 Remove aliases and unhide hidden rules for support by ocaml-tree-sitter.
 This relies on fragile assumptions. Please check the output.
+
+Options:
+  --help
+      Print this message and exit.
+
+  --suffix SUFFIX
+      Suffix to be appended to rule names whose leading underscores are
+      removed (hidden rules). Default: none.
 EOF
 }
+
+suffix=''
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)
+      usage
+      exit 0
+      ;;
+    --suffix)
+      suffix="$2"
+      shift
+      ;;
+    *)
+      echo "Unsupported argument '$1'. Try --help." >&2
+      exit 1
+  esac
+  shift
+done
 
 # Replace
 #   alias($.foo, $.bar)
@@ -47,7 +73,7 @@ remove_aliases() {
 #   $.method
 #
 remove_leading_underscores() {
-  sed -e 's/\([ .]\)[_]\([a-z]\)/\1\2/g'
+  sed -e "s/\([ .]\)[_]\+\([a-z][a-z0-9A-Z_]*\)/\1\2$suffix/g"
 }
 
 # Remove the supertypes declaration, which we don't need but must contain

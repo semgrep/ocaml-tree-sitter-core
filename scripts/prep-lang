@@ -26,22 +26,33 @@ mkdir -p src
 
 # We need grammar.js in the current folder, without aliases or hidden rules.
 #
-if [[ -f orig/grammar.js ]]; then
+# Do this with a custom script 'make-grammar-js' if things are complicated,
+# otherwise run a generic 'simplify-grammar' on 'orig/grammar.js'.
+#
+if [[ -e make-grammar-js ]]; then
+  echo "Prepare 'grammar.js' using custom script 'make-grammar-js'."
+  ./make-grammar-js
+elif [[ -e orig/grammar.js ]]; then
+  echo "Simplify 'grammar.js'."
   "$scripts"/simplify-grammar < orig/grammar.js > grammar.js
-else
-  test -f "grammar.js" || error "missing grammar.js or orig/grammar.js"
 fi
 
-if [[ -f orig/scanner.cc ]]; then
+test -f "grammar.js" || error "missing grammar.js"
+
+if [[ -e orig/scanner.cc ]]; then
   cp orig/scanner.cc src/
-elif [[ -f orig/scanner.c ]]; then
+elif [[ -e orig/scanner.c ]]; then
   cp orig/scanner.c src/
+fi
+
+if [[ -e orig/scanner.h ]]; then
+  cp orig/scanner.h src/
 fi
 
 # This file is created incorrectly by 'tree-sitter generate' if it doesn't
 # exist, i.e. the optional scanner.c or scanner.cc must be added to the
 # list of C sources.
 #
-if [[ -f orig/binding.gyp ]]; then
+if [[ -e orig/binding.gyp ]]; then
   cp orig/binding.gyp binding.gyp
 fi
