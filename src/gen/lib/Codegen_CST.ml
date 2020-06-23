@@ -8,6 +8,7 @@ open Codegen_util
 
 module E = Easy_format
 
+let comment = Codegen_util.comment
 let trans = translate_ident
 
 (* Format ocaml type definitions. Might be reusable. *)
@@ -161,19 +162,18 @@ let format_token ~def_name (tok : token) =
       | Constant cst ->
           sprintf "Token.t (* %S *)" cst
       | Pattern pat ->
-          let pat_str =
-            sprintf "%S" pat
-            |> Codegen_util.safe_comment
-          in
+          let pat_str = comment pat in
           sprintf "Token.t (* %spattern %s *)"
-            (match interesting_name with None -> "" | Some s -> s ^ " ")
+            (match interesting_name with
+             | None -> ""
+             | Some s -> comment s ^ " ")
             pat_str
       | Token
       | External ->
           sprintf "Token.t%s"
             (match interesting_name with
              | None -> ""
-             | Some s -> sprintf " (* %s *)" s)
+             | Some s -> sprintf " (* %s *)" (comment s))
     else
       sprintf "%s (*tok*)" (trans name)
   in

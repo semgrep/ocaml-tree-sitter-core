@@ -88,7 +88,31 @@ let format_bindings ~is_rec ~is_local bindings =
 
    This inserts a line-break after the slash.
 *)
-let safe_comment =
+let make_editor_friendly_comment =
   let regexp = Str.regexp "\\*)" in
   fun s ->
     Str.global_substitute regexp (fun _ -> "*\\\n  )") s
+
+let has_escape_characters s =
+  try
+    String.iter (function
+      | '"'
+      | '\'' -> raise Exit
+      | _ -> ()
+    ) s;
+    false
+  with Exit -> true
+
+(*
+   Prevent code injections from tree-sitter token nodes with funny names.
+
+   It's like sprintf "%S", but tries to not double-quote things that don't
+   need it.
+*)
+let comment s =
+  (if has_escape_characters s then
+     sprintf "%S" s
+   else
+     s
+  )
+  |> make_editor_friendly_comment
