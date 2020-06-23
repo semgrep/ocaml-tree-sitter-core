@@ -74,8 +74,10 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
   let rec translate ?rule_name x =
     match (x : Tree_sitter_t.rule_body) with
     | SYMBOL ident -> Symbol ident
-    | STRING cst -> translate_constant rule_name cst
-    | PATTERN pat -> translate_pattern rule_name pat
+    | STRING cst
+    | IMMEDIATE_TOKEN (STRING cst) -> translate_constant rule_name cst
+    | PATTERN pat
+    | IMMEDIATE_TOKEN (PATTERN pat) -> translate_pattern rule_name pat
     | IMMEDIATE_TOKEN body
     | TOKEN body -> translate_token rule_name body
     | BLANK -> Blank
