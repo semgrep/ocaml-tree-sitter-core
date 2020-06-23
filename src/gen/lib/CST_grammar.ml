@@ -52,6 +52,7 @@ type token_description =
 type token = {
   name: string;
     (* the node 'type' in tree-sitter's output.
+       It may not be an alphanumeric identifier.
 
        It is the enclosing rule name or alias, if there's one.
        Otherwise it's the 'value' field.
@@ -84,6 +85,12 @@ type token = {
        name: "star"
     *)
 
+  is_inlined: bool;
+    (* always true for Constant tokens whose name is not an alphanumeric
+       identifier. May be true or false for other kinds of tokens, depending
+       on whether the type expression uses the 'Token.t' type directly
+       (inlined) or the 'name' field (not inlined). *)
+
   description: token_description;
     (* informational *)
 }
@@ -108,6 +115,23 @@ type rule_body =
 type rule = {
   name: ident;
   is_rec: bool;
+
+  is_inlined: bool;
+    (* An inlined rule is a type definition that was inlined everywhere
+       it occurs in other type expressions.
+
+       For example, consider the rule 'foo':
+         type foo = [`Bar|`Baz]
+         and type program = foo option
+
+       Inlining 'foo' results in
+         type program = [`Bar|`Baz] option
+         type foo = [`Bar|`Baz]
+
+       The rule 'foo' is now marked as inlined, and it can be ignored for
+       some purposes.
+*)
+
   body: rule_body;
 }
 
