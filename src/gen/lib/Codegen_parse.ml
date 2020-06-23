@@ -124,7 +124,7 @@ let gen_extras grammar =
     Line ""
   ]
 
-let preamble ~ast_module_name grammar =
+let preamble ~cst_module_name grammar =
   [
     Line constant_header;
     Line (declare_externals grammar.name);
@@ -158,7 +158,7 @@ let parse_input_tree input_tree : %s.%s option =
     )
   in
 "
-            ast_module_name (trans grammar.entrypoint)
+            cst_module_name (trans grammar.entrypoint)
          )
   ]
 
@@ -637,14 +637,14 @@ let create_cache prefix id type_ =
     Block [Line "Combine.Memoize.create () in"];
   ]
 
-let gen_rule_cache ~ast_module_name (rule : rule) =
+let gen_rule_cache ~cst_module_name (rule : rule) =
   let primary_name = rule.name in
   let leaf = is_leaf rule.body in
   let cache_type =
     if leaf then
       "Token.t"
     else
-      sprintf "%s.%s" ast_module_name (trans primary_name)
+      sprintf "%s.%s" cst_module_name (trans primary_name)
   in
   [create_cache "cache_" primary_name cache_type]
 
@@ -673,7 +673,7 @@ let gen_rule_cache ~ast_module_name (rule : rule) =
    - parse_inline_TYPE is called directly for aliases whose name starts
      with '_'. There's no need for a dedicated parse_inline_ALIAS.
 *)
-let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
+let gen_rule_parser_bindings ~cst_module_name (rule : rule) =
   let name = rule.name in
   let body = rule.body in
   if is_leaf body then (
@@ -719,7 +719,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
       [
         Line (sprintf "%s _parse_tail : (%s.%s * _) Combine.reader ="
                 fun_name
-                ast_module_name (trans name));
+                cst_module_name (trans name));
         Block (trace_reader fun_name [
           Block (gen_seq body next_tail
                  |> flatten_seq_with_tail
@@ -732,7 +732,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
       [
         Line (sprintf "%s : %s.%s Combine.full_seq_reader ="
                 fun_name
-                ast_module_name (trans name));
+                cst_module_name (trans name));
         Block (trace fun_name [
           Line "(fun nodes ->";
           Block [
@@ -748,7 +748,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
       [
         Line (sprintf "%s : %s.%s Combine.reader ="
                 fun_name
-                ast_module_name (trans name));
+                cst_module_name (trans name));
         Block (trace_reader fun_name [
           Line "(fun nodes ->";
           Block [
@@ -766,7 +766,7 @@ let gen_rule_parser_bindings ~ast_module_name (rule : rule) =
     in
     [parse_inline_binding; parse_children_binding; parse_node_binding]
 
-let gen ~ast_module_name grammar =
+let gen ~cst_module_name grammar =
   let entrypoint = grammar.entrypoint in
   let rule_defs =
     List.map (fun rule_group ->
@@ -777,12 +777,12 @@ let gen ~ast_module_name grammar =
       in
       let rule_caches =
         List.map (fun rule ->
-          Inline (gen_rule_cache ~ast_module_name rule)
+          Inline (gen_rule_cache ~cst_module_name rule)
         ) rule_group in
       let rule_parsers =
         let bindings =
           List.map (fun rule ->
-            gen_rule_parser_bindings ~ast_module_name rule
+            gen_rule_parser_bindings ~cst_module_name rule
           ) rule_group
           |> List.flatten
         in
@@ -796,7 +796,7 @@ let gen ~ast_module_name grammar =
     |> List.flatten
   in
   [
-    Inline (preamble ~ast_module_name grammar);
+    Inline (preamble ~cst_module_name grammar);
     Block [
       Inline rule_defs;
       Line "let result =";
@@ -825,7 +825,7 @@ let file src_file =
   parse_input_tree input_tree
 |}
 
-let generate ~ast_module_name grammar =
-  let tree = gen ~ast_module_name grammar in
+let generate ~cst_module_name grammar =
+  let tree = gen ~cst_module_name grammar in
   let ml_contents = Indent.to_string tree ^ ml_trailer in
   mli_contents grammar, ml_contents
