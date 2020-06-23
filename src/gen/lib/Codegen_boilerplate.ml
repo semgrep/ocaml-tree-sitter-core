@@ -105,8 +105,11 @@ let gen ~cst_module_name grammar =
     in
     let rule_mappers =
       let bindings =
-        List.map (fun rule ->
-          gen_rule_mapper_binding ~cst_module_name rule
+        List.filter_map (fun rule ->
+          if rule.is_inlined then
+            None
+          else
+            Some (gen_rule_mapper_binding ~cst_module_name rule)
         ) rule_group
       in
       Codegen_util.format_bindings ~is_rec ~is_local:false bindings
@@ -116,5 +119,6 @@ let gen ~cst_module_name grammar =
   |> List.flatten
 
 let generate ~cst_module_name grammar =
-  let tree = gen ~cst_module_name grammar in
+  let inline_grammar = Inline.inline_rules grammar in
+  let tree = gen ~cst_module_name inline_grammar in
   make_header grammar ^ Indent.to_string tree
