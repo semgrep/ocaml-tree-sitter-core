@@ -20,10 +20,20 @@ build:
 	dune build
 	test -e bin || ln -s _build/install/default/bin .
 
+# Full development setup
 .PHONY: setup
 setup:
-	./scripts/install-tree-sitter
+	./scripts/install-tree-sitter-lib
+	./scripts/install-tree-sitter-cli
 	opam install --deps-only -y .
+
+# Setup for users who only want to install the runtime libraries for
+# C/OCaml parsers that were already generated for them.
+#
+.PHONY: install-runtime
+install-runtime:
+	./scripts/install-tree-sitter-lib
+	opam install -y .
 
 # Keep things like node_modules that are worth keeping around
 .PHONY: clean
@@ -34,6 +44,7 @@ clean:
 	make -C lang clean
 
 .PHONY: distclean
+distclean:
 	# remove everything that's git-ignored
 	git clean -dfX
 

@@ -1,0 +1,19 @@
+#! /usr/bin/env bash
+#
+# Install the tree-sitter C library and headers.
+#
+set -eu
+
+project_root=$(git rev-parse --show-toplevel)
+
+if [[ ! -e tree-sitter ]]; then
+  git clone --depth 1 https://github.com/tree-sitter/tree-sitter.git
+fi
+
+(
+  cd tree-sitter
+  git pull origin master
+  git clean -dfX
+  make
+  sudo make install
+)
