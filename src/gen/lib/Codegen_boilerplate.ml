@@ -28,71 +28,102 @@ let todo _ = failwith "not implemented"
 |}
     grammar.name
 
-let todo = [ Line "todo ()" ]
-
-let simple_pat = function
-  | Symbol _ -> "x"
-  | Token _ -> "tok"
-  | Blank -> "()"
-  | Repeat _ -> "xs"
-  | Repeat1 _ -> "xs"
-  | Choice _ -> "x"
-  | Optional _ -> "opt"
+let destruct x =
+  match x with
+  | Symbol _ -> ["x", x]
+  | Token _ -> ["tok", x]
+  | Blank -> []
+  | Repeat _ -> ["xs", x]
+  | Repeat1 _ -> ["xs", x]
+  | Choice _ -> ["x", x]
+  | Optional _ -> ["opt", x]
   | Seq l ->
-      sprintf "(%s)"
-        (List.mapi (fun i _ -> sprintf "v%i" (i+1)) l
-         |> String.concat ", ")
+      List.mapi (fun i x -> (sprintf "v%i" (i+1), x)) l
 
-let simple_exp x = simple_pat x
+let mkpat env =
+  match List.map fst env with
+  | [] -> "()"
+  | [var] -> var
+  | l -> sprintf "(%s)" (String.concat ", " l)
 
-let gen_rule_mapper_body body =
-  let arg = simple_exp body in
+let mkexp env = mkpat env
+
+let rec gen_mapper_body var body : node list =
   match body with
-  | Symbol name -> [ Line (sprintf "map_%s %s" (trans name) arg) ]
-  | Token _token -> [ Line (sprintf "token %s" arg)]
-  | Blank -> [ Line (sprintf "blank %s" arg)]
+  | Symbol name -> [ Line (sprintf "map_%s %s" (trans name) var) ]
+  | Token _token -> [ Line (sprintf "token %s" var)]
+  | Blank -> [ Line (sprintf "blank %s" var)]
   | Repeat (Symbol name)
   | Repeat1 (Symbol name) ->
-      [ Line (sprintf "List.map map_%s %s" (trans name) arg) ]
+      [ Line (sprintf "List.map map_%s %s" (trans name) var) ]
   | Repeat (Token _token)
   | Repeat1 (Token _token) ->
-      [ Line (sprintf "List.map token %s" arg) ]
-  | Repeat x
-  | Repeat1 x ->
+      [ Line (sprintf "List.map token %s" var) ]
+  | Repeat body
+  | Repeat1 body ->
+      let env = destruct body in
       [
-        Line (
-          sprintf "List.map (fun %s -> todo %s) %s"
-            (simple_pat x) (simple_exp x) arg
-        )
+        Line (sprintf "List.map (fun %s ->" (mkpat env));
+        Block (gen_mapper_body_multi env);
+        Line (sprintf ") %s" var)
       ]
   | Choice l ->
       let cases =
         List.map (fun (name, body) ->
-          Line (sprintf "| `%s %s -> todo %s"
-                  name (simple_pat body) (simple_exp body))
+          let env = destruct body in
+          Inline [
+            Line (sprintf "| `%s %s ->" name (mkpat env));
+            Block [Block (gen_mapper_body_multi env)]
+          ]
         ) l
       in
       [
-        Line (sprintf "match %s with" arg);
+        Line (sprintf "(match %s with" var);
         Inline cases;
+        Line ")";
       ]
   | Optional body ->
+      let env = destruct body in
       [
-        Line (sprintf "match %s with" arg);
-        Line (sprintf "| Some %s -> todo %s"
-                (simple_pat body) (simple_exp body));
-        Line (sprintf "| None -> todo ()")
+        Line (sprintf "(match %s with" var);
+        Line (sprintf "| Some %s ->" (mkpat env));
+        Block [Block (gen_mapper_body_multi env)];
+        Line (sprintf "| None -> todo ())")
       ]
-  | Seq _ ->
-      [ Line (sprintf "todo %s" arg) ]
+  | Seq _ as body ->
+      let env = destruct body in
+      [
+        Line (sprintf "let %s = %s in" (mkpat env) var);
+        Inline (gen_mapper_body_multi env)
+      ]
+
+and gen_mapper_body_multi env =
+  match env with
+  | [] -> [ Line "todo ()" ]
+  | [var, body] -> gen_mapper_body var body
+  | env ->
+      let bindings =
+        List.map (fun (var, body) ->
+          Inline [
+            Line (sprintf "let %s =" var);
+            Block (gen_mapper_body var body);
+            Line "in";
+          ]
+        ) env
+      in
+      [
+        Inline bindings;
+        Line (sprintf "todo %s" (mkexp env))
+      ]
 
 let gen_rule_mapper_binding ~cst_module_name (rule : rule) =
   let name = rule.name in
+  let env = destruct rule.body in
   [
     Line (sprintf "map_%s (%s : %s.%s) ="
-            (trans name) (simple_pat rule.body)
+            (trans name) (mkpat env)
             cst_module_name (trans name));
-    Block (gen_rule_mapper_body rule.body);
+    Block (gen_mapper_body_multi env);
     Line "";
   ]
 
