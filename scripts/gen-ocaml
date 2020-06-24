@@ -9,20 +9,26 @@
 # │   ├── dune
 # │   └── Main.ml
 # ├── lib
+# │   ├── bindings.c
+# │   ├── Boilerplate.ml
 # │   ├── CST.ml
 # │   ├── dune
 # │   ├── Parse.ml
+# │   ├── Parse.mli
 # │   ├── parser.c
 # │   ├── scanner.cc
 # │   └── tree_sitter
 # │       └── parser.h
-# └── tree-sitter.opam
-#
+# └── tree-sitter-ruby.opam
 #
 set -eu -o pipefail
 
 project_root=$(git rev-parse --show-toplevel)
-ocaml_tree_sitter="$project_root"/bin/ocaml-tree-sitter
+
+# The ocaml-tree-sitter executable and the runtime library are assumed to
+# to have been installed with 'make install'
+#
+ocaml_tree_sitter=$(which ocaml-tree-sitter)
 
 default_dst_dir="ocaml-src"
 default_src_dir="src"
@@ -182,16 +188,16 @@ EOF
 
 cat > "$dst_dir"/lib/dune <<EOF
 (library
-  (public_name tree-sitter-${lang_dashes})
+  (public_name tree-sitter-lang.${lang_dashes})
   (name tree_sitter_${lang_underscores})
   (preprocess (pps ppx_sexp_conv))
   (libraries atdgen-runtime tree-sitter.run)
   (foreign_stubs
     (language c)
     (names ${c_files})
-    (flags -fPIC
-           -I .
-           -I %{env:TREESITTER_INCLUDE_DIR=/usr/local/include})
+    (flags -std=c99
+           -fPIC
+           -I .)
   )
   (c_library_flags (-L%{env:TREESITTER_LIBRARY_DIR=/usr/local/lib}
                     -lstdc++
@@ -201,20 +207,20 @@ cat > "$dst_dir"/lib/dune <<EOF
     (language cxx)
     (names ${cxx_files})
     (flags -fPIC
-           -I .
-           -I %{env:TREESITTER_INCLUDE_DIR=/usr/local/include})
+           -I .)
   )
 )
 EOF
 
 cat > "$dst_dir"/bin/dune <<EOF
 (executable
+  (package tree-sitter-lang)
   (public_name parse-${lang_dashes})
   (name Main)
-  (libraries tree-sitter-${lang_dashes})
+  (libraries tree-sitter-lang.${lang_dashes})
 )
 EOF
 
 # This is needed for building with dune.
 #
-touch "$dst_dir"/tree-sitter-"$lang_dashes".opam
+touch "$dst_dir"/tree-sitter-lang.opam

@@ -23,13 +23,14 @@ let name_of_body opt_rule_name body =
      percents: $ => repeat1('%')  // name of the repeated element is '%'
 *)
 let translate_constant opt_rule_name cst =
-  let name =
+  let name, is_inlined =
     match opt_rule_name with
-    | Some rule_name -> rule_name
-    | None -> cst
+    | Some rule_name -> rule_name, false
+    | None -> cst, true
   in
   Token {
     name;
+    is_inlined;
     description = Constant cst
   }
 
@@ -39,7 +40,7 @@ let translate_constant opt_rule_name cst =
 *)
 let translate_token opt_rule_name body =
   match name_of_body opt_rule_name body with
-  | Some name -> Token { name; description = Token }
+  | Some name -> Token { name; is_inlined = false; description = Token }
   | None -> Blank
 
 (*
@@ -48,7 +49,7 @@ let translate_token opt_rule_name body =
 *)
 let translate_pattern opt_rule_name pat =
   match opt_rule_name with
-  | Some name -> Token { name; description = Pattern pat }
+  | Some name -> Token { name; is_inlined = false; description = Pattern pat }
   | None -> Blank
 
 (*
@@ -73,8 +74,10 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
   let rec translate ?rule_name x =
     match (x : Tree_sitter_t.rule_body) with
     | SYMBOL ident -> Symbol ident
-    | STRING cst -> translate_constant rule_name cst
-    | PATTERN pat -> translate_pattern rule_name pat
+    | STRING cst
+    | IMMEDIATE_TOKEN (STRING cst) -> translate_constant rule_name cst
+    | PATTERN pat
+    | IMMEDIATE_TOKEN (PATTERN pat) -> translate_pattern rule_name pat
     | IMMEDIATE_TOKEN body
     | TOKEN body -> translate_token rule_name body
     | BLANK -> Blank
@@ -127,7 +130,9 @@ and flatten_seq normalized_list =
 let make_external_rules externals =
   List.filter_map (function
     | Tree_sitter_t.SYMBOL name ->
-        let body = Token { name; description = External } in
+        let body =
+          Token { name; is_inlined = false; description = External }
+        in
         Some (name, body)
     | Tree_sitter_t.STRING _ -> None (* no need for a rule *)
     | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"
@@ -143,7 +148,7 @@ let tsort_rules rules =
   let sorted = Topo_sort.sort rules in
   List.map (fun group ->
     List.map (fun (is_rec, (name, body)) ->
-      { name; is_rec; body }) group
+      { name; is_rec; is_inlined = false; body }) group
   ) sorted
 
 let filter_extras bodies =

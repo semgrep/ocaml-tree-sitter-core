@@ -11,11 +11,17 @@ SCRIPTS = $(PROJECT_ROOT)/scripts
 #
 .PHONY: build
 build:
+	$(MAKE) gen
+	$(MAKE) build-c
+	$(MAKE) build-ocaml
+
+# Only generate source code without compiling it.
+#
+.PHONY: gen
+gen:
 	$(MAKE) prep
 	$(MAKE) gen-c
 	$(MAKE) gen-ocaml
-	$(MAKE) build-c
-	$(MAKE) build-ocaml
 
 .PHONY: install
 install:
