@@ -7,9 +7,10 @@ open Printf
 module Types = struct
   type node =
     | Line of string
-    | Paren of string * node list * string
     | Block of node list
     | Inline of node list
+    | Space
+    | Group of node list
 end
 
 open Types
@@ -17,7 +18,7 @@ open Types
 type t = node list
 
 (*
-   Expand Inline and Paren nodes, remove empty blocks.
+   Expand Inline nodes, remove empty blocks.
 *)
 let rec simplify l =
   List.map simplify_node l
@@ -25,17 +26,6 @@ let rec simplify l =
 
 and simplify_node = function
   | Line _ as x -> [x]
-  | Paren (open_, l, close) ->
-      (match simplify l with
-       | [Line s] -> [Line (open_ ^ s ^ close)]
-       | [] -> [Line (open_ ^ close)]
-       | l ->
-           [
-             Line open_;
-             Block l;
-             Line close;
-           ]
-      )
   | Block l ->
       (match simplify l with
        | [] -> []
@@ -46,18 +36,63 @@ and simplify_node = function
        | [] -> []
        | l -> l
       )
+  | Space -> [Space]
+  | Group l ->
+      (match simplify l with
+       | [] -> []
+       | l -> [Group l]
+      )
+
+let really_collapse nodes =
+  let buf = Buffer.create 100 in
+  let rec add nodes =
+    List.iter add_node nodes
+  and add_node = function
+    | Line s -> Buffer.add_string buf s
+    | Block nodes -> add nodes
+    | Inline nodes -> add nodes
+    | Space -> Buffer.add_char buf ' '
+    | Group nodes -> add nodes
+  in
+  add nodes;
+  Line (Buffer.contents buf)
+
+let collapse ?(max_len = 60) nodes =
+  let rec collapse nodes =
+    let l = List.map collapse_node nodes in
+    let size = List.fold_left (fun acc (size, _node) -> acc + size) 0 l in
+    size, List.map snd l
+
+  and collapse_node = function
+    | Line s as x ->
+        String.length s, x
+    | Block nodes ->
+        let size, nodes = collapse nodes in
+        size, Block nodes
+    | Inline _ -> assert false (* removed by 'simplify' *)
+    | Space ->
+        1, Space
+    | Group nodes ->
+        let size, nodes = collapse nodes in
+        if size <= max_len then
+          size, really_collapse nodes
+        else
+          size, Group nodes
+  in
+  snd (collapse nodes)
 
 let rec print_node buf indent (x : node) =
   match x with
   | Line s -> bprintf buf "%s%s\n" (String.make indent ' ') s
-  | Block l -> print buf (indent + 2) l
+  | Block nodes -> print buf (indent + 2) nodes
   | Inline _ -> assert false (* removed by 'simplify' *)
-  | Paren _ -> assert false (* removed by 'simplify' *)
+  | Space -> ()
+  | Group nodes -> print buf indent nodes
 
-and print buf indent l =
-  List.iter (print_node buf indent) l
+and print buf indent nodes =
+  List.iter (print_node buf indent) nodes
 
-let to_string l =
+let to_string nodes =
   let buf = Buffer.create 1000 in
-  print buf 0 (simplify l);
+  print buf 0 (simplify nodes |> collapse);
   Buffer.contents buf

@@ -71,8 +71,9 @@ let rec gen_mapper_body var body : node list =
       let cases =
         List.map (fun (name, body) ->
           let env = destruct body in
-          Inline [
+          Group [
             Line (sprintf "| `%s %s ->" name (mkpat env));
+            Space;
             Block [Block (gen_mapper_body_multi env)]
           ]
         ) l
@@ -86,8 +87,11 @@ let rec gen_mapper_body var body : node list =
       let env = destruct body in
       [
         Line (sprintf "(match %s with" var);
-        Line (sprintf "| Some %s ->" (mkpat env));
-        Block [Block (gen_mapper_body_multi env)];
+        Group [
+          Line (sprintf "| Some %s ->" (mkpat env));
+          Space;
+          Block [Block (gen_mapper_body_multi env)];
+        ];
         Line (sprintf "| None -> todo ())")
       ]
   | Seq _ as body ->
@@ -104,9 +108,11 @@ and gen_mapper_body_multi env =
   | env ->
       let bindings =
         List.map (fun (var, body) ->
-          Inline [
+          Group [
             Line (sprintf "let %s =" var);
+            Space;
             Block (gen_mapper_body var body);
+            Space;
             Line "in";
           ]
         ) env

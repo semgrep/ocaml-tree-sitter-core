@@ -28,9 +28,21 @@
 module Types : sig
   type node =
     | Line of string
-        (* single line of output *)
+        (* single line of output. May be collapsed with other lines
+           it's a member of a group. *)
 
-    | Paren of string * node list * string
+    | Block of node list
+        (* a list of things to indent *)
+
+    | Inline of node list
+        (* a list of things to not indent *)
+
+    | Space
+        (* guarantees the presence of at least one whitespace character
+           (space or newline) between the previous and the next element
+           to be printed. This is useful when collapsing a group. *)
+
+    | Group of node list
         (* single line of output iff contains a single line, otherwise
            an indented block. e.g.
 
@@ -47,12 +59,6 @@ module Types : sig
 
              ()
          *)
-
-    | Block of node list
-        (* a list of things to indent *)
-
-    | Inline of node list
-        (* a list of things to not indent *)
 end
 
 open Types

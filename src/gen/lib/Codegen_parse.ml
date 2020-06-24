@@ -64,10 +64,11 @@ val parse_input_tree :
 let trace_gen trace_fun name (reader : Indent.t) =
   if !debug_trace then
     [
-      Paren (
-        sprintf "fun nodes -> Combine.%s %S (" trace_fun name,
-        reader
-        , ") nodes");
+      Group [
+        Line (sprintf "fun nodes -> Combine.%s %S (" trace_fun name);
+        Block reader;
+        Line ") nodes"
+      ]
     ]
   else
     reader
@@ -162,7 +163,14 @@ let parse_input_tree input_tree : %s.%s option =
          )
   ]
 
-let paren x = [Paren ("(", x, ")")]
+let paren x =
+  [
+    Group [
+      Line "(";
+      Block x;
+      Line ")"
+    ]
+  ]
 
 let format_cases cases =
   List.map (fun (pat, e) ->
