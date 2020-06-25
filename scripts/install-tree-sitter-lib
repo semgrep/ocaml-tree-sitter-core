@@ -14,4 +14,5 @@ fi
   git clean -dfX
   make
   sudo make install
+  sudo ldconfig /usr/local/lib
 )

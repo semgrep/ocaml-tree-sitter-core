@@ -33,7 +33,4 @@ COPY --chown=opam:opam . /home/opam/ocaml-tree-sitter
 #
 RUN opam exec -- make
 RUN opam exec -- make install
-
-# FIXME Why does ld not search /usr/local/lib despite it being listed
-# in /etc/ld.so.conf.d/libc.conf ?
-RUN LD_LIBRARY_PATH=/usr/local/lib opam exec -- make test
+RUN opam exec -- make test
