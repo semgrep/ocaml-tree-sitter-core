@@ -4,8 +4,6 @@
 #
 set -eu
 
-project_root=$(git rev-parse --show-toplevel)
-
 if [[ ! -e tree-sitter ]]; then
   git clone --depth 1 https://github.com/tree-sitter/tree-sitter.git
 fi

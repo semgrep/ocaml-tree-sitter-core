@@ -1,0 +1,23 @@
+#! /usr/bin/env bash
+#
+# Install Node.js so that we can install the tree-sitter command-line
+# interface. Intended for Debian/Ubuntu only.
+#
+
+cat > ~/.npmrc <<EOF
+prefix = ~/.node
+EOF
+
+cat >> ~/.bashrc <<EOF
+export PATH="$HOME/.node/bin:$PATH"
+export NODE_PATH="$HOME/.node/lib/node_modules:$NODE_PATH"
+export MANPATH="$HOME/.node/share/man:$MANPATH"
+EOF
+
+sudo apt-get update
+sudo apt-get install -y nodejs npm
+
+npm install npm -g
+
+# Local install into node_modules/
+npm install node-gyp

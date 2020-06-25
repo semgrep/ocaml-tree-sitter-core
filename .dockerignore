@@ -1,0 +1,13 @@
+#
+# Translated manually from .gitignore.
+#
+
+bin
+**/tmp
+**/_build
+**/.merlin
+**/*.install
+_opam
+node_modules
+package-lock.json
+tree-sitter
