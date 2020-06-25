@@ -15,6 +15,8 @@ FROM ocaml/opam2:debian-stable
 COPY --chown=opam:opam scripts /home/opam/ocaml-tree-sitter/scripts
 COPY --chown=opam:opam Makefile /home/opam/ocaml-tree-sitter/Makefile
 WORKDIR /home/opam/ocaml-tree-sitter
+
+# hadolint ignore=DL3004 https://github.com/hadolint/hadolint/wiki/DL3004
 RUN sudo chown opam:opam .
 
 # Slow steps that mostly download and build external stuff.
