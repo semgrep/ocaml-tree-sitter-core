@@ -7,7 +7,7 @@
 sudo apt-get update
 sudo apt-get install -y m4
 
-opam switch 4.09
+opam switch 4.10
 
 if ! (opam repo list | grep -q http); then
   opam repo add --all -k git github \
