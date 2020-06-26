@@ -52,3 +52,7 @@ test: build
 .PHONY: install
 install:
 	dune install
+
+.PHONY: ci
+ci:
+	docker build -t ocaml-tree-sitter .
