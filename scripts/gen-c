@@ -24,7 +24,6 @@ test -x "$tree_sitter" || error "missing executable $tree_sitter"
 #
 
 # 1. Generate from grammar.js
-rm -f src/grammar.json src/grammar.json.orig
 "$tree_sitter" generate
 
 # 2. Simplify grammar.json

@@ -12,7 +12,6 @@ SCRIPTS = $(PROJECT_ROOT)/scripts
 .PHONY: build
 build:
 	$(MAKE) gen
-	$(MAKE) build-c
 	$(MAKE) build-ocaml
 
 # Only generate source code without compiling it.
@@ -31,8 +30,7 @@ install:
 #
 .PHONY: test
 test:
-	$(MAKE) parse-step1
-	$(MAKE) parse-step2
+	$(MAKE) parse-examples
 
 .PHONY: prep
 prep:
@@ -46,28 +44,19 @@ gen-c:
 gen-ocaml:
 	$(SCRIPTS)/gen-ocaml --lang $(LANG)
 
-.PHONY: build-c
-build-c:
-	$(SCRIPTS)/build-c
-
 .PHONY: build-ocaml
 build-ocaml:
 	$(SCRIPTS)/build-ocaml
 	ln -sf ocaml-src/_build/install/default/bin/parse-$(LANG)
 
-# Parse source and generate json files using tree-sitter only
-.PHONY: parse-step1
-parse-step1:
-	$(SCRIPTS)/parse-step1
-
 # Parse source using standalone executable and dump OCaml CST
-.PHONY: parse-step2
-parse-step2:
-	$(SCRIPTS)/parse-step2 $(LANG)
+.PHONY: parse-examples
+parse-examples:
+	$(SCRIPTS)/parse-examples $(LANG)
 
 .PHONY: stat
 stat:
-	$(SCRIPTS)/lang-stat projects.txt extensions.txt
+	$(SCRIPTS)/lang-stat $(LANG) projects.txt extensions.txt
 
 .PHONY: clean
 clean:

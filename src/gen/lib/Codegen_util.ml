@@ -5,7 +5,7 @@
 open Printf
 
 let translate_ident =
-  let registry = Protect_ident.create () in
+  let registry = Protect_ident.create ~reserved:Protect_ident.ocaml_reserved in
   fun ident -> Protect_ident.translate registry ident
 
 let interleave sep l =

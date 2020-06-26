@@ -4,6 +4,7 @@
 
 let test_suites : unit Alcotest.test list = [
   Fresh.test;
+  Protect_ident.test;
 ]
 
 let main () = Alcotest.run "ocaml-tree-sitter.gen" test_suites
