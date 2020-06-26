@@ -24,19 +24,6 @@ test -x "$node_gyp" || error "missing executable $node_gyp"
 
 mkdir -p src
 
-# We need grammar.js in the current folder, without aliases or hidden rules.
-#
-# Do this with a custom script 'make-grammar-js' if things are complicated,
-# otherwise run a generic 'simplify-grammar' on 'orig/grammar.js'.
-#
-if [[ -e make-grammar-js ]]; then
-  echo "Prepare 'grammar.js' using custom script 'make-grammar-js'."
-  ./make-grammar-js
-elif [[ -e orig/grammar.js ]]; then
-  echo "Simplify 'grammar.js'."
-  "$scripts"/simplify-grammar < orig/grammar.js > grammar.js
-fi
-
 test -f "grammar.js" || error "missing grammar.js"
 
 if [[ -e orig/scanner.cc ]]; then

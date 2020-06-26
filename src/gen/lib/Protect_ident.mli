@@ -1,5 +1,5 @@
 (*
-   Change the name of identifiers that would make unsuitable Reason
+   Change the name of identifiers that would make unsuitable OCaml
    identifiers. This tracks all identifiers to avoid conflicts.
 *)
 

@@ -1,6 +1,17 @@
 (executable
   (public_name ocaml-tree-sitter)
-  (name Main)
+  (name Ocaml_tree_sitter_main)
+  (modules Ocaml_tree_sitter_main)
+  (libraries
+    cmdliner
+    tree-sitter.gen
+  )
+)
+
+(executable
+  (public_name simplify-grammar)
+  (name Simplify_grammar_main)
+  (modules Simplify_grammar_main)
   (libraries
     cmdliner
     tree-sitter.gen

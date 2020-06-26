@@ -16,7 +16,20 @@ EOF
 
 test -x "$tree_sitter" || error "missing executable $tree_sitter"
 
-# Generate C source code for the grammar.
-# Also generate 'grammar.json' used by the OCaml code generator.
+# Generate C source code for the grammar, in two passes:
 #
+# 1. Generate the original grammar.json by executing grammar.js.
+# 2. Simplify grammar.json so it's compatible with ocaml-tree-sitter.
+# 3. Generate the C parser.
+#
+
+# 1. Generate from grammar.js
+rm -f src/grammar.json src/grammar.json.orig
 "$tree_sitter" generate
+
+# 2. Simplify grammar.json
+mv src/grammar.json src/grammar.json.orig
+simplify-grammar < src/grammar.json.orig > src/grammar.json
+
+# 3. Generate from grammar.json
+"$tree_sitter" generate src/grammar.json
