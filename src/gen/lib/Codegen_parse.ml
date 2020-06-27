@@ -175,17 +175,24 @@ let paren x =
 let format_cases cases =
   List.map (fun (pat, e) ->
     [
-      Line (sprintf "| %s ->" pat);
-      Block [Block e];
+      Group [
+        Line (sprintf "| %s ->" pat);
+        Space;
+        Block [Block e];
+      ]
     ]
   ) cases
   |> List.flatten
 
 let match_with e cases =
   paren [
-    Line "match";
-    Block e;
-    Line "with";
+    Group [
+      Line "match";
+      Space;
+      Block e;
+      Space;
+      Line "with";
+    ];
     Inline (format_cases cases);
   ]
 
@@ -226,8 +233,11 @@ let gen_lazy_or cases =
         [
           Line (sprintf "match _parse_%s nodes with" name);
           Line "| Some _ as res -> res";
-          Line "| None ->";
-          Block [Block (gen cases)];
+          Group [
+            Line "| None ->";
+            Space;
+            Block [Block (gen cases)]
+          ];
         ]
   in
   gen cases
