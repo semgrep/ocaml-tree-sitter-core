@@ -57,24 +57,47 @@ let really_collapse nodes =
   add nodes;
   Line (Buffer.contents buf)
 
-let collapse ?(max_len = 60) nodes =
+module Size = struct
+  (* Length of a collapsible group. If None, the group is not collapsible. *)
+  type t = int option
+
+  let max_len = 60
+
+  let add a b : t =
+    match a, b with
+    | None, _
+    | _, None -> None
+    | Some a, Some b ->
+        let len = a + b in
+        if len <= max_len then
+          Some len
+        else
+          None
+end
+
+let collapse nodes =
   let rec collapse nodes =
     let l = List.map collapse_node nodes in
-    let size = List.fold_left (fun acc (size, _node) -> acc + size) 0 l in
+    let size =
+      List.fold_left (fun acc (size, _node) -> Size.add acc size) (Some 0) l
+    in
     size, List.map snd l
 
   and collapse_node = function
     | Line s as x ->
-        String.length s, x
+        Some (String.length s), x
+    | Block [node] ->
+        let size, node = collapse_node node in
+        size, Block [node]
     | Block nodes ->
-        let size, nodes = collapse nodes in
-        size, Block nodes
+        let _size, nodes = collapse nodes in
+        None, Block nodes
     | Inline _ -> assert false (* removed by 'simplify' *)
     | Space ->
-        1, Space
+        Some 1, Space
     | Group nodes ->
         let size, nodes = collapse nodes in
-        if size <= max_len then
+        if size <> None then
           size, really_collapse nodes
         else
           size, Group nodes
