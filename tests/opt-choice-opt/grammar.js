@@ -1,5 +1,5 @@
 module.exports = grammar({
-    name: "ts",
+    name: "opt_choice_opt",
     rules: {
         program: $ => optional(
             choice(

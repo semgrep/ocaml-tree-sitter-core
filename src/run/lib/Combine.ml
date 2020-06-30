@@ -10,9 +10,6 @@ open Tree_sitter_bindings.Tree_sitter_output_t
 type 'a reader = node list -> ('a * node list) option
 type 'a full_seq_reader = node list -> 'a option
 
-type ('head_elt, 'head, 'tail) seq_reader =
-  'head_elt reader -> 'tail reader -> ('head * 'tail) reader
-
 let trace_indent = ref 0
 
 let show_node node =
@@ -107,15 +104,20 @@ let parse_seq parse_elt1 parse_tail nodes =
       | None -> None
       | Some (res2, nodes) -> Some ((res1, res2), nodes)
 
-let parse_end nodes =
+let check_end nodes =
   match nodes with
-  | [] -> Some ((), [])
-  | _ -> None
+  | [] -> true
+  | _ -> false
+
+let check_seq parse check_tail nodes =
+  match parse nodes with
+  | None -> false
+  | Some (_, nodes) -> check_tail nodes
 
 let parse_full_seq parse_inline nodes =
-  match parse_inline parse_end nodes with
-  | Some ((res, ()), []) -> Some res
-  | Some (_, (_::_)) -> invalid_arg "Combine.parse_full_seq"
+  match parse_inline check_end nodes with
+  | Some (res, []) -> Some res
+  | Some (_, (_::_)) -> None
   | None -> None
 
 (* Each time we make forward progress in a repeat, we take a snapshot
@@ -145,45 +147,45 @@ let rec find_longest_match parse_elt stack nodes =
 (* Repeat with backtracking, starting from longest match.
    We could disable some or all backtracking here.
 *)
-let parse_repeat parse_elt parse_tail nodes =
+let parse_repeat parse_elt check_tail nodes =
   let rec backtrack stack =
     match stack with
     | [] -> None
     | (rev_elts, nodes) :: remaining_stack ->
-        match parse_tail nodes with
-        | Some (tail, nodes) ->
-            let res = (List.rev rev_elts, tail) in
+        match check_tail nodes with
+        | true ->
+            let res = List.rev rev_elts in
             Some (res, nodes)
-        | None ->
+        | false ->
             backtrack remaining_stack
   in
   let first_snapshot = ([], nodes) in
   let matches = find_longest_match parse_elt [first_snapshot] nodes in
   backtrack matches
 
-let parse_repeat1 parse_elt parse_tail nodes =
+let parse_repeat1 parse_elt check_tail nodes =
   match parse_elt nodes with
   | None -> None
   | Some (elt, nodes) ->
-      match parse_repeat parse_elt parse_tail nodes with
+      match parse_repeat parse_elt check_tail nodes with
       | None -> None
-      | Some ((repeat_tail, res2), nodes) ->
-          Some ((elt :: repeat_tail, res2), nodes)
+      | Some (repeat_tail, nodes) ->
+          Some ((elt :: repeat_tail), nodes)
 
-let parse_optional parse_elt parse_tail orig_nodes =
+let parse_optional parse_elt check_tail orig_nodes =
   match parse_elt orig_nodes with
   | None ->
-      (match parse_tail orig_nodes with
-       | Some (tail, nodes) -> Some ((None, tail), nodes)
-       | None -> None
+      (match check_tail orig_nodes with
+       | true -> Some (None, orig_nodes)
+       | false -> None
       )
   | Some (elt, remaining_nodes) ->
-      match parse_tail remaining_nodes with
-      | Some (tail, nodes) -> Some ((Some elt, tail), nodes)
-      | None ->
-          (match parse_tail orig_nodes with
-           | Some (tail, nodes) -> Some ((Some elt, tail), nodes)
-           | None -> None
+      match check_tail remaining_nodes with
+      | true -> Some (Some elt, remaining_nodes)
+      | false ->
+          (match check_tail orig_nodes with
+           | true -> Some (Some elt, orig_nodes)
+           | false -> None
           )
 
 let map f parse_elt nodes =

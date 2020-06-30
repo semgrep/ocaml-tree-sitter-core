@@ -18,6 +18,3 @@ sudo apt-get update
 sudo apt-get install -y nodejs npm
 
 npm install npm -g
-
-# Local install into node_modules/
-npm install node-gyp

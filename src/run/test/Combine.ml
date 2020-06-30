@@ -51,103 +51,98 @@ let test_seq () =
       Combine.parse_success
       [a; b]
     = Some (("a", ()), [b])
-  );
-  assert (
-    Combine.parse_seq
-      (parse_node "a")
-      Combine.parse_end
-      [a; b]
-    = None
   )
+
+let check_success _nodes = true
 
 let test_optional () =
   assert (
     Combine.parse_optional
       (parse_node "a")
-      Combine.parse_success
+      check_success
       [b]
-    = Some ((None, ()), [b])
+    = Some (None, [b])
   );
   assert (
     Combine.parse_optional
       (parse_node "a")
-      Combine.parse_success
+      check_success
       [a; b]
-    = Some ((Some "a", ()), [b])
+    = Some (Some "a", [b])
   );
   assert (
     Combine.parse_optional
       (parse_node "a")
-      Combine.parse_end
+      Combine.check_end
       [a; b]
     = None
   );
   assert (
     Combine.parse_optional
       (parse_node "a")
-      Combine.parse_end
+      Combine.check_end
       [a]
-    = Some ((Some "a", ()), [])
+    = Some (Some "a", [])
   )
 
 let test_repeat () =
   assert (
     Combine.parse_repeat
       (parse_node "a")
-      Combine.parse_success
+      check_success
       []
-    = Some (([], ()), [])
+    = Some ([], [])
   );
   assert (
     Combine.parse_repeat
       (parse_node "a")
-      Combine.parse_success
+      check_success
       [a; b]
-    = Some ((["a"], ()), [b])
+    = Some (["a"], [b])
   );
   assert (
     Combine.parse_repeat
       (parse_node "a")
-      Combine.parse_end
+      Combine.check_end
       [a; b]
     = None
   );
   assert (
     Combine.parse_repeat
       (parse_node "a")
-      Combine.parse_end
+      Combine.check_end
       [a; a]
-    = Some ((["a"; "a"], ()), [])
+    = Some (["a"; "a"], [])
   )
 
 let test_repeat1 () =
   assert (
     Combine.parse_repeat1
       (parse_node "a")
-      Combine.parse_success
+      check_success
       []
     = None
   );
   assert (
     Combine.parse_repeat1
       (parse_node "a")
-      Combine.parse_success
+      check_success
       [a; b]
-    = Some ((["a"], ()), [b])
+    = Some (["a"], [b])
   );
   assert (
     Combine.parse_repeat1
       (parse_node "a")
-      Combine.parse_end
+      Combine.check_end
       [a; b]
     = None
   );
   assert (
     Combine.parse_repeat1
       (parse_node "a")
-      Combine.parse_end
+      Combine.check_end
       [a; a]
-    = Some ((["a"; "a"], ()), [])
+    = Some (["a"; "a"], [])
   )
 
 let test_opt_repeat1 () =
@@ -155,11 +150,11 @@ let test_opt_repeat1 () =
     Combine.parse_optional
       (Combine.parse_repeat1
          (parse_node "a")
-         Combine.parse_end
+         Combine.check_end
       )
-      Combine.parse_success
+      check_success
       [a]
-    = Some ((Some (["a"], ()), ()), [])
+    = Some (Some ["a"], [])
   )
 
 let test = "Combine", [

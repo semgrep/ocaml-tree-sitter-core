@@ -10,7 +10,6 @@ project_root=$(git rev-parse --show-toplevel)
 scripts="$project_root"/scripts
 node_bin="$project_root"/node_modules/.bin
 tree_sitter="$node_bin"/tree-sitter
-node_gyp="$node_bin"/node-gyp
 
 error() {
   cat >&2 <<EOF
@@ -20,7 +19,6 @@ EOF
 }
 
 test -x "$tree_sitter" || error "missing executable $tree_sitter"
-test -x "$node_gyp" || error "missing executable $node_gyp"
 
 mkdir -p src
 

@@ -68,53 +68,46 @@ module Parse = struct
         _parse_leaf_rule "variable"
       ) nodes
     in
-    let rec parse_inline_expression _parse_tail
-      : (CST.expression * _) Combine.reader =
+    let rec parse_inline_expression check_tail
+      : CST.expression Combine.reader =
       fun nodes ->
-        let parse_case0 _parse_tail nodes =
+        let parse_case0 check_tail nodes =
           match
-            (
-              Combine.parse_seq parse_node_variable _parse_tail
-            )
-              nodes
+            parse_node_variable nodes
           with
-          | Some ((res, tail), nodes) -> Some ((`Case0 res, tail), nodes)
+          | Some (res, nodes) -> Some (`Case0 res, nodes)
           | None -> None
         in
-        let parse_case1 _parse_tail nodes =
+        let parse_case1 check_tail nodes =
           match
-            (
-              Combine.parse_seq parse_node_number _parse_tail
-            )
-              nodes
+            parse_node_number nodes
           with
-          | Some ((res, tail), nodes) -> Some ((`Case1 res, tail), nodes)
+          | Some (res, nodes) -> Some (`Case1 res, nodes)
           | None -> None
         in
-        let parse_case2 _parse_tail nodes =
+        let parse_case2 check_tail nodes =
           match
             (
-              let _parse_tail =
-                let _parse_tail =
-                  Combine.parse_seq parse_node_expression _parse_tail
-                in
-                Combine.parse_seq (_parse_leaf_rule "+") _parse_tail
-              in
-              Combine.parse_seq parse_node_expression _parse_tail
+              Combine.parse_seq
+                parse_node_expression
+                (Combine.parse_seq
+                   (_parse_leaf_rule "+")
+                   parse_node_expression
+                )
             ) nodes
           with
-          | Some ((e0, (e1, (e2, tail))), nodes) ->
-              Some ((`Case2 (e0, e1, e2), tail), nodes)
+          | Some ((e0, (e1, e2)), nodes) ->
+              Some (`Case2 (e0, e1, e2), nodes)
           | None ->
               None
         in
-        match parse_case0 _parse_tail nodes with
+        match parse_case0 check_tail nodes with
         | Some _ as res -> res
         | None ->
-            match parse_case1 _parse_tail nodes with
+            match parse_case1 check_tail nodes with
             | Some _ as res -> res
             | None ->
-                parse_case2 _parse_tail nodes
+                parse_case2 check_tail nodes
     and parse_children_expression : _ Combine.full_seq_reader = fun nodes ->
       Combine.parse_full_seq parse_inline_expression nodes
     and parse_node_expression = fun nodes ->
@@ -127,20 +120,16 @@ module Parse = struct
     let cache_node_statement = Combine.Memoize.create () in
     let cache_node_stmt = Combine.Memoize.create () in
 
-    let parse_inline_statement _parse_tail
-      : (CST.statement * _) Combine.reader =
+    let parse_inline_statement check_tail
+      : CST.statement Combine.reader =
       fun nodes ->
         match
           Combine.parse_seq
             parse_node_expression
-            (
-              Combine.parse_seq
-                (_parse_leaf_rule ";")
-                _parse_tail
-            )
+            (_parse_leaf_rule ";")
             nodes
         with
-        | Some ((e1, (e2, tail)), nodes) -> Some (((e1, e2), tail), nodes)
+        | Some ((e1, e2), nodes) -> Some ((e1, e2), nodes)
         | None -> None
     in
     let parse_children_statement : _ Combine.full_seq_reader = fun nodes ->
@@ -159,16 +148,16 @@ module Parse = struct
       ) nodes
     in
     (* inline alias *)
-    let parse_inline__thing _parse_tail : (CST._thing * _) Combine.reader =
+    let parse_inline__thing check_tail : CST._thing Combine.reader =
       fun nodes ->
-        parse_inline_statement _parse_tail nodes
+        parse_inline_statement check_tail nodes
     in
 
     let parse_node_program = fun nodes ->
       Combine.parse_rule "program" (
         Combine.parse_repeat
           parse_node_statement
-          Combine.parse_end
+          Combine.check_end
       ) nodes
     in
     parse_node_program [root_node]
