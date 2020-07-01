@@ -65,22 +65,21 @@ static struct custom_operations TSNode_custom_ops = {
 
 const char *octs_read(void *payload, uint32_t byte_offset, TSPoint position,
                       uint32_t *bytes_read) {
-  value *closure = caml_named_value("octs__parse_read");
+  value closure = *caml_named_value("octs__parse_read");
   value result =
-      caml_callback3(*closure, Val_int(byte_offset), Val_int(position.row),
+      caml_callback3(closure, Val_int(byte_offset), Val_int(position.row),
                      Val_int(position.column));
 
-  char *ret = NULL;
   *bytes_read = 0;
   if (Is_block(result)) {
     value strVal = Field(result, 0);
 
-    char *str = String_val(strVal);
+    const char *str = String_val(strVal);
     *bytes_read = strlen(str);
-    ret = str;
+    return str;
   }
-
-  return ret;
+  else
+    return NULL;
 }
 
 CAMLprim value octs_parser_parse(value vParser, value vTree, value vRead) {
