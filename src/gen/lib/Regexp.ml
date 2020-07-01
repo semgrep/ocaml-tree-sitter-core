@@ -105,12 +105,13 @@ let print_seq_elt seq_elt =
 *)
 type exp =
   | Atom of Param.code             (* e *)
+  | Var of string                  (* var *)
   | App of exp * exp               (* f e *)
   | Fun of string * exp            (* fun var -> e *)
   | Def of string * exp * exp      (* let var = e1 in e2 *)
   | Op of rep_kind * exp           (* op f *)
   | Alt of exp * exp               (* match e1 with
-                                      | Some res -> res
+                                      | Some _ as res -> res
                                       | None -> e2 *)
 
   | Flatten of exp * int * (string -> string) option
@@ -126,8 +127,6 @@ type exp =
   | Seq of exp
      (* parse_seq f parse_tail *)
 
-let atom s = Atom (Param.code_of_string s)
-
 let rec compile_seq seq =
   match seq with
   | [] -> assert false
@@ -138,11 +137,11 @@ let rec compile_seq seq =
       (n + 1,
        Def ("_parse_tail",
             parse_tail,
-            Seq (compile_seq_elt head (Some (atom "_parse_tail")))))
+            Seq (compile_seq_elt head (Some (Var "_parse_tail")))))
 
 and compile_seq_flat seq opt_wrap =
   let n, f = compile_seq seq in
-  Fun ("nodes", Flatten (App (f, atom "nodes"), n, opt_wrap))
+  Fun ("nodes", Flatten (App (f, Var "nodes"), n, opt_wrap))
 
 and compile_seq_elt seq_elt opt_parse_tail =
   match seq_elt with
@@ -169,7 +168,7 @@ and compile_cases cases =
         Atom Param.parse_fail
     | (name, seq) :: cases ->
         let wrap arg = Param.apply_variant name arg in
-        let first = App (compile_seq_flat seq (Some wrap), atom "nodes") in
+        let first = App (compile_seq_flat seq (Some wrap), Var "nodes") in
         match cases with
         | [] -> first
         | cases -> Alt (first, compile_choice cases)

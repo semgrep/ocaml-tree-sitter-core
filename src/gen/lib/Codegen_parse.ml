@@ -8,8 +8,8 @@ open Printf
 open CST_grammar
 open Indent.Types
 
-let debug_gen = false
-let debug_trace = ref true
+(* Set on the ocaml-tree-sitter command line. *)
+let debug_trace = ref false
 
 (* All rule names and other names directly defined in grammar.json
    must go through this translation. For example, it turns
@@ -76,10 +76,6 @@ let trace_gen trace_fun name (reader : Indent.t) =
 (* works with any function of type _ -> _ option *)
 let trace name reader =
   trace_gen "trace" name reader
-
-(* works only with functions of type _ reader (which return input nodes) *)
-let trace_reader name reader =
-  trace_gen "trace_reader" name reader
 
 let debug_log s =
   if !debug_trace then
@@ -216,7 +212,7 @@ let gen_rule_parser_bindings ~cst_module_name (rule : rule) =
       let fun_name = "parse_inline_" ^ trans name in
       [
         Line (sprintf "%s : unit Combine.reader =" fun_name);
-        Block (trace_reader fun_name [
+        Block (trace fun_name [
           Line "(fun nodes ->";
           Block [
             Line "Combine.parse_success nodes";
@@ -230,7 +226,7 @@ let gen_rule_parser_bindings ~cst_module_name (rule : rule) =
       [
         Line (sprintf "%s : Token.t Combine.reader ="
                 fun_name);
-        Block (trace_reader fun_name [
+        Block (trace fun_name [
           Line "(fun nodes ->";
           Block [
             Line (sprintf "Combine.Memoize.apply cache_%s" (trans name));
@@ -254,7 +250,7 @@ let gen_rule_parser_bindings ~cst_module_name (rule : rule) =
                 fun_name
                 cst_module_name (trans name));
         Block (
-          trace_reader fun_name
+          trace fun_name
             (Codegen_matcher.generate_ocaml body);
         )
       ]
@@ -281,7 +277,7 @@ let gen_rule_parser_bindings ~cst_module_name (rule : rule) =
         Line (sprintf "%s : %s.%s Combine.reader ="
                 fun_name
                 cst_module_name (trans name));
-        Block (trace_reader fun_name [
+        Block (trace fun_name [
           Line "(fun nodes ->";
           Block [
             Line (sprintf "Combine.Memoize.apply cache_%s ("

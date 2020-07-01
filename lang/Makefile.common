@@ -7,6 +7,10 @@ DUNE_BIN = $(PROJECT_ROOT)/bin
 NODE_BIN = $(PROJECT_ROOT)/node_modules/.bin
 SCRIPTS = $(PROJECT_ROOT)/scripts
 
+ifndef GEN_OCAML_OPTIONS
+  GEN_OCAML_OPTIONS =
+endif
+
 # Build the parsers.
 #
 .PHONY: build
@@ -42,7 +46,7 @@ gen-c:
 
 .PHONY: gen-ocaml
 gen-ocaml:
-	$(SCRIPTS)/gen-ocaml --lang $(LANG)
+	$(SCRIPTS)/gen-ocaml --lang $(LANG) $(GEN_OCAML_OPTIONS)
 
 .PHONY: build-ocaml
 build-ocaml:

@@ -57,6 +57,45 @@ and make_seq (body : rule_body) : seq_elt list =
   | Seq bodies -> List.map make_seq_elt bodies
   | other -> [make_seq_elt other]
 
+(* Optional simplifications
+
+   This results in more natural code, with possible minor performance
+   improvements. However it makes debugging a little harder, so it's
+   a good idea to turn it off when debugging.
+
+   The 'top' parameter is to preserve expressions of the form
+
+     (fun x -> e x)
+
+   Replacing it by just 'e' may be disallowed when it is part of
+   a mutually-recursive definition. For example, the following is forbidden:
+
+     let rec f = g
+     and g = f
+
+  Instead we would write:
+
+     let rec f = fun x -> g x
+     and g = fun x -> f x
+*)
+let rec simplify ?(top = false) (exp : exp) : exp =
+  match exp with
+  | Atom _
+  | Var _ -> exp
+  | App (Fun (var1, e), Var var2)
+    when not top && var1 = var2 -> simplify e
+  | App (e1, e2) -> App (simplify e1, simplify e2)
+  | Fun (var, e) -> Fun (var, simplify e)
+  | Def (var1, e1, Var var2)
+    when var1 = var2 -> simplify e1
+  | Def (var, e1, e2) -> Def (var, simplify e1, simplify e2)
+  | Op (rep_kind, e) -> Op (rep_kind, simplify e)
+  | Alt (e1, e2) -> Alt (simplify e1, simplify e2)
+  | Flatten (e, (1 | 2), None) -> simplify e
+  | Flatten (e, n, wrap) -> Flatten (simplify e, n, wrap)
+  | Check_tail e -> Check_tail (simplify e)
+  | Seq e -> Seq (simplify e)
+
 (*** OCaml code formatting ***)
 
 let paren code =
@@ -74,15 +113,23 @@ let paren code =
 let rec format (exp : exp) : Indent.t =
   match exp with
   | Atom code -> code
+  | Var var -> [ Line var ]
   | App (f, arg) ->
       [
-        Inline (paren (format f));
-        Block (paren (format arg));
+        Inline (format_paren f);
+        Block (format_paren arg);
       ]
   | Fun (param, body) ->
       [
         Line (sprintf "fun %s ->" param);
         Block (format body);
+      ]
+  | Def (var, Fun (param, e1), e2) ->
+      [
+        Line (sprintf "let %s %s =" var param);
+        Block (format e1);
+        Line "in";
+        Inline (format e2);
       ]
   | Def (var, e1, e2) ->
       [
@@ -101,7 +148,7 @@ let rec format (exp : exp) : Indent.t =
       [
         Line function_name;
         Block [
-          Inline (paren (format f1));
+          Inline (format_paren f1);
           Line "check_tail";
         ]
       ]
@@ -141,7 +188,7 @@ let rec format (exp : exp) : Indent.t =
       [
         Line "Combine.check_seq";
         Block [
-          Inline (paren (format f));
+          Inline (format_paren f);
           Line "check_tail";
         ];
       ]
@@ -149,13 +196,21 @@ let rec format (exp : exp) : Indent.t =
       [
         Line "Combine.parse_seq";
         Block [
-          Inline (paren (format f));
+          Inline (format_paren f);
           Line "_parse_tail";
         ];
       ]
 
+and format_paren e =
+  match e with
+  | Var _ -> format e
+  | e -> paren (format e)
+
 let generate_ocaml (rule_body : rule_body) : Indent.t =
   let seq_elt = make_seq_elt rule_body in
   Regexp.print_seq_elt seq_elt;
-  let pseudo_code = Regexp.compile_seq_elt seq_elt None in
+  let pseudo_code =
+    Regexp.compile_seq_elt seq_elt None
+    |> simplify ~top:true
+  in
   format pseudo_code
