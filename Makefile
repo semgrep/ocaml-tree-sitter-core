@@ -27,14 +27,6 @@ setup:
 	./scripts/install-tree-sitter-cli
 	opam install --deps-only -y .
 
-# Setup for users who only want to install the runtime libraries for
-# C/OCaml parsers that were already generated for them.
-#
-.PHONY: install-runtime
-install-runtime:
-	./scripts/install-tree-sitter-lib
-	opam install -y .
-
 # Keep things like node_modules that are worth keeping around
 .PHONY: clean
 clean:
