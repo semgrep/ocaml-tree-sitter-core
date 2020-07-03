@@ -10,10 +10,10 @@
   (foreign_stubs
     (language c)
     (names bindings)
-    (flags -I %{env:TREESITTER_INCLUDE_DIR=/usr/local/include}
+    (flags -I %{env:INCLUDEDIR=/usr/local/include}
     )
   )
-  (c_library_flags (-L%{env:TREESITTER_LIBRARY_DIR=/usr/local/lib}
+  (c_library_flags (-L%{env:LIBDIR=/usr/local/lib}
                     -ltree-sitter))
 )
 

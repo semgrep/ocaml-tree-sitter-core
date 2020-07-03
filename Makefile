@@ -5,15 +5,16 @@
 # a second phase, in lang/
 #
 
+# Generate this with ./configure
+include config.mk
+
 PROJECT_ROOT = $(shell pwd)
 
 TREESITTER_ROOT = \
   $(PROJECT_ROOT)/node_modules/tree-sitter/vendor/tree-sitter/lib
 
 TREESITTER_INCLUDE_DIR = $(TREESITTER_ROOT)/include
-TREESITTER_LIBRARY_DIR = $(TREESITTER_ROOT)/lib
 export TREESITTER_INCLUDE_DIR
-export TREESITTER_LIBRARY_DIR
 
 .PHONY: build
 build:

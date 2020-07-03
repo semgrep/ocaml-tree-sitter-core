@@ -1,66 +1,17 @@
 #! /usr/bin/env bash
 #
-# Install the tree-sitter C library and headers.
+# Install the libtree-sitter runtime library.
+# Must run from the ocaml-tree-sitter project root.
 #
-# Tries to support Ubuntu for x86_64, with either musl or glibc depending
-# on [the name of] the opam setup.
-#
-set -eu
 
-if [[ ! -e tree-sitter ]]; then
-  git clone --depth 1 https://github.com/tree-sitter/tree-sitter.git
-fi
+error() {
+  echo "Error: $@" >&2
+  exit 1
+}
 
-# Try to detect whether we want to use glibc and dynamic linking,
-# or musl and static linking.
-#
-use_musl=false
-case "$(opam switch)" in
-  *+musl+*)
-    echo "Attempting configuration for musl and static linking."
-    use_musl=true
-    ;;
-  *)
-    echo "Using default configuration suitable for glibc and dynamic linking."
-esac
-
-if [[ "$use_musl" = true ]]; then
-  CC=musl-gcc
-else
-  CC=gcc
-fi
-export CC
-
-if [[ -z "${PREFIX+x}" ]]; then
-  PREFIX=/usr/local
-fi
-export PREFIX
-
-if [[ -z "${INCLUDEDIR+x}" ]]; then
-  if [[ "$use_musl" = true ]]; then
-    INCLUDEDIR="/usr/include/x86_64-linux-musl"
-  else
-    INCLUDEDIR="$PREFIX"/lib
-  fi
-fi
-export INCLUDEDIR
-
-if [[ -z "${LIBDIR+x}" ]]; then
-  if [[ "$use_musl" = true ]]; then
-    LIBDIR="/usr/lib/x86_64-linux-musl"
-  else
-    LIBDIR="$PREFIX"/include
-  fi
-fi
-export LIBDIR
-
-cat <<EOF
-Config for libtree-sitter:
-  CC: $CC
-  PREFIX: $PREFIX
-  INCLUDEDIR: $INCLUDEDIR
-  LIBDIR: $LIBDIR
-EOF
+config=config.sh
+[[ -f "$config" ]] || error "Missing config file. Did you run ./configure?"
+. "$config"
 
 (
   cd tree-sitter

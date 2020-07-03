@@ -19,3 +19,6 @@ tmp
 
 # Read-only cloned repo
 /tree-sitter
+
+/config.sh
+/config.mk

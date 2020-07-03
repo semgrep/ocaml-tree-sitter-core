@@ -19,6 +19,9 @@ jobs:
           name: set up opam
           command: ./scripts/setup-opam
       - run:
+          name: configure
+          command: ./configure
+      - run:
           name: install dependencies
           command: opam exec -- make setup
       - run:
