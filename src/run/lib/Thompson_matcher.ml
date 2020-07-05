@@ -15,8 +15,6 @@
    regular expression.
 *)
 
-open Printf
-
 (* An element of the input sequence. *)
 module type Token = sig
   (* A token ID, known in advance and comparable. *)
@@ -93,6 +91,7 @@ module Make (Token : Token) = struct
     states: state array;
   }
 
+(*
   let compile (exp : exp) : nfa =
     let new_id =
       let counter = ref (-1) in
@@ -147,6 +146,7 @@ module Make (Token : Token) = struct
     let dst_state = new_state dst_id [] in
     let all_states = src_state :: dst_state :: acc in
     List.sort .... (* sort states, turn into array, annotate start and end *)
+*)
 end
 
 module String_token = struct

@@ -5,8 +5,6 @@
    and therefore can't match arbitrary regular expressions.
 *)
 
-open Printf
-
 type node = string
 type nodes = node list
 
@@ -73,80 +71,3 @@ and parse_seq e1 e2 nodes =
       match parse e2 nodes with
       | None -> None
       | Some (res2, nodes) -> Some (Seq (res1, res2), nodes)
-
-let a = "a"
-let b = "b"
-
-let string_of_nodes nodes =
-  String.concat " " nodes
-
-let string_of_output = function
-  | None -> "None"
-  | Some (_, nodes) -> sprintf "Some (_, %s)" (string_of_nodes nodes)
-
-let test exp nodes expected_output =
-  let output = parse exp nodes in
-  printf "input:\n  %s\n%!" (string_of_nodes nodes);
-  printf "expected output:\n  %s\n%!"
-    (string_of_output output);
-  printf "output:\n  %s\n%!"
-    (string_of_output output);
-  if output <> expected_output then
-    printf "FAIL\n"
-  else
-    printf "OK\n"
-
-(* Easy, no backtracking needed. *)
-
-(* a *)
-let () =
-  test (Repeat (Simple a)) [a;a;b]
-    (Some (Repeat [Simple a; Simple a], [b]))
-
-(* a* *)
-let () =
-  test (Seq (Repeat (Simple a), End)) [a;a;b] None
-
-(* a*$ *)
-let () =
-  test (Seq (Repeat (Simple a), End)) [a;a;]
-    (Some (Seq (Repeat [Simple a; Simple a], End), []))
-
-(* Backtracking needed, fail. *)
-
-(* a*a *)
-let () =
-  test (Seq (Repeat (Simple a), Simple a)) [a;a]
-    (Some (Seq (Repeat [Simple a], Simple a), []))
-
-(* More backtracking needed, fail. *)
-
-(* (a*a)*a *)
-let () =
-  test
-    (
-      Seq (
-        Repeat (
-          Seq (
-            Repeat (Simple a),
-            Simple a
-          )
-        ),
-        Simple a
-      )
-    )
-    [a;a]
-    (
-      Some (
-        Seq (
-          Repeat [
-            Seq (
-              Repeat [],
-              Simple a
-            )
-          ],
-          Simple a
-        ),
-        []
-      )
-    )

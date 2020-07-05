@@ -3,6 +3,7 @@
  (name tree_sitter_run)
  (preprocess (pps ppx_sexp_conv))
  (libraries
+   tree-sitter.gen
    tree-sitter.bindings
    sexplib
  )
