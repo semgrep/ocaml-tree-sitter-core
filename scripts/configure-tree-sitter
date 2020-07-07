@@ -19,7 +19,7 @@ fi
 # or musl and static linking.
 #
 use_musl=false
-case "$(opam switch)" in
+case "$(opam switch show)" in
   *+musl+*)
     echo "Attempting configuration for musl and static linking."
     use_musl=true
