@@ -147,7 +147,14 @@ let translate_rules rules =
 let tsort_rules rules =
   let sorted = Topo_sort.sort rules in
   List.map (fun group ->
+    let rec_group =
+      match group with
+      | [] -> assert false
+      | [_] -> false
+      | _ -> true
+    in
     List.map (fun (is_rec, (name, body)) ->
+      let is_rec = rec_group || is_rec in
       { name; is_rec; is_inlined = false; body }) group
   ) sorted
 
