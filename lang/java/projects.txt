@@ -1,0 +1,4 @@
+#
+# Collection of public git repositories of java code.
+#
+https://github.com/elastic/elasticsearch.git
