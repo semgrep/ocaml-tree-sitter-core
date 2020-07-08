@@ -47,18 +47,29 @@ let mkpat env =
   | l -> sprintf "(%s)" (String.concat ", " l)
 
 let mkexp env = mkpat env
+let comment = Codegen_util.comment
+
+let token_comment (tok : token) =
+  match tok.description with
+  | Constant cst ->
+      sprintf "(* %S *)" cst
+  | Pattern pat ->
+      sprintf "(* pattern %s *)" (comment pat)
+  | Token
+  | External ->
+      sprintf "(* %s *)" (comment tok.name)
 
 let rec gen_mapper_body var body : node list =
   match body with
   | Symbol name -> [ Line (sprintf "map_%s %s" (trans name) var) ]
-  | Token _token -> [ Line (sprintf "token %s" var)]
+  | Token token -> [ Line (sprintf "token %s %s" var (token_comment token)) ]
   | Blank -> [ Line (sprintf "blank %s" var)]
   | Repeat (Symbol name)
   | Repeat1 (Symbol name) ->
       [ Line (sprintf "List.map map_%s %s" (trans name) var) ]
-  | Repeat (Token _token)
-  | Repeat1 (Token _token) ->
-      [ Line (sprintf "List.map token %s" var) ]
+  | Repeat (Token token)
+  | Repeat1 (Token token) ->
+      [ Line (sprintf "List.map token %s %s" (token_comment token) var) ]
   | Repeat body
   | Repeat1 body ->
       let env = destruct body in
