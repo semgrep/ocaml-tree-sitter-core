@@ -25,5 +25,8 @@ config=config.sh
     LIBDIR="$LIBDIR" \
     install
 
-  sudo ldconfig "$LIBDIR"
+  # MacOS doesn't have ldconfig. Maybe it works without it?
+  if ldconfig --version > /dev/null; then
+    sudo ldconfig "$LIBDIR"
+  fi
 )
