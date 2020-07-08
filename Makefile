@@ -5,15 +5,16 @@
 # a second phase, in lang/
 #
 
+# Generate this with ./configure
+include config.mk
+
 PROJECT_ROOT = $(shell pwd)
 
 TREESITTER_ROOT = \
   $(PROJECT_ROOT)/node_modules/tree-sitter/vendor/tree-sitter/lib
 
 TREESITTER_INCLUDE_DIR = $(TREESITTER_ROOT)/include
-TREESITTER_LIBRARY_DIR = $(TREESITTER_ROOT)/lib
 export TREESITTER_INCLUDE_DIR
-export TREESITTER_LIBRARY_DIR
 
 .PHONY: build
 build:
@@ -26,14 +27,6 @@ setup:
 	./scripts/install-tree-sitter-lib
 	./scripts/install-tree-sitter-cli
 	opam install --deps-only -y .
-
-# Setup for users who only want to install the runtime libraries for
-# C/OCaml parsers that were already generated for them.
-#
-.PHONY: install-runtime
-install-runtime:
-	./scripts/install-tree-sitter-lib
-	opam install -y .
 
 # Keep things like node_modules that are worth keeping around
 .PHONY: clean

@@ -1,18 +1,32 @@
 #! /usr/bin/env bash
 #
-# Install the tree-sitter C library and headers.
+# Install the libtree-sitter runtime library.
+# Must run from the ocaml-tree-sitter project root.
 #
-set -eu
 
-if [[ ! -e tree-sitter ]]; then
-  git clone --depth 1 https://github.com/tree-sitter/tree-sitter.git
-fi
+error() {
+  echo "Error: $@" >&2
+  exit 1
+}
+
+config=config.sh
+[[ -f "$config" ]] || error "Missing config file. Did you run ./configure?"
+. "$config"
 
 (
   cd tree-sitter
   git pull origin master
   git clean -dfX
   make
-  sudo make install
-  sudo ldconfig /usr/local/lib
+
+  sudo make \
+    PREFIX="$PREFIX" \
+    INCLUDEDIR="$INCLUDEDIR" \
+    LIBDIR="$LIBDIR" \
+    install
+
+  # MacOS doesn't have ldconfig. Maybe it works without it?
+  if ldconfig --version > /dev/null; then
+    sudo ldconfig "$LIBDIR"
+  fi
 )

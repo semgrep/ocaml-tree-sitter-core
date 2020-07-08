@@ -1,0 +1,8 @@
+#! /usr/bin/env bash
+#
+# Install runtime support only, without the ability to generate new parsers.
+#
+set -eu
+
+./scripts/install-tree-sitter-lib
+opam install -y .
