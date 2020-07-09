@@ -4,7 +4,7 @@
 # ocaml-tree-sitter must have been built and installed for this to work.
 #
 
-SUPPORTED_LANGUAGES = java ruby
+SUPPORTED_LANGUAGES = ruby
 
 .PHONY: build
 build:
