@@ -3,7 +3,6 @@
 *)
 
 let test_suites : unit Alcotest.test list = [
-  Combine.test;
   Matcher.test;
 ]
 
