@@ -49,12 +49,33 @@ let test_token () =
     [a]
     (Some (Token a))
 
+(* ab *)
+let test_seq () =
+  test_b
+    (Seq [Token a; Token b])
+    [a; b]
+    (Some (Seq [Token a; Token b]))
+
 (* a* *)
 let test_repeat () =
   test_b
     (Repeat (Token a))
     [a;a]
     (Some (Repeat [Token a; Token a]))
+
+(* (a|b) *)
+let test_alt0 () =
+  test_b
+    (Alt [| Token a; Token b |])
+    [a]
+    (Some (Repeat [Token a]))
+
+(* (a|b) *)
+let test_alt1 () =
+  test_b
+    (Alt [| Token a; Token b |])
+    [b]
+    (Some (Repeat [Token a]))
 
 (* Backtracking needed. *)
 
@@ -98,7 +119,10 @@ let test_much_backtrack () =
 
 let test = "Matcher", [
   "token", `Quick, test_token;
+  "seq", `Quick, test_seq;
   "repeat", `Quick, test_repeat;
+  "alt0", `Quick, test_alt0;
+  "alt1", `Quick, test_alt1;
   "backtrack", `Quick, test_backtrack;
   "much backtrack", `Quick, test_much_backtrack;
 ]

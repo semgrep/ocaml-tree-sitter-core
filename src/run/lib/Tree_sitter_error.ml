@@ -25,8 +25,12 @@ let prepend_msg src node msg =
         start.row start.column end_.row end_.column
   in
   let snippet = format_snippet src start end_ in
-  sprintf "%s\n%s\n%s"
-    loc snippet msg
+  sprintf "\
+%s
+Node of type %S:
+%s
+%s"
+    loc node.type_ snippet msg
 
 let fail src node msg =
   let msg = prepend_msg src node msg in
