@@ -13,6 +13,7 @@ module Exp = struct
     | Opt of 'token_kind t
     | Alt of 'token_kind t array
     | Seq of 'token_kind t list
+    | Nothing
 end
 
 module Capture = struct
@@ -26,6 +27,7 @@ module Capture = struct
     | Opt of 'token t option
     | Alt of int * 'token t
     | Seq of 'token t list
+    | Nothing
 end
 
 type 'token_kind exp = 'token_kind Exp.t
@@ -92,6 +94,8 @@ let show_match show_token opt_capture =
           Block (List.map show l |> List.flatten);
           Line ")";
         ]
+    | Nothing ->
+        [ Line "Nothing" ]
   in
   let show_opt = function
     | None -> [Line "no match"]

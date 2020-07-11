@@ -43,13 +43,8 @@ let parse_and_dump
     ~dump_tree
     input_kind =
   let input_tree = load_input_tree ~parse_source_file ~src_file input_kind in
-  match parse_input_tree input_tree with
-  | None ->
-      flush stdout;
-      eprintf "Cannot interpret json file derived from %s.\n%!" src_file;
-      exit 1
-  | Some ast ->
-      dump_tree ast
+  parse_input_tree input_tree
+  |> dump_tree
 
 let usage ~lang () =
   eprintf "\

@@ -23,6 +23,10 @@ end
 module Parse = struct
   (* open Tree_sitter_run *)
 
+  let debug = ref false
+
+  type mt = Run.matcher_token
+
   (*
   external create_parser :
     unit -> Tree_sitter_API.ts_parser = "octs_create_parser_XXX"
@@ -31,42 +35,52 @@ module Parse = struct
   let create_parser () : Tree_sitter_bindings.Tree_sitter_API.ts_parser =
     failwith "not implemented"
 
-  let ts_parser () = create_parser ()
+  let ts_parser = lazy (create_parser ())
+
+  let parse_source_string ?src_file contents =
+    Tree_sitter_parsing.parse_source_string ?src_file
+      (Lazy.force ts_parser) contents
+
+  let parse_source_file src_file =
+    Tree_sitter_parsing.parse_source_file
+      (Lazy.force ts_parser) src_file
+
+  (* generated *)
+  let extras = [
+    "comment";
+  ]
 
   (* generated *)
   let children_regexps : (string * string Matcher.Exp.t) list = [
-    "expression",
-    Alt [|
-      Token "variable";
-      Token "number";
-      Seq [
-        Token "expression";
-        Token "+";
-        Token "expression";
-      ]
-    |];
+    (
+      "expression",
+      Alt [|
+        Token "variable";
+        Token "number";
+        Seq [
+          Token "expression";
+          Token "+";
+          Token "expression";
+        ];
+      |];
+    );
   ]
 
-  type mt = Run.matcher_token
-
-  let parse_source_file src_file =
-    Tree_sitter_parsing.parse_source_file (ts_parser ()) src_file
-
   (* generated *)
-  let trans_variable ((name, capture) : mt) : CST.variable =
-    match capture with
+  let trans_variable ((name, body) : mt) : CST.variable =
+    match body with
     | Leaf v -> v
     | _ -> assert false
 
   (* generated *)
-  let trans_number ((name, capture) : mt) : CST.number =
-    match capture with
+  let trans_number ((name, body) : mt) : CST.number =
+    match body with
     | Leaf v -> v
-    | _ -> assert false
+    | Children _ -> assert false
 
   (* generated *)
-  let rec trans_expression ((name, capture) : mt) : CST.expression =
-    match capture with
+  let rec trans_expression ((name, body) : mt) : CST.expression =
+    match body with
     | Children v ->
         (match v with
          | Alt (0, v) ->
@@ -85,11 +99,11 @@ module Parse = struct
              )
          | _ -> assert false
         )
-    | _ -> assert false
+    | Leaf _ -> assert false
 
   (* generated *)
-  let trans_statement ((name, capture) : mt) =
-    match capture with
+  let trans_statement ((name, body) : mt) =
+    match body with
     | Children v ->
         (match v with
          | Seq [v1; v2] ->
@@ -100,16 +114,34 @@ module Parse = struct
     | _ -> assert false
 
   (* generated *)
-  let trans_program ((name, capture) : mt) =
-    match capture with
+  let trans_program ((name, body) : mt) =
+    match body with
     | Children v ->
         Run.repeat (fun v -> trans_statement (Run.matcher_token v)) v
     | _ -> assert false
 
   let parse_input_tree input_tree =
-    let root_node = Tree_sitter_parsing.root input_tree in
+    let root_node =
+      Tree_sitter_parsing.root input_tree
+      |> Run.remove_extras ~extras
+    in
+    if !debug then (
+      Printf.printf "input from tree-sitter:\n";
+      Tree_sitter_dump.to_stdout [root_node];
+      flush stdout;
+      Printf.printf "ocaml-tree-sitter trace:\n"
+    );
     let src = Tree_sitter_parsing.src input_tree in
     let match_node = Run.make_node_matcher children_regexps src in
     let matched_tree = match_node root_node in
     trans_program matched_tree
+
+  let string ?src_file contents =
+    let input_tree = parse_source_string ?src_file contents in
+    parse_input_tree input_tree
+
+  let file src_file =
+    let input_tree = parse_source_file src_file in
+    parse_input_tree input_tree
+
 end

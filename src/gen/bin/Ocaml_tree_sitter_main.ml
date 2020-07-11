@@ -10,7 +10,6 @@ type config = {
   lang : string;
   grammar : string;
   out_dir : string option;
-  trace : bool;
 }
 
 let codegen config =
@@ -19,7 +18,6 @@ let codegen config =
       config.grammar
   in
   let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
-  Codegen_parse.debug_trace := config.trace;
   Codegen.ocaml ?out_dir:config.out_dir ~lang:config.lang grammar
 
 let lang_term =
@@ -51,22 +49,14 @@ let out_dir_term =
   in
   Arg.value (Arg.opt Arg.(some string) None info)
 
-let trace_term =
-  let info =
-    Arg.info ["trace"]
-      ~doc:"Generate code that traces the execution of the parser."
-  in
-  Arg.value (Arg.flag info)
-
 let cmdline_term =
-  let combine lang grammar out_dir trace =
-    { lang; grammar; out_dir; trace }
+  let combine lang grammar out_dir =
+    { lang; grammar; out_dir }
   in
   Term.(const combine
         $ lang_term
         $ grammar_term
         $ out_dir_term
-        $ trace_term
        )
 
 let doc =

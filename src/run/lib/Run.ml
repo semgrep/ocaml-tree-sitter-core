@@ -121,3 +121,30 @@ let opt map capture =
   match capture with
   | Matcher.Capture.Opt l -> Option.map map l
   | _ -> assert false
+
+let nothing capture =
+  match capture with
+  | Matcher.Capture.Nothing -> ()
+  | _ -> assert false
+
+let rec filter_nodes keep nodes =
+  List.filter_map (filter_node keep) nodes
+
+and filter_node keep node =
+  if keep node then
+    Some { node with children = filter_nodes keep node.children }
+  else
+    None
+
+let make_keep ~blacklist =
+  let tbl = Hashtbl.create 100 in
+  List.iter (fun s -> Hashtbl.replace tbl s ()) blacklist;
+  let keep node =
+    not (Hashtbl.mem tbl node.type_)
+  in
+  keep
+
+let remove_extras ~extras =
+  let keep = make_keep ~blacklist:extras in
+  fun root_node ->
+    { root_node with children = filter_nodes keep root_node.children }

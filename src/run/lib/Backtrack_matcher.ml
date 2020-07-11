@@ -27,6 +27,7 @@ struct
     | Enter_alt of int
     | Enter_seq
     | Leave
+    | Nothing
 
   type path_elt =
     | Token of token
@@ -58,6 +59,7 @@ struct
         match_opt (Punct Enter_opt :: path) exp tokens cont
     | Alt exps, tokens -> match_cases path exps tokens cont
     | Seq exps, tokens -> match_seq (Punct Enter_seq :: path) exps tokens cont
+    | Nothing, tokens -> cont (Punct Nothing :: path) tokens
     | _ -> None
 
   and match_repeat path exp tokens cont =
@@ -122,6 +124,8 @@ struct
     | Seq exps, (Punct Enter_seq :: path) ->
         let list, path = read_seq exps path in
         Seq list, path
+    | Nothing, (Punct Nothing :: path) ->
+        Nothing, path
     | _ ->
         assert false
 
