@@ -27,10 +27,18 @@ let prepend_msg src node msg =
   let snippet = format_snippet src start end_ in
   sprintf "\
 %s
-Node of type %S:
+node type: %S
+children: [
+%s]
+code:
 %s
 %s"
-    loc node.type_ snippet msg
+    loc
+    node.type_
+    (List.map (fun x -> sprintf "  %S\n" x.type_) node.children
+     |> String.concat "")
+    snippet
+    msg
 
 let fail src node msg =
   let msg = prepend_msg src node msg in
