@@ -55,3 +55,10 @@ let parse_source_string ?src_file ts_parser src_data =
 let parse_source_file ts_parser src_file =
   let src_data = string_of_file src_file in
   parse_source_string ~src_file ts_parser src_data
+
+let print_json src =
+  Atdgen_runtime.Util.Json.to_string
+    Tree_sitter_output_j.write_node
+    src.root
+  |> Yojson.Safe.prettify
+  |> print_endline
