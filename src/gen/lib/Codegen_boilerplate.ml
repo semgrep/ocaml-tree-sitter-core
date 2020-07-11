@@ -32,15 +32,6 @@ let blank (env : env) () =
 let todo (env : env) _ =
    failwith "not implemented"
 
-let list_map f (env : env) xs =
-  let env, ys =
-    List.fold_left (fun (env, acc) x ->
-      let env, y = f env x in
-      (env, y :: acc)
-    ) (env, []) xs
-  in
-  (env, List.rev ys)
-
 |}
     grammar.name
 
@@ -85,17 +76,17 @@ let rec gen_mapper_body var body : node list =
       [ Line (sprintf "blank env %s" var)]
   | Repeat (Symbol name)
   | Repeat1 (Symbol name) ->
-      [ Line (sprintf "list_map map_%s env %s" (trans name) var) ]
+      [ Line (sprintf "List.map (map_%s env) %s" (trans name) var) ]
   | Repeat (Token token)
   | Repeat1 (Token token) ->
-      [ Line (sprintf "list_map token env %s %s" (token_comment token) var) ]
+      [ Line (sprintf "List.map (token env) %s %s" (token_comment token) var) ]
   | Repeat body
   | Repeat1 body ->
       let env = destruct body in
       [
-        Line (sprintf "list_map (fun env %s ->" (mkpat env));
+        Line (sprintf "List.map (fun %s ->" (mkpat env));
         Block (gen_mapper_body_multi env);
-        Line (sprintf ") env %s" var)
+        Line (sprintf ") %s" var)
       ]
   | Choice l ->
       let cases =
