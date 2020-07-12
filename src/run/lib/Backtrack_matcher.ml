@@ -30,7 +30,8 @@ struct
     | Enter_opt
     | Enter_alt of int
     | Enter_seq
-    | Leave_repeat (* also used to close repeat1 *)
+    | Leave_repeat
+    | Leave_repeat1
     | Leave_opt
     | Leave_alt
     | Leave_seq
@@ -53,6 +54,7 @@ struct
         | Enter_alt i -> sprintf "Enter_alt %i" i
         | Enter_seq -> "Enter_seq"
         | Leave_repeat -> "Leave_repeat"
+        | Leave_repeat1 -> "Leave_repeat1"
         | Leave_opt -> "Leave_opt"
         | Leave_alt -> sprintf "Leave_alt"
         | Leave_seq -> "Leave_seq"
@@ -62,59 +64,78 @@ struct
     List.map (fun x -> sprintf "  %s\n" (show_path_elt x)) path
     |> String.concat ""
 
-  let match_success path tokens = Some (path, tokens)
-
   let match_end path tokens =
     match tokens with
     | [] -> Some (path, tokens)
     | _ -> None
 
-  let (&&&) res cont =
-    match res with
-    | None -> None
-    | Some (path, tokens) -> cont path tokens
+  (*
+     Match an expression against the beginning of the input sequence and match
+     the rest of the input sequence.
 
-  let rec match_exp (path : path) (exp : exp) tokens cont =
+     There may be several ways of matching an expression.
+     Each way is tried sequentially until a match for the full sequence
+     is found.
+   *)
+  let rec match_exp (path : path) (exp : exp) (tokens : token list) cont
+    : (path * token list) option =
     match exp, tokens with
-    | Token kind, tok :: tokens
-      when kind = Token.kind tok -> Some (Token tok :: path, tokens) &&& cont
+    | Token kind, tokens ->
+        (* one way *)
+        (match tokens with
+         | tok :: tokens when kind = Token.kind tok ->
+             cont (Token tok :: path) tokens
+         | _ ->
+             None
+        )
     | Repeat exp, tokens ->
+        (* zero or more ways *)
+        let cont path tokens =
+          cont (Punct Leave_repeat :: path) tokens
+        in
         match_repeat (Punct Enter_repeat :: path) exp tokens cont
     | Repeat1 exp, tokens ->
+        (* one or more ways *)
+        let cont path tokens =
+          cont (Punct Leave_repeat1 :: path) tokens
+        in
         match_repeat1 (Punct Enter_repeat1 :: path) exp tokens cont
     | Opt exp, tokens ->
+        (* zero or one way *)
+        let cont path tokens =
+          cont (Punct Leave_opt :: path) tokens
+        in
         match_opt (Punct Enter_opt :: path) exp tokens cont
-    | Alt exps, tokens -> match_cases path exps tokens cont
-    | Seq exps, tokens -> match_seq (Punct Enter_seq :: path) exps tokens cont
-    | Nothing, tokens -> cont (Punct Nothing :: path) tokens
-    | _ -> None
+    | Alt exps, tokens ->
+        (* n ways *)
+        match_cases path exps tokens cont
+    | Seq exps, tokens ->
+        (* one way *)
+        match_seq (Punct Enter_seq :: path) exps tokens cont
+    | Nothing, tokens ->
+        (* one way *)
+        cont (Punct Nothing :: path) tokens
 
-  and match_repeat path exp tokens cont =
-    match match_exp path exp tokens match_success with
-    | Some (path_accept, tokens_accept) ->
-        (match match_repeat path_accept exp tokens_accept cont with
-         | Some _ as res -> res
-         | None -> cont (Punct Leave_repeat :: path) tokens
-        )
-    | None ->
-        cont (Punct Leave_repeat :: path) tokens
+  and match_repeat path exp tokens after_repeat =
+    let after_exp path tokens =
+      match_repeat path exp tokens after_repeat
+    in
+    match match_exp path exp tokens after_exp with
+    | Some _ as res -> res
+    | None -> after_repeat path tokens
 
-  and match_repeat1 path exp tokens cont =
-    match match_exp path exp tokens match_success with
-    | Some (path, tokens) ->
-        match_repeat path exp tokens cont
-    | None ->
-        None
+  and match_repeat1 path exp tokens after_repeat =
+    let after_exp path tokens =
+      match_repeat path exp tokens after_repeat
+    in
+    match match_exp path exp tokens after_exp with
+    | Some _ as res -> res
+    | None -> None
 
-  and match_opt path exp tokens cont =
-    match match_exp path exp tokens match_success with
-    | Some (path_accept, tokens_accept) ->
-        (match cont (Punct Leave_opt :: path_accept) tokens_accept with
-         | Some _ as res -> res
-         | None -> cont (Punct Leave_opt :: path) tokens
-        )
-    | None ->
-        cont (Punct Leave_opt :: path) tokens
+  and match_opt path exp tokens after_opt =
+    match match_exp path exp tokens after_opt with
+    | Some _ as res -> res
+    | None -> after_opt path tokens
 
   and match_cases path exps tokens cont =
     if Array.length exps = 0 then
@@ -168,7 +189,7 @@ struct
   (* used for both repeat and repeat1 *)
   and read_repeat exp path : _ list * path =
     match path with
-    | Punct Leave_repeat :: path -> [], path
+    | Punct (Leave_repeat | Leave_repeat1) :: path -> [], path
     | _ ->
         let head, path = reconstruct_capture exp path in
         let tail, path = read_repeat exp path in

@@ -59,6 +59,20 @@ let test_seq () =
     [a; b]
     (Some (Seq [Token a; Token b]))
 
+(* a? *)
+let test_some () =
+  test_b
+    (Opt (Token a))
+    [a]
+    (Some (Opt (Some (Token a))))
+
+(* a? *)
+let test_none () =
+  test_b
+    (Opt (Token a))
+    []
+    (Some (Opt None))
+
 (* a* *)
 let test_repeat () =
   test_b
@@ -137,6 +151,8 @@ let test_much_backtrack () =
 let test = "Matcher", [
   "token", `Quick, test_token;
   "seq", `Quick, test_seq;
+  "some", `Quick, test_some;
+  "none", `Quick, test_none;
   "repeat", `Quick, test_repeat;
   "alt0", `Quick, test_alt0;
   "alt1", `Quick, test_alt1;
