@@ -91,8 +91,11 @@ struct
 
   and match_repeat path exp tokens cont =
     match match_exp path exp tokens match_success with
-    | Some (path, tokens) ->
-        match_repeat path exp tokens cont
+    | Some (path_accept, tokens_accept) ->
+        (match match_repeat path_accept exp tokens_accept cont with
+         | Some _ as res -> res
+         | None -> cont (Punct Leave_repeat :: path) tokens
+        )
     | None ->
         cont (Punct Leave_repeat :: path) tokens
 
@@ -105,8 +108,8 @@ struct
 
   and match_opt path exp tokens cont =
     match match_exp path exp tokens match_success with
-    | Some (path_accept, tokens) ->
-        (match cont (Punct Leave_opt :: path_accept) tokens with
+    | Some (path_accept, tokens_accept) ->
+        (match cont (Punct Leave_opt :: path_accept) tokens_accept with
          | Some _ as res -> res
          | None -> cont (Punct Leave_opt :: path) tokens
         )

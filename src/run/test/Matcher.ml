@@ -26,12 +26,14 @@ let test
     (expected_output : string Matcher.capture option) =
   let output = match_tree exp tokens in
   printf "input:\n  %s\n%!" (show_tokens tokens);
-  printf "expected output:\n  %s\n%!"
+  printf "expected output:\n%s\n%!"
     (Matcher.show_match String_token.show expected_output);
-  printf "output:\n  %s\n%!"
+  printf "output:\n%s\n%!"
     (Matcher.show_match String_token.show output);
-  if output <> expected_output then
-    printf "FAIL\n"
+  if output <> expected_output then (
+    printf "FAIL\n";
+    failwith "no match"
+  )
   else
     printf "OK\n"
 
@@ -69,21 +71,21 @@ let test_alt0 () =
   test_b
     (Alt [| Token a; Token b |])
     [a]
-    (Some (Repeat [Token a]))
+    (Some (Alt (0, Token a)))
 
 (* (a|b) *)
 let test_alt1 () =
   test_b
     (Alt [| Token a; Token b |])
     [b]
-    (Some (Repeat [Token a]))
+    (Some (Alt (1, Token b)))
 
 (* ((a)?)? *)
 let test_opt_alt_opt () =
   test_b
     (Opt (Alt [| Opt (Token a) |]))
     [a]
-    (Some (Alt (0, Opt (Some (Token a)))))
+    (Some (Opt (Some (Alt (0, Opt (Some (Token a)))))))
 
 (* Backtracking needed. *)
 
@@ -138,8 +140,8 @@ let test = "Matcher", [
   "repeat", `Quick, test_repeat;
   "alt0", `Quick, test_alt0;
   "alt1", `Quick, test_alt1;
+  "opt(alt(opt()))", `Quick, test_opt_alt_opt;
   "backtrack", `Quick, test_backtrack;
   "backtrack opt", `Quick, test_backtrack_opt;
   "much backtrack", `Quick, test_much_backtrack;
-  "opt(alt(opt()))", `Quick, test_opt_alt_opt;
 ]
