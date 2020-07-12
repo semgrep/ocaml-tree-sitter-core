@@ -78,6 +78,13 @@ let test_alt1 () =
     [b]
     (Some (Repeat [Token a]))
 
+(* ((a)?)? *)
+let test_opt_alt_opt () =
+  test_b
+    (Opt (Alt [| Opt (Token a) |]))
+    [a]
+    (Some (Alt (0, Opt (Some (Token a)))))
+
 (* Backtracking needed. *)
 
 (* a*a *)
@@ -134,4 +141,5 @@ let test = "Matcher", [
   "backtrack", `Quick, test_backtrack;
   "backtrack opt", `Quick, test_backtrack_opt;
   "much backtrack", `Quick, test_much_backtrack;
+  "opt(alt(opt()))", `Quick, test_opt_alt_opt;
 ]
