@@ -105,8 +105,11 @@ struct
 
   and match_opt path exp tokens cont =
     match match_exp path exp tokens match_success with
-    | Some (path, tokens) ->
-        cont (Punct Leave_opt :: path) tokens
+    | Some (path_accept, tokens) ->
+        (match cont (Punct Leave_opt :: path_accept) tokens with
+         | Some _ as res -> res
+         | None -> cont (Punct Leave_opt :: path) tokens
+        )
     | None ->
         cont (Punct Leave_opt :: path) tokens
 

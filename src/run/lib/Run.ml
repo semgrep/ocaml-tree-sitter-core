@@ -95,8 +95,7 @@ let make_node_matcher regexps src : node -> matcher_token =
 Tree-sitter parse tree could not be interpreted.
 
 Cannot match children sequence against the following regular expression:
-%s
-"
+%s"
                       (Children_matcher.show_exp regexp)
                   in
                   Tree_sitter_error.fail src node msg
