@@ -24,7 +24,7 @@ parser=./parse-"$lang"
 #
 if [[ -d examples ]]; then
   for src in $(ls examples/*.src || :); do
-    ast=${src%.src}.ast
-    "$parser" "$src" 2>&1 | tee "$ast"
+    cst=${src%.src}.cst
+    "$parser" "$src" 2>&1 | tee "$cst"
   done
 fi

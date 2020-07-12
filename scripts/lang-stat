@@ -52,7 +52,7 @@ parse() {
   (
     cd tmp
     json=out.json
-    ast=out.ast
+    cst=out.cst
     "$ocaml_parser" "$input" > /dev/null
   ) > tmp/parse.log 2>&1
 }

@@ -5,7 +5,7 @@ CST_*.ml
 Parse_*.ml
 
 # Various output files
-/*/examples/*.ast
+/*/examples/*.cst
 /*/examples/*.json
 
 node_modules
