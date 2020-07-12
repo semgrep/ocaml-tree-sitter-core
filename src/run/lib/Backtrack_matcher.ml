@@ -16,7 +16,9 @@ struct
   type token_kind = Token.kind
   type token = Token.t
 
-  let show_match opt_capture = Matcher.show_match Token.show opt_capture
+  let show_exp = Matcher.Exp.show Token.show_kind
+  let show_capture = Matcher.Capture.show Token.show
+  let show_match = Matcher.show_match Token.show
 
   (* Local type aliases for use in type annotations *)
   type nonrec exp = token_kind exp
@@ -115,15 +117,15 @@ struct
       let cont path tokens =
         cont (Punct Leave_alt :: path) tokens
       in
-      match_case path exps tokens cont 0 exps.(0)
+      match_case path exps tokens cont 0
 
-  and match_case path exps tokens cont i exp =
-    match match_exp (Punct (Enter_alt i) :: path) exp tokens cont with
+  and match_case path exps tokens cont i =
+    match match_exp (Punct (Enter_alt i) :: path) exps.(i) tokens cont with
     | Some _ as res -> res
     | None ->
         let i = i + 1 in
         if i < Array.length exps then
-          match_case path exps tokens cont i exp
+          match_case path exps tokens cont i
         else
           None
 

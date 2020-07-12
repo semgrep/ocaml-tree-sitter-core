@@ -2,6 +2,7 @@
    Various helper functions called directly by the generated code.
 *)
 
+open Printf
 open Tree_sitter_bindings.Tree_sitter_output_t
 
 (*
@@ -50,6 +51,8 @@ module Matcher_token = struct
 
   let kind (name, _) = name
 
+  let show_kind s = sprintf "%S" s
+
   let show (name, contents) =
     match contents with
     | Children _ -> name
@@ -88,8 +91,15 @@ let make_node_matcher regexps src : node -> matcher_token =
               in
               match opt_capture with
               | None ->
-                  Tree_sitter_error.fail src node
-                    "Tree-sitter parse tree could not be interpreted."
+                  let msg = sprintf "\
+Tree-sitter parse tree could not be interpreted.
+
+Cannot match children sequence against the following regular expression:
+%s
+"
+                      (Children_matcher.show_exp regexp)
+                  in
+                  Tree_sitter_error.fail src node msg
               | Some capture ->
                   Children capture
         in

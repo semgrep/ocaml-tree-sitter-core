@@ -30,7 +30,7 @@ let prepend_msg src node msg =
 node type: %S
 children: [
 %s]
-code:
+source code:
 %s
 %s"
     loc

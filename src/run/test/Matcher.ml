@@ -9,6 +9,7 @@ module String_token = struct
   type kind = string
   type t = string
   let kind s = s
+  let show_kind s = s
   let show s = s
 end
 
