@@ -43,7 +43,7 @@ let parse_and_dump
     ~dump_tree
     input_kind =
   let input_tree = load_input_tree ~parse_source_file ~src_file input_kind in
-  Tree_sitter_parsing.print_json input_tree;
+  Tree_sitter_parsing.print input_tree;
   parse_input_tree input_tree
   |> dump_tree
 

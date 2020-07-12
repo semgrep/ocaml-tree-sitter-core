@@ -51,18 +51,28 @@ module Parse = struct
   ]
 
   (* generated *)
-  let children_regexps : (string * string Matcher.Exp.t) list = [
+  let children_regexps : (string * string Matcher.Exp.t option) list = [
+    (
+      "variable",
+      None
+    );
+    (
+      "number",
+      None
+    );
     (
       "expression",
-      Alt [|
-        Token "variable";
-        Token "number";
-        Seq [
-          Token "expression";
-          Token "+";
-          Token "expression";
-        ];
-      |];
+      Some (
+        Alt [|
+          Token "variable";
+          Token "number";
+          Seq [
+            Token "expression";
+            Token "+";
+            Token "expression";
+          ];
+        |];
+      )
     );
   ]
 

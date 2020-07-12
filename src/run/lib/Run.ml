@@ -81,26 +81,41 @@ let make_node_matcher regexps src : node -> matcher_token =
           "Source code cannot be parsed by tree-sitter."
     | name ->
         let contents =
-          match get_children_regexp name with
+          match node.children with
           | None ->
               Leaf (get_loc node, get_token src node)
-          | Some regexp ->
-              let matched_children = List.map match_node node.children in
-              let opt_capture =
-                Children_matcher.match_tree regexp matched_children
-              in
-              match opt_capture with
-              | None ->
-                  let msg = sprintf "\
-Tree-sitter parse tree could not be interpreted.
-
+          | Some children ->
+              match get_children_regexp name with
+              | Some None ->
+                  (* don't care if there are any children *)
+                  Leaf (get_loc node, get_token src node)
+              | Some (Some regexp) ->
+                  let matched_children = List.map match_node children in
+                  let opt_capture =
+                    Children_matcher.match_tree regexp matched_children
+                  in
+                  (match opt_capture with
+                   | None ->
+                       let msg = sprintf "\
 Cannot match children sequence against the following regular expression:
-%s"
-                      (Children_matcher.show_exp regexp)
+%s
+Tree-sitter parse tree could not be interpreted.
+"
+                           (Children_matcher.show_exp regexp)
+                       in
+                       Tree_sitter_error.fail src node msg
+                   | Some capture ->
+                       Children capture
+                  )
+              | _ ->
+                  let msg = sprintf "\
+Wrong node type: confusion between named node %s and literal %S?
+
+Tree-sitter parse tree could not be interpreted.
+"
+                      name name
                   in
                   Tree_sitter_error.fail src node msg
-              | Some capture ->
-                  Children capture
         in
         (name, contents)
   in
@@ -141,7 +156,7 @@ let rec filter_nodes keep nodes =
 
 and filter_node keep node =
   if keep node then
-    Some { node with children = filter_nodes keep node.children }
+    Some { node with children = Option.map (filter_nodes keep) node.children }
   else
     None
 
@@ -156,4 +171,5 @@ let make_keep ~blacklist =
 let remove_extras ~extras =
   let keep = make_keep ~blacklist:extras in
   fun root_node ->
-    { root_node with children = filter_nodes keep root_node.children }
+    { root_node with
+      children = Option.map (filter_nodes keep) root_node.children }

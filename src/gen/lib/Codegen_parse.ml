@@ -141,26 +141,27 @@ let rec fmt_regexp (x : rule_body) =
 let gen_regexps grammar =
   let list_elements =
     List.flatten grammar.rules
-    |> List.filter_map (fun rule ->
-      match rule.body with
-      | Token _ -> None
-      | body ->
-          Some (
-            Inline [
-              Group [
-                Line "(";
-                Block [
-                  Line (sprintf "%S," (trans rule.name));
-                  Inline (fmt_regexp body);
-                ];
-                Line ");";
-              ]
+    |> List.map (fun rule ->
+      let opt_regexp =
+        match rule.body with
+        | Token _ ->
+            [Line "None;"]
+        | body ->
+            [
+              Line "Some (";
+              Block (fmt_regexp body);
+              Line ");";
             ]
-          )
+      in
+      Group [
+        Line (sprintf "%S," rule.name);
+        Inline opt_regexp;
+      ]
     )
   in
   [
-    Line "let children_regexps : (string * string Matcher.Exp.t) list = [";
+    Line "let children_regexps : \
+            (string * string Matcher.Exp.t option) list = [";
     Block list_elements;
     Line "]";
   ]

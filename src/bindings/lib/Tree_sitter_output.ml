@@ -20,12 +20,17 @@ let rec of_ts_node get_node_id ts_node =
   }
 
 and read_children get_node_id ts_node =
-  match Node.child_count ts_node with
-  | 0 -> []
-  | child_count ->
-      List.init child_count (fun i ->
-        of_ts_node get_node_id (Node.child ts_node i)
-      )
+  if Node.is_named ts_node then
+    match Node.child_count ts_node with
+    | 0 -> Some []
+    | child_count ->
+        Some (
+          List.init child_count (fun i ->
+            of_ts_node get_node_id (Node.child ts_node i)
+          )
+        )
+  else
+    None
 
 let of_ts_tree ts_tree =
   let root = Tree.root_node ts_tree in

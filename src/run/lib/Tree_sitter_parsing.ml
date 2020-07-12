@@ -19,7 +19,7 @@ let assign_unique_ids root_node =
   let rec map node =
     let id = create_id () in
     assert (id >= 0);
-    let children = List.map map node.children in
+    let children = Option.map (List.map map) node.children in
     { node with id; children }
   in
   map root_node
@@ -56,9 +56,5 @@ let parse_source_file ts_parser src_file =
   let src_data = string_of_file src_file in
   parse_source_string ~src_file ts_parser src_data
 
-let print_json src =
-  Atdgen_runtime.Util.Json.to_string
-    Tree_sitter_output_j.write_node
-    src.root
-  |> Yojson.Safe.prettify
-  |> print_endline
+let print src =
+  Tree_sitter_dump.to_stdout [src.root]

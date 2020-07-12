@@ -12,7 +12,10 @@ type node = {
   type_ <json name="type">: string;
   start_pos <json name="startPosition">: position;
   end_pos <json name="endPosition">: position;
-  ~children: node list;
+
+  ?children: node list option;
+    (* Some children if 'type' field holds a grammar rule name,
+       None if 'type' field holds a literal token. *)
 
  (* Unique ID assigned right after parsing the json file so as to facilitate
     further processing. *)

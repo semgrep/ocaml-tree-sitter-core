@@ -29,6 +29,6 @@ val parse_source_string :
 val load_json_file : src_file:string -> json_file:string -> t
 
 (*
-   Pretty-print as json for debugging purposes.
+   Pretty-print for debugging purposes.
 *)
-val print_json : t -> unit
+val print : t -> unit
