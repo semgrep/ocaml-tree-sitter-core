@@ -119,7 +119,7 @@ cxx_files=""
 
 cp "$src_dir"/parser.c "$dst_dir"/lib
 
-if [[ -e "$dst_dir"/lib/scanner.c ]]; then
+if [[ -e "$src_dir"/scanner.c ]]; then
   cp "$src_dir"/scanner.c "$dst_dir"/lib
   c_files="scanner $c_files"
 fi
@@ -131,6 +131,8 @@ fi
 
 # Copy C header files
 #
+shopt -s nullglob
+for x in "$src_dir"/*.h; do cp "$x" "$dst_dir"/lib; done
 cp -a "$src_dir"/tree_sitter "$dst_dir"/lib/tree_sitter
 
 # Generate the OCaml code needed to parse the examples/*.out json files.
