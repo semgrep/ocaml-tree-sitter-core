@@ -42,7 +42,11 @@ typedef struct _tree {
 void finalize_tree(value v) {
   tree_W *p;
   p = (tree_W *)Data_custom_val(v);
-  ts_tree_delete(p->tree);
+  //TODO: ts_tree_delete(p->tree);
+  // this caused some segfaults, probably during Gc after
+  // analyzing many Ruby files. We go around this bug by
+  // running the Ruby parser in a separate process so segfaults
+  // or here memory leak do not reach the main semgrep-core process.
 }
 
 static struct custom_operations tree_custom_ops = {
