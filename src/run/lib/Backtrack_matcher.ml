@@ -116,19 +116,27 @@ struct
         (* one way *)
         cont (Punct Nothing :: path) tokens
 
-  and match_repeat path exp tokens after_repeat =
+  and match_repeat path exp tokens0 after_repeat =
     let after_exp path tokens =
-      match_repeat path exp tokens after_repeat
+      if tokens == tokens0 (* physical equality *) then
+        (* avoid infinite loop if no input was consumed *)
+        after_repeat path tokens
+      else
+        match_repeat path exp tokens after_repeat
     in
-    match match_exp path exp tokens after_exp with
+    match match_exp path exp tokens0 after_exp with
     | Some _ as res -> res
-    | None -> after_repeat path tokens
+    | None -> after_repeat path tokens0
 
-  and match_repeat1 path exp tokens after_repeat =
+  and match_repeat1 path exp tokens0 after_repeat =
     let after_exp path tokens =
-      match_repeat path exp tokens after_repeat
+      if tokens == tokens0 (* physical equality *) then
+        (* avoid infinite loop if no input was consumed *)
+        after_repeat path tokens
+      else
+        match_repeat path exp tokens after_repeat
     in
-    match match_exp path exp tokens after_exp with
+    match match_exp path exp tokens0 after_exp with
     | Some _ as res -> res
     | None -> None
 

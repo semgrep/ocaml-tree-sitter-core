@@ -80,6 +80,34 @@ let test_repeat () =
     [a;a]
     (Some (Repeat [Token a; Token a]))
 
+(* a+ *)
+let test_repeat1 () =
+  test_b
+    (Repeat1 (Token a))
+    [a;a]
+    (Some (Repeat1 [Token a; Token a]))
+
+(* fail to match a+ *)
+let test_repeat1_fail () =
+  test_b
+    (Repeat1 (Token a))
+    []
+    None
+
+(* shouldn't result in an infinite loop *)
+let test_repeat_nothing () =
+  test_b
+    (Repeat Nothing)
+    []
+    (Some (Repeat [Nothing]))
+
+(* shouldn't result in an infinite loop *)
+let test_repeat1_nothing () =
+  test_b
+    (Repeat Nothing)
+    []
+    (Some (Repeat [Nothing]))
+
 (* (a|b) *)
 let test_alt0 () =
   test_b
@@ -154,8 +182,12 @@ let test = "Matcher", [
   "some", `Quick, test_some;
   "none", `Quick, test_none;
   "repeat", `Quick, test_repeat;
-  "alt0", `Quick, test_alt0;
-  "alt1", `Quick, test_alt1;
+  "repeat1", `Quick, test_repeat1;
+  "repeat1 fail", `Quick, test_repeat1_fail;
+  "repeat nothing", `Quick, test_repeat_nothing;
+  "repeat1 nothing", `Quick, test_repeat1_nothing;
+  "alt 0", `Quick, test_alt0;
+  "alt 1", `Quick, test_alt1;
   "opt(alt(opt()))", `Quick, test_opt_alt_opt;
   "backtrack", `Quick, test_backtrack;
   "backtrack opt", `Quick, test_backtrack_opt;
