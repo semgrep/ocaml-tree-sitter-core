@@ -155,6 +155,7 @@ let gen_regexps grammar =
       in
       Group [
         Line (sprintf "%S," rule.name);
+        Space;
         Inline opt_regexp;
       ]
     )
