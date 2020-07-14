@@ -2,6 +2,7 @@ TESTS = \
   seq \
   choice \
   choice-seq \
+  choice-choice \
   repeat-choice \
   repeat-optional \
   optional-seq \

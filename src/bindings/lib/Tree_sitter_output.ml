@@ -11,11 +11,17 @@ let rec of_ts_node get_node_id ts_node =
   let start_pos = Node.start_point ts_node in
   let end_pos = Node.end_point ts_node in
   let children = read_children get_node_id ts_node in
+  let kind =
+    match children with
+    | None -> Literal type_
+    | Some _ -> Name type_
+  in
   {
     type_;
     start_pos;
     end_pos;
     children;
+    kind;
     id;
   }
 

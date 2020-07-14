@@ -8,14 +8,25 @@
      OCaml bindings).
 *)
 
+type node_kind = [ Name of string | Literal of string ] <ocaml repr="classic">
+
 type node = {
+  (* Original 'type' field, which by itself is ambiguous. Use 'kind'
+     instead. *)
   type_ <json name="type">: string;
+
   start_pos <json name="startPosition">: position;
   end_pos <json name="endPosition">: position;
 
   ?children: node list option;
     (* Some children if 'type' field holds a grammar rule name,
        None if 'type' field holds a literal token. *)
+
+  (*** Fields not part of the original tree-sitter data ***)
+
+  (* Unique identifier for the kind of node. This is the 'type' field,
+     tagged appropriately to avoid confusion. *)
+  ~kind <ocaml default="Literal \"\"">: node_kind;
 
  (* Unique ID assigned right after parsing the json file so as to facilitate
     further processing. *)

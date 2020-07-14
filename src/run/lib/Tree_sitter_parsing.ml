@@ -12,7 +12,7 @@ type t = {
 let src x = x.src
 let root x = x.root
 
-let assign_unique_ids root_node =
+let set_missing_fields root_node =
   let open Tree_sitter_output_t in
   let counter = ref (-1) in
   let create_id () = incr counter; !counter in
@@ -20,7 +20,12 @@ let assign_unique_ids root_node =
     let id = create_id () in
     assert (id >= 0);
     let children = Option.map (List.map map) node.children in
-    { node with id; children }
+    let kind =
+      match children with
+      | None -> Literal node.type_
+      | Some _ -> Name node.type_
+    in
+    { node with id; children; kind }
   in
   map root_node
 
@@ -28,7 +33,7 @@ let parse_json_file json_file =
   Atdgen_runtime.Util.Json.from_file
     Tree_sitter_output_j.read_node
     json_file
-  |> assign_unique_ids
+  |> set_missing_fields
 
 let load_json_file ~src_file ~json_file =
   let root = parse_json_file json_file in

@@ -102,8 +102,8 @@ let preamble grammar =
 
 let rec fmt_regexp (x : rule_body) =
   match x with
-  | Symbol name -> [Line (sprintf "Token %S;" name)]
-  | Token token -> [Line (sprintf "Token %S;" token.name)]
+  | Symbol name -> [Line (sprintf "Token (Name %S);" name)]
+  | Token token -> [Line (sprintf "Token (Literal %S);" token.name)]
   | Blank -> [Line "Nothing;"]
   | Repeat x ->
       [
@@ -160,8 +160,7 @@ let gen_regexps grammar =
     )
   in
   [
-    Line "let children_regexps : \
-            (string * string Matcher.Exp.t option) list = [";
+    Line "let children_regexps : (string * Run.exp option) list = [";
     Block list_elements;
     Line "]";
   ]
@@ -249,10 +248,11 @@ let rec gen_trans_capture rule_body : exp =
                   (trans name) arg);
         ]
       )
-  | Token _ ->
+  | Token token ->
       Fun (fun arg ->
         Code [
-          Line (sprintf "Run.trans_token (Run.matcher_token %s)" arg);
+          Line (sprintf "Run.trans_token (Run.matcher_token %s) \
+                         (* token: %s *)" arg (CST_grammar.show_token token));
         ]
       )
   | Blank -> Code [Line "Run.nothing"]
@@ -344,7 +344,7 @@ let gen_translator ~cst_module_name (rule : rule) =
     | body -> gen_trans_body body
   in
   [
-    Line (sprintf "trans_%s ((name, body) : mt) : %s.%s ="
+    Line (sprintf "trans_%s ((kind, body) : mt) : %s.%s ="
             (trans name) cst_module_name (trans name));
     Block body;
   ]

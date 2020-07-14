@@ -51,7 +51,7 @@ module Parse = struct
   ]
 
   (* generated *)
-  let children_regexps : (string * string Matcher.Exp.t option) list = [
+  let children_regexps : (string * Run.exp option) list = [
     (
       "variable",
       None
@@ -64,12 +64,12 @@ module Parse = struct
       "expression",
       Some (
         Alt [|
-          Token "variable";
-          Token "number";
+          Token (Name "variable");
+          Token (Name "number");
           Seq [
-            Token "expression";
-            Token "+";
-            Token "expression";
+            Token (Name "expression");
+            Token (Literal "+");
+            Token (Name "expression");
           ];
         |];
       )
@@ -77,19 +77,19 @@ module Parse = struct
   ]
 
   (* generated *)
-  let trans_variable ((name, body) : mt) : CST.variable =
+  let trans_variable ((kind, body) : mt) : CST.variable =
     match body with
     | Leaf v -> v
     | _ -> assert false
 
   (* generated *)
-  let trans_number ((name, body) : mt) : CST.number =
+  let trans_number ((kind, body) : mt) : CST.number =
     match body with
     | Leaf v -> v
     | Children _ -> assert false
 
   (* generated *)
-  let rec trans_expression ((name, body) : mt) : CST.expression =
+  let rec trans_expression ((kind, body) : mt) : CST.expression =
     match body with
     | Children v ->
         (match v with
@@ -112,7 +112,7 @@ module Parse = struct
     | Leaf _ -> assert false
 
   (* generated *)
-  let trans_statement ((name, body) : mt) =
+  let trans_statement ((kind, body) : mt) =
     match body with
     | Children v ->
         (match v with
@@ -124,7 +124,7 @@ module Parse = struct
     | _ -> assert false
 
   (* generated *)
-  let trans_program ((name, body) : mt) =
+  let trans_program ((kind, body) : mt) =
     match body with
     | Children v ->
         Run.repeat (fun v -> trans_statement (Run.matcher_token v)) v

@@ -3,6 +3,7 @@
 *)
 
 type ident = string
+[@@deriving show]
 
 type token_description =
   | Constant of string
@@ -48,6 +49,7 @@ type token_description =
   | External
       (* a symbol declared in the 'externals' list and produced by an external
          C parser. *)
+[@@deriving show]
 
 type token = {
   name: string;
@@ -71,18 +73,6 @@ type token = {
        grammar.js:
          repeat("*")
        name of the repeated element: "*"
-
-       grammar.js:
-         alias("*", "star")
-       name: "star"
-
-       grammar.js:
-         alias("*", $.star)
-       name: "star"
-
-       grammar.js:
-         alias($.times, $.star)
-       name: "star"
     *)
 
   is_inlined: bool;
@@ -94,6 +84,7 @@ type token = {
   description: token_description;
     (* informational *)
 }
+[@@deriving show]
 
 type rule_body =
   (* atomic (leaves) *)
@@ -111,6 +102,7 @@ type rule_body =
 
   | Optional of rule_body
   | Seq of rule_body list
+[@@deriving show]
 
 type rule = {
   name: ident;
@@ -134,6 +126,7 @@ type rule = {
 
   body: rule_body;
 }
+[@@deriving show]
 
 type grammar = {
   name: string;
@@ -146,9 +139,11 @@ type grammar = {
     (* node names that don't belong to any rule and can occur anywhere,
        such as comments. *)
 }
+[@@deriving show]
 
 (* alias *)
 type t = grammar
+[@@deriving show]
 
 let is_leaf = function
   | Token _
