@@ -21,9 +21,16 @@ let make_header grammar = sprintf
 (* Disable warning against unused 'rec' *)
 [@@@warning "-39"]
 
-let token (_tok : Tree_sitter_run.Token.t) = failwith "not implemented"
-let blank () = failwith "not implemented"
-let todo _ = failwith "not implemented"
+type env = unit
+
+let token (env : env) (_tok : Tree_sitter_run.Token.t) =
+  failwith "not implemented"
+
+let blank (env : env) () =
+  failwith "not implemented"
+
+let todo (env : env) _ =
+   failwith "not implemented"
 
 |}
     grammar.name
@@ -61,15 +68,18 @@ let token_comment (tok : token) =
 
 let rec gen_mapper_body var body : node list =
   match body with
-  | Symbol name -> [ Line (sprintf "map_%s %s" (trans name) var) ]
-  | Token token -> [ Line (sprintf "token %s %s" var (token_comment token)) ]
-  | Blank -> [ Line (sprintf "blank %s" var)]
+  | Symbol name ->
+      [ Line (sprintf "map_%s env %s" (trans name) var) ]
+  | Token token ->
+      [ Line (sprintf "token env %s %s" var (token_comment token)) ]
+  | Blank ->
+      [ Line (sprintf "blank env %s" var)]
   | Repeat (Symbol name)
   | Repeat1 (Symbol name) ->
-      [ Line (sprintf "List.map map_%s %s" (trans name) var) ]
+      [ Line (sprintf "List.map (map_%s env) %s" (trans name) var) ]
   | Repeat (Token token)
   | Repeat1 (Token token) ->
-      [ Line (sprintf "List.map token %s %s" (token_comment token) var) ]
+      [ Line (sprintf "List.map (token env) %s %s" (token_comment token) var) ]
   | Repeat body
   | Repeat1 body ->
       let env = destruct body in
@@ -103,7 +113,7 @@ let rec gen_mapper_body var body : node list =
           Space;
           Block [Block (gen_mapper_body_multi env)];
         ];
-        Line (sprintf "| None -> todo ())")
+        Line (sprintf "| None -> todo env ())")
       ]
   | Seq _ as body ->
       let env = destruct body in
@@ -114,7 +124,7 @@ let rec gen_mapper_body var body : node list =
 
 and gen_mapper_body_multi env =
   match env with
-  | [] -> [ Line "todo ()" ]
+  | [] -> [ Line "todo env ()" ]
   | [var, body] -> gen_mapper_body var body
   | env ->
       let bindings =
@@ -130,14 +140,14 @@ and gen_mapper_body_multi env =
       in
       [
         Inline bindings;
-        Line (sprintf "todo %s" (mkexp env))
+        Line (sprintf "todo env %s" (mkexp env))
       ]
 
 let gen_rule_mapper_binding ~cst_module_name (rule : rule) =
   let name = rule.name in
   let env = destruct rule.body in
   [
-    Line (sprintf "map_%s (%s : %s.%s) ="
+    Line (sprintf "map_%s (env : env) (%s : %s.%s) ="
             (trans name) (mkpat env)
             cst_module_name (trans name));
     Block (gen_mapper_body_multi env);

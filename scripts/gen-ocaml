@@ -173,12 +173,12 @@ void finalize_parser(value v) {
 }
 
 static struct custom_operations parser_custom_ops = {
-  identifier : "parser handling",
-  finalize : finalize_parser,
-  compare : custom_compare_default,
-  hash : custom_hash_default,
-  serialize : custom_serialize_default,
-  deserialize : custom_deserialize_default
+  .identifier = "parser handling",
+  .finalize = finalize_parser,
+  .compare = custom_compare_default,
+  .hash = custom_hash_default,
+  .serialize = custom_serialize_default,
+  .deserialize = custom_deserialize_default
 };
 
 // OCaml function
