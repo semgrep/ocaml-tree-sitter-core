@@ -39,7 +39,7 @@ typedef struct _tree {
   TSTree *tree;
 } tree_W;
 
-void finalize_tree(value v) {
+static void finalize_tree(value v) {
   tree_W *p;
   p = (tree_W *)Data_custom_val(v);
   //TODO: ts_tree_delete(p->tree);
