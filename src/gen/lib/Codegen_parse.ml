@@ -248,11 +248,10 @@ let rec gen_trans_capture rule_body : exp =
                   (trans name) arg);
         ]
       )
-  | Token token ->
+  | Token _ ->
       Fun (fun arg ->
         Code [
-          Line (sprintf "Run.trans_token (Run.matcher_token %s) \
-                         (* token: %s *)" arg (CST_grammar.show_token token));
+          Line (sprintf "Run.trans_token (Run.matcher_token %s)" arg);
         ]
       )
   | Blank -> Code [Line "Run.nothing"]

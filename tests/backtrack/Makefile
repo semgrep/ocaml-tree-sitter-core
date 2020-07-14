@@ -5,5 +5,5 @@
 # - make test   # parse
 # - make clean
 #
-LANG = opt-choice-opt
+LANG = backtrack
 include ../../lang/Makefile.common

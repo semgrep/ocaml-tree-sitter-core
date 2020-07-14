@@ -7,6 +7,8 @@
 
 open Printf
 
+let debug = false
+
 module Make (Token : Matcher.Token) : Matcher.Matcher
   with type token_kind = Token.kind
    and type token = Token.t =
@@ -262,6 +264,7 @@ struct
     match match_ exp tokens with
     | None -> None
     | Some path ->
-        printf "path: [\n%s]\n%!" (show_path path);
+        if debug then
+          printf "path: [\n%s]\n%!" (show_path path);
         Some (reconstruct exp path)
 end

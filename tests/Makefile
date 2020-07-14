@@ -1,20 +1,15 @@
+# List of tests that run by default and are expected to pass.
+#
 TESTS = \
   seq \
   choice \
   choice-seq \
-  choice-choice \
   repeat-choice \
-  repeat-optional \
-  optional-seq \
   opt-repeat1 \
-  opt-choice-opt \
   recurse \
   arithmetic \
   extras \
-  backtrack-opt \
-  backtrack-repeat \
-  backtrack-choice \
-  backtrack-multi
+  backtrack
 
 # Build and run all the tests.
 .PHONY: test
