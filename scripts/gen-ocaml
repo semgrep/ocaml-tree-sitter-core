@@ -166,7 +166,7 @@ typedef struct _parser {
   TSParser *parser;
 } parser_W;
 
-void finalize_parser(value v) {
+static void finalize_parser(value v) {
   parser_W *p;
   p = (parser_W *)Data_custom_val(v);
   ts_parser_delete(p->parser);
