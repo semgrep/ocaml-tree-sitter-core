@@ -3,16 +3,7 @@
    identifiers.
 *)
 
-(*
-   Map from input identifier to output identifier and vice-versa.
-   This map is initialized with the reserved keywords of the output language
-   (Reason), and then filled with identifiers as they are encountered
-   in the program.
-*)
-type t = {
-  forward: (string, string) Hashtbl.t;
-  backward: (string, string) Hashtbl.t;
-}
+open Printf
 
 let ocaml_keywords = [
   "and";
@@ -88,63 +79,80 @@ let ocaml_builtin_types = [
 
 let ocaml_reserved = ocaml_keywords @ ocaml_builtin_types
 
-type availability = Available | Taken | Mismatched
+(*
+   Map from input identifier to output identifier and vice-versa.
+   This map is initialized with the reserved keywords of the output language,
+   and then filled with identifiers as they are encountered in the program.
+*)
+type t = {
+  forward: (string, string) Hashtbl.t;
+  backward: (string, string) Hashtbl.t;
+}
 
-(* Check that a maps to b and b maps to a, either already or if we make them
-   that way. *)
-let check x a b =
-  match Hashtbl.find_opt x.forward a, Hashtbl.find_opt x.backward b with
+type translation_status =
+  | Available
+  | Valid
+  | Invalid
+
+(* Check that src could map to dst and vice-versa. *)
+let check x src dst =
+  match Hashtbl.find_opt x.forward src, Hashtbl.find_opt x.backward dst with
   | None, None -> Available
-  | Some b', Some a' when a = a' && b = b' -> Taken
-  | _ -> Mismatched
+  | Some dst', Some src' when src' = src && dst' = dst -> Valid
+  | _ -> Invalid
 
 let force_add x a b =
   Hashtbl.replace x.forward a b;
   Hashtbl.replace x.backward b a
 
-let create ?(reserved = ocaml_reserved) () =
+let create ~reserved =
   let x = {
     forward = Hashtbl.create 100;
     backward = Hashtbl.create 100;
   } in
-  List.iter (fun kw -> force_add x kw (kw ^ "_")) reserved;
+  List.iter (fun src ->
+    let dst = src ^ "_" in
+    match check x src dst with
+    | Available -> force_add x src dst
+    | Valid -> ()
+    | Invalid -> invalid_arg (sprintf "Protect_ident.create: %s" src)
+  ) reserved;
   x
 
 (* Try these suffixes first before falling back to random numbers. *)
 let good_suffixes = [
   "";
   "_";
-  "0"; "1"; "2"; "3"; "4"; "5";
+  "2"; "3"; "4"; "5";
 ]
 
-let find_available x ident =
+let find_available x src preferred_dst =
   let rec try_suffix suffixes =
     let candidate_suffix, suffixes =
       match suffixes with
       | [] -> (Random.bits () |> string_of_int), []
       | x :: xs -> x, xs
     in
-    let ident' = ident ^ candidate_suffix in
-    match check x ident ident' with
-    | Taken -> assert false
+    let dst = preferred_dst ^ candidate_suffix in
+    match check x src dst with
     | Available ->
-        force_add x ident ident';
-        ident'
-    | Mismatched ->
+        force_add x src dst;
+        dst
+    | Valid ->
+        dst
+    | Invalid ->
         try_suffix suffixes
   in
   try_suffix good_suffixes
 
 (*
    Forward translation of an identifier. For example, "object" returns
-   "object_". "object_" might then return something like "object_1".
-
-   TODO: ensure that that the translated identifier is syntactically valid
-         in Reason.
+   "object_". "object_" might then return something like "object__".
 *)
-let translate x ident =
-  match Hashtbl.find_opt x.forward ident with
-  | Some ident' -> ident'
-  | None -> find_available x ident
+let translate x src =
+  match Hashtbl.find_opt x.forward src with
+  | Some dst -> dst
+  | None -> find_available x src src
 
-(* TODO: tests *)
+let reserve x ~src ~preferred_dst =
+  find_available x src preferred_dst

@@ -26,9 +26,9 @@ let get_string = function
 let normalize_variant_object fields =
   let get k = get_field k fields in
   let opt k = get_opt_field k fields in
-  let name = get "type" |> get_string in
+  let type_ = get "type" |> get_string in
   let opt_value =
-    match name with
+    match type_ with
     | "SYMBOL" -> Some (get "name")
     | "STRING" -> Some (get "value")
     | "PATTERN" -> Some (get "value")
@@ -48,8 +48,8 @@ let normalize_variant_object fields =
     | _ -> raise Malformed
   in
   match opt_value with
-  | None -> `String name
-  | Some value -> `List [`String name; value]
+  | None -> `String type_
+  | Some value -> `List [`String type_; value]
 
 (*
    Convert {type: name; <other fields>} to [name, <atom or tuple>].
@@ -65,5 +65,50 @@ let normalize (json : json) : json =
   with Malformed -> json
 
 (* Convert back to tree-sitter format *)
-let restore (_json : json) : json =
-  failwith "TODO"
+let restore (json : json) : json =
+  let type_, opt_value =
+    match json with
+    | `String type_ -> type_, None
+    | `List [`String type_; value] -> type_, Some value
+    | _ -> assert false
+  in
+  let optional_fields =
+    match opt_value with
+    | None -> []
+    | Some value ->
+        match type_ with
+        | "SYMBOL" -> ["name", value]
+        | "STRING" -> ["value", value]
+        | "PATTERN" -> ["value", value]
+        | "BLANK" -> []
+        | "REPEAT"
+        | "REPEAT1" -> ["content", value]
+        | "CHOICE" -> ["members", value]
+        | "SEQ" -> ["members", value]
+        | "PREC"
+        | "PREC_DYNAMIC"
+        | "PREC_LEFT"
+        | "PREC_RIGHT" ->
+            (match value with
+             | `List [value; content] ->
+                 ["value", value;
+                  "content", content]
+             | _ -> assert false
+            )
+        | "ALIAS" ->
+            (match value with
+             | `Assoc fields -> fields
+             | _ -> assert false
+            )
+        | "FIELD" ->
+            (match value with
+             | `List [name; content] ->
+                 ["name", name;
+                  "content", content]
+             | _ -> assert false
+            )
+        | "IMMEDIATE_TOKEN" -> ["content", value]
+        | "TOKEN" -> ["content", value]
+        | _ -> assert false
+  in
+  `Assoc (("type", `String type_) :: optional_fields)

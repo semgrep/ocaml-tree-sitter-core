@@ -2,7 +2,7 @@
 tmp
 
 # Dune build data
-/_build
+_build
 
 # Merlin configuring file for Vim and Emacs
 .merlin

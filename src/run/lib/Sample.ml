@@ -12,19 +12,20 @@ module CST = struct
   type number = (Loc.t * string) (* pattern "\\d+" *)
   type variable = (Loc.t * string) (* pattern "\\a\\w*" *)
   type expression = [
-    | `Case0 of variable
-    | `Case1 of number
-    | `Case2 of (expression * (Loc.t * string (* "+" *)) * expression)
+    | `Var of variable
+    | `Num of number
+    | `Exp_PLUS_exp of (expression * (Loc.t * string (* "+" *)) * expression)
   ]
   type statement = (expression * (Loc.t * string (* ";" *)))
-  type stmt = statement (* alias *)
-  type _thing = statement (* inline alias *)
   type program = statement list (* zero or more *)
 end
 
 module Parse = struct
-  open Tree_sitter_bindings.Tree_sitter_output_t
-  let get_loc x = Loc.({ start = x.start_pos; end_ = x.end_pos})
+  (* open Tree_sitter_run *)
+
+  let debug = ref false
+
+  type mt = Run.matcher_token
 
   (*
   external create_parser :
@@ -34,142 +35,123 @@ module Parse = struct
   let create_parser () : Tree_sitter_bindings.Tree_sitter_API.ts_parser =
     failwith "not implemented"
 
-  let ts_parser () = create_parser ()
+  let ts_parser = lazy (create_parser ())
+
+  let parse_source_string ?src_file contents =
+    Tree_sitter_parsing.parse_source_string ?src_file
+      (Lazy.force ts_parser) contents
 
   let parse_source_file src_file =
-    Tree_sitter_parsing.parse_source_file (ts_parser ()) src_file
+    Tree_sitter_parsing.parse_source_file
+      (Lazy.force ts_parser) src_file
+
+  (* generated *)
+  let extras = [
+    "comment";
+  ]
+
+  (* generated *)
+  let children_regexps : (string * Run.exp option) list = [
+    (
+      "variable",
+      None
+    );
+    (
+      "number",
+      None
+    );
+    (
+      "expression",
+      Some (
+        Alt [|
+          Token (Name "variable");
+          Token (Name "number");
+          Seq [
+            Token (Name "expression");
+            Token (Literal "+");
+            Token (Name "expression");
+          ];
+        |];
+      )
+    );
+  ]
+
+  (* generated *)
+  let trans_variable ((kind, body) : mt) : CST.variable =
+    match body with
+    | Leaf v -> v
+    | _ -> assert false
+
+  (* generated *)
+  let trans_number ((kind, body) : mt) : CST.number =
+    match body with
+    | Leaf v -> v
+    | Children _ -> assert false
+
+  (* generated *)
+  let rec trans_expression ((kind, body) : mt) : CST.expression =
+    match body with
+    | Children v ->
+        (match v with
+         | Alt (0, v) ->
+             `Var (trans_variable (Run.matcher_token v))
+         | Alt (1, v) ->
+             `Num (trans_number (Run.matcher_token v))
+         | Alt (2, v) ->
+             `Exp_PLUS_exp (
+               match v with
+               | Seq [v1; v2; v3] ->
+                   let v1 = trans_expression (Run.matcher_token v1) in
+                   let v2 = Run.trans_token (Run.matcher_token v2) in
+                   let v3 = trans_expression (Run.matcher_token v3) in
+                   (v1, v2, v3)
+               | _ -> assert false
+             )
+         | _ -> assert false
+        )
+    | Leaf _ -> assert false
+
+  (* generated *)
+  let trans_statement ((kind, body) : mt) =
+    match body with
+    | Children v ->
+        (match v with
+         | Seq [v1; v2] ->
+             (trans_expression (Run.matcher_token v1),
+              Run.trans_token (Run.matcher_token v2))
+         | _ -> assert false
+        )
+    | _ -> assert false
+
+  (* generated *)
+  let trans_program ((kind, body) : mt) =
+    match body with
+    | Children v ->
+        Run.repeat (fun v -> trans_statement (Run.matcher_token v)) v
+    | _ -> assert false
 
   let parse_input_tree input_tree =
-    let root_node = Tree_sitter_parsing.root input_tree in
+    let root_node =
+      Tree_sitter_parsing.root input_tree
+      |> Run.remove_extras ~extras
+    in
+    if !debug then (
+      Printf.printf "input from tree-sitter:\n";
+      Tree_sitter_dump.to_stdout [root_node];
+      flush stdout;
+      Printf.printf "ocaml-tree-sitter trace:\n"
+    );
     let src = Tree_sitter_parsing.src input_tree in
-    let get_token x =
-      Src_file.get_token src x.start_pos x.end_pos in
+    let match_node = Run.make_node_matcher children_regexps src in
+    let matched_tree = match_node root_node in
+    trans_program matched_tree
 
-    (* childless rule, from which we extract location and token. *)
-    let _parse_leaf_rule type_ =
-      Combine.parse_node (fun x ->
-        if x.type_ = type_ then
-          Some (get_loc x, get_token x)
-        else
-          None
-      )
-    in
+  let string ?src_file contents =
+    let input_tree = parse_source_string ?src_file contents in
+    parse_input_tree input_tree
 
-    let cache_inline_expression = Combine.Memoize.create () in
-    let cache_node_expression = Combine.Memoize.create () in
+  let file src_file =
+    let input_tree = parse_source_file src_file in
+    parse_input_tree input_tree
 
-    let parse_node_number : CST.number Combine.reader = fun nodes ->
-      (
-        _parse_leaf_rule "number"
-      ) nodes
-    in
-    let parse_node_variable nodes =
-      (
-        _parse_leaf_rule "variable"
-      ) nodes
-    in
-    let rec parse_inline_expression _parse_tail
-      : (CST.expression * _) Combine.reader =
-      fun nodes ->
-        let parse_case0 _parse_tail nodes =
-          match
-            (
-              Combine.parse_seq parse_node_variable _parse_tail
-            )
-              nodes
-          with
-          | Some ((res, tail), nodes) -> Some ((`Case0 res, tail), nodes)
-          | None -> None
-        in
-        let parse_case1 _parse_tail nodes =
-          match
-            (
-              Combine.parse_seq parse_node_number _parse_tail
-            )
-              nodes
-          with
-          | Some ((res, tail), nodes) -> Some ((`Case1 res, tail), nodes)
-          | None -> None
-        in
-        let parse_case2 _parse_tail nodes =
-          match
-            (
-              let _parse_tail =
-                let _parse_tail =
-                  Combine.parse_seq parse_node_expression _parse_tail
-                in
-                Combine.parse_seq (_parse_leaf_rule "+") _parse_tail
-              in
-              Combine.parse_seq parse_node_expression _parse_tail
-            ) nodes
-          with
-          | Some ((e0, (e1, (e2, tail))), nodes) ->
-              Some ((`Case2 (e0, e1, e2), tail), nodes)
-          | None ->
-              None
-        in
-        match parse_case0 _parse_tail nodes with
-        | Some _ as res -> res
-        | None ->
-            match parse_case1 _parse_tail nodes with
-            | Some _ as res -> res
-            | None ->
-                parse_case2 _parse_tail nodes
-    and parse_children_expression : _ Combine.full_seq_reader = fun nodes ->
-      Combine.parse_full_seq parse_inline_expression nodes
-    and parse_node_expression = fun nodes ->
-      Combine.Memoize.apply cache_node_expression (
-        Combine.parse_rule "expression" parse_children_expression
-      ) nodes
-    in
-
-    let cache_inline_statement = Combine.Memoize.create () in
-    let cache_node_statement = Combine.Memoize.create () in
-    let cache_node_stmt = Combine.Memoize.create () in
-
-    let parse_inline_statement _parse_tail
-      : (CST.statement * _) Combine.reader =
-      fun nodes ->
-        match
-          Combine.parse_seq
-            parse_node_expression
-            (
-              Combine.parse_seq
-                (_parse_leaf_rule ";")
-                _parse_tail
-            )
-            nodes
-        with
-        | Some ((e1, (e2, tail)), nodes) -> Some (((e1, e2), tail), nodes)
-        | None -> None
-    in
-    let parse_children_statement : _ Combine.full_seq_reader = fun nodes ->
-      Combine.parse_full_seq parse_inline_statement nodes
-    in
-    (* normal rule (not inline, not an alias) *)
-    let parse_node_statement : CST.statement Combine.reader = fun nodes ->
-      Combine.Memoize.apply cache_node_statement (
-        Combine.parse_rule "statement" parse_children_statement
-      ) nodes
-    in
-    (* alias *)
-    let parse_node_stmt : CST.stmt Combine.reader = fun nodes ->
-      Combine.Memoize.apply cache_node_stmt (
-        Combine.parse_rule "stmt" parse_children_statement
-      ) nodes
-    in
-    (* inline alias *)
-    let parse_inline__thing _parse_tail : (CST._thing * _) Combine.reader =
-      fun nodes ->
-        parse_inline_statement _parse_tail nodes
-    in
-
-    let parse_node_program = fun nodes ->
-      Combine.parse_rule "program" (
-        Combine.parse_repeat
-          parse_node_statement
-          Combine.parse_end
-      ) nodes
-    in
-    parse_node_program [root_node]
 end

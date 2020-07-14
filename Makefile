@@ -43,12 +43,21 @@ distclean:
 
 .PHONY: test
 test: build
-	./_build/default/src/gen/test/test.exe
-	./_build/default/src/run/test/test.exe
+	$(MAKE) unit
 	$(MAKE) -C tests
 	$(MAKE) -C lang build
 	$(MAKE) -C lang test
 
+# Run unit tests only.
+.PHONY: unit
+unit: build
+	./_build/default/src/gen/test/test.exe
+	./_build/default/src/run/test/test.exe
+
 .PHONY: install
 install:
 	dune install
+
+.PHONY: ci
+ci:
+	docker build -t ocaml-tree-sitter .

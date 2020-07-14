@@ -9,7 +9,7 @@ progname=$(basename "$0")
 
 usage() {
   cat <<EOF
-Usage: $progname PROJECTS_FILE EXTENSIONS_FILE
+Usage: $progname LANG PROJECTS_FILE EXTENSIONS_FILE
 
 For each project specified by a git URL in PROJECTS_FILE, run the local
 parser on all the files of the project whose extension matches one of the
@@ -26,13 +26,14 @@ error() {
 
 [[ "${BASH_VERSION%%.*}" -ge 4 ]] || error "requires bash >= 4"
 
-if [[ $# != 2 ]]; then
+if [[ $# != 3 ]]; then
   usage 2>&1
   exit 1
 fi
 
-projects_file="$1"
-extensions_file="$2"
+lang="$1"
+projects_file="$2"
+extensions_file="$3"
 
 # Read lines into array after removing comments and blank lines.
 readarray -t urls < <(grep -v '^ *\(#\| *$\)' "$projects_file")
@@ -45,16 +46,14 @@ cat > "$csv" <<EOF
 "Project URL","Parse attempts","Parse failures","Lines of code"
 EOF
 
-tree_sitter_parser=$(pwd)/tree-sitter-parser.js
-ocaml_parser=$(pwd)/ocaml-src/_build/install/default/bin/parse
+ocaml_parser=$(pwd)/ocaml-src/_build/install/default/bin/parse-"$lang"
 
 parse() {
   (
     cd tmp
     json=out.json
-    ast=out.ast
-    "$tree_sitter_parser" "$input" > "$json"
-    "$ocaml_parser" "$input" "$json" > /dev/null
+    cst=out.cst
+    "$ocaml_parser" "$input" > /dev/null
   ) > tmp/parse.log 2>&1
 }
 

@@ -27,3 +27,8 @@ val parse_source_string :
    The original source file is required to recover tokens from their location.
 *)
 val load_json_file : src_file:string -> json_file:string -> t
+
+(*
+   Pretty-print for debugging purposes.
+*)
+val print : t -> unit

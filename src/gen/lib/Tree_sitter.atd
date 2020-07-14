@@ -8,7 +8,7 @@ type ident = string
 
 type grammar = {
   name: ident;
-  rules: (ident * rule_body) list <json repr="object">;
+  ?word: ident option; (* token name *)
   ~extras: rule_body list; (* tokens (can only be STRING or PATTERN) *)
   ~inline: ident list; (* rule names *)
   ~conflicts: ident list list; (* list of lists of rule names *)
@@ -17,8 +17,8 @@ type grammar = {
     (* list of terminal symbols returned by an external C parser, hence not
        defined (but used) in the 'rules' section. *)
 
-  ?word: ident option; (* token name *)
   ~supertypes: ident list; (* rule names *)
+  rules: (ident * rule_body) list <json repr="object">;
 }
 
 type rule_body = [

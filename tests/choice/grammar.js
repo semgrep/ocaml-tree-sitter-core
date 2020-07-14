@@ -2,10 +2,10 @@ module.exports = grammar({
   name: "choice",
   rules: {
     program: $ => choice(
-      $.variable,
-      $.number
+      $.number,
+      $.variable
     ),
-    variable: $ => /\a\w*/,
-    number: $ => /\d+/
+    variable: $ => /[a-z]+/,
+    number: $ => /[0-9]+/
   }
 });

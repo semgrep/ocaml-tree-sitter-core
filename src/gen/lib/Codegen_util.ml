@@ -5,7 +5,7 @@
 open Printf
 
 let translate_ident =
-  let registry = Protect_ident.create () in
+  let registry = Protect_ident.create ~reserved:Protect_ident.ocaml_reserved in
   fun ident -> Protect_ident.translate registry ident
 
 let interleave sep l =
@@ -70,14 +70,15 @@ let format_bindings ~is_rec ~is_local bindings =
   match bindings with
   | [] -> []
   | bindings ->
-      let final_in =
+      let final_in, spacing =
         if is_local && is_rec then
-          [Line "in"]
+          [Line "in"], []
         else
-          []
+          [], [Line ""]
       in
       [
         Inline (List.mapi (format_binding ~is_rec ~is_local) bindings
+                |> interleave spacing
                 |> List.flatten);
         Inline final_in;
       ]

@@ -10,7 +10,6 @@ project_root=$(git rev-parse --show-toplevel)
 scripts="$project_root"/scripts
 node_bin="$project_root"/node_modules/.bin
 tree_sitter="$node_bin"/tree-sitter
-node_gyp="$node_bin"/node-gyp
 
 error() {
   cat >&2 <<EOF
@@ -20,28 +19,25 @@ EOF
 }
 
 test -x "$tree_sitter" || error "missing executable $tree_sitter"
-test -x "$node_gyp" || error "missing executable $node_gyp"
 
 mkdir -p src
 
-# We need grammar.js in the current folder, without aliases or hidden rules.
-#
-if [[ -f orig/grammar.js ]]; then
-  "$scripts"/simplify-grammar < orig/grammar.js > grammar.js
-else
-  test -f "grammar.js" || error "missing grammar.js or orig/grammar.js"
+test -f "grammar.js" || error "missing grammar.js"
+
+if [[ -e orig/scanner.cc ]]; then
+  cp orig/scanner.cc src/
+elif [[ -e orig/scanner.c ]]; then
+  cp orig/scanner.c src/
 fi
 
-if [[ -f orig/scanner.cc ]]; then
-  cp orig/scanner.cc src/
-elif [[ -f orig/scanner.c ]]; then
-  cp orig/scanner.c src/
+if [[ -e orig/scanner.h ]]; then
+  cp orig/scanner.h src/
 fi
 
 # This file is created incorrectly by 'tree-sitter generate' if it doesn't
 # exist, i.e. the optional scanner.c or scanner.cc must be added to the
 # list of C sources.
 #
-if [[ -f orig/binding.gyp ]]; then
+if [[ -e orig/binding.gyp ]]; then
   cp orig/binding.gyp binding.gyp
 fi

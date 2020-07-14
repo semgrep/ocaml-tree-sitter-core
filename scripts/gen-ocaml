@@ -57,6 +57,8 @@ Options:
       of the library and of the OCaml module. Case conversion and conversions
       between dashes and underscores will take place as needed.
       Default: $default_lang
+  --trace
+      Print debugging info during parsing.
 EOF
 }
 
@@ -72,6 +74,7 @@ test -x "$ocaml_tree_sitter" || error "missing executable $ocaml_tree_sitter"
 lang="$default_lang"
 src_dir="$default_src_dir"
 dst_dir="$default_dst_dir"
+trace_option=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -90,6 +93,9 @@ while [[ $# -gt 0 ]]; do
     --src)
       src_dir="$2"
       shift
+      ;;
+    --trace)
+      trace_option="--trace"
       ;;
     *)
       error "Unsupported argument: $1"
@@ -113,7 +119,7 @@ cxx_files=""
 
 cp "$src_dir"/parser.c "$dst_dir"/lib
 
-if [[ -e "$dst_dir"/lib/scanner.c ]]; then
+if [[ -e "$src_dir"/scanner.c ]]; then
   cp "$src_dir"/scanner.c "$dst_dir"/lib
   c_files="scanner $c_files"
 fi
@@ -125,11 +131,17 @@ fi
 
 # Copy C header files
 #
+shopt -s nullglob
+for x in "$src_dir"/*.h; do cp "$x" "$dst_dir"/lib; done
 cp -a "$src_dir"/tree_sitter "$dst_dir"/lib/tree_sitter
 
 # Generate the OCaml code needed to parse the examples/*.out json files.
 #
-"$ocaml_tree_sitter" "$lang_underscores" "$src_dir"/grammar.json -d "$dst_dir"
+"$ocaml_tree_sitter" \
+  "$lang_underscores" \
+  "$src_dir"/grammar.json \
+  -d "$dst_dir" \
+  "${trace_option[@]}"
 
 cat > "$dst_dir"/lib/bindings.c <<EOF
 /*
