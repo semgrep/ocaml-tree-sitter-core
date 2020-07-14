@@ -1,4 +1,5 @@
 #
 # Collection of public git repositories of java code.
 #
+https://github.com/Mohist-Community/Mohist.git
 https://github.com/elastic/elasticsearch.git

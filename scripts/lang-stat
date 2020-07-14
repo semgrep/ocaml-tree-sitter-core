@@ -40,61 +40,102 @@ readarray -t urls < <(grep -v '^ *\(#\| *$\)' "$projects_file")
 readarray -t extensions < <(grep -v '^ *\(#\| *$\)' "$extensions_file")
 
 csv=stat.csv
+tmp=stat.tmp
+failed_inputs=stat.fail
 
 # CSV header
 cat > "$csv" <<EOF
-"Project URL","Parse attempts","Parse failures","Lines of code"
+Name,URL,Files,"Failed files",Lines,"Failed lines"
 EOF
 
-ocaml_parser=$(pwd)/ocaml-src/_build/install/default/bin/parse-"$lang"
+parser=$(pwd)/ocaml-src/_build/install/default/bin/parse-"$lang"
+test -x "$parser" || error "Missing parser '$parser'."
 
 parse() {
   (
-    cd tmp
+    cd "$proj_workspace"
     json=out.json
     cst=out.cst
-    "$ocaml_parser" "$input" > /dev/null
-  ) > tmp/parse.log 2>&1
+    "$parser" "$input" > /dev/null
+  ) > "$proj_workspace"/parse.log 2>&1
 }
 
 handle_project() {
-  echo "Fetch $url."
+  name=$(basename "${url%.git}")
+  proj_workspace="$tmp"/"$name"
+  mkdir -p "$proj_workspace"
   (
-    cd tmp
-    rm -rf repo
+    cd "$proj_workspace"
     rm -f inputs
-    git clone --depth 1 "$url" repo
+    if [[ ! -d "$name" ]]; then
+      echo "Clone '$name' from '$url'."
+      git clone --depth 1 "$url" "$name"
+    else
+      echo "Use local git repo for '$name'."
+      origin_url=$(git -C "$name" remote get-url origin)
+      if [[ "$url" != "$origin_url" ]]; then
+        cat >&2 <<EOF
+Wrong remote URL found in cloned repository '$name':
+  found $origin_url
+  expected $url
+Check that you don't have two project URLs with the same repo name.
+EOF
+        exit 1
+      fi
+    fi
     for ext in "${extensions[@]}"; do
       if [[ -n "$ext" ]]; then
-        find repo -name "*$ext" >> inputs
+        find "$name" -name "*$ext" >> inputs
       fi
     done
   )
-  readarray -t inputs < <(cat tmp/inputs)
+  readarray -t inputs < <(cat "$proj_workspace"/inputs)
   num_files=${#inputs[@]}
   echo "Found $num_files files."
   errors=0
   line_count=0
+  error_line_count=0
   for input in "${inputs[@]}"; do
     echo -n "$input"
-    file_line_count=$(wc -l "tmp/$input" | cut -f1 -d' ')
+    file_line_count=$(wc -l "$proj_workspace/$input" | cut -f1 -d' ')
     echo -n " ($file_line_count lines)"
     line_count=$(( line_count + file_line_count ))
     if parse; then
       echo "  OK"
     else
+      error_line_count=$(( error_line_count + file_line_count ))
+      echo "$proj_workspace/$input" >> "$failed_inputs"
       errors=$(( errors + 1 ))
       echo "  ERROR"
     fi
   done
-  echo "$url,$num_files,$errors,$line_count" >> "$csv"
+  global_line_count=$(( global_line_count + line_count ))
+  global_error_line_count=$(( global_error_line_count + error_line_count ))
+  echo "$name,$url,$num_files,$errors,$line_count,$error_line_count" >> "$csv"
 }
 
-mkdir -p tmp
+mkdir -p "$tmp"
+rm -f "$failed_inputs"
+global_line_count=0
+global_error_line_count=0
 for url in "${urls[@]}"; do
-  (
-    handle_project || echo "Failed on $url"
-  ) 2>&1 | tee tmp/lang-stat.log
+  handle_project 2>&1 || echo "Failed on $url" 2>&1 \
+    | tee "$tmp"/lang-stat.log
 done
 
-echo "Result file: $csv"
+line_coverage=$(awk -f - <<EOF
+BEGIN {
+  printf "%.3f%%\n",
+  100 * (1 - $global_error_line_count / $global_line_count)
+}
+EOF
+)
+
+echo "$global_error_line_count / $global_line_count"
+
+cat <<EOF
+Failed inputs: $failed_inputs
+Result file: $csv
+Line count: $global_line_count
+Line coverage: $line_coverage
+EOF
