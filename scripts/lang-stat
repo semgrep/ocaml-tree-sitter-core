@@ -131,8 +131,6 @@ BEGIN {
 EOF
 )
 
-echo "$global_error_line_count / $global_line_count"
-
 cat <<EOF
 Failed inputs: $failed_inputs
 Result file: $csv
