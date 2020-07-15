@@ -5,6 +5,7 @@
 #
 
 SUPPORTED_LANGUAGES = \
+  go \
   java \
   ruby \
   typescript
