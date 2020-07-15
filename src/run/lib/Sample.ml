@@ -5,7 +5,14 @@
    generator.
 *)
 
-(* Disable warnings against unused variables *)
+(*
+   Disable warning 42:
+     "this use of Foo relies on type-directed disambiguation,
+      it will not compile with OCaml 4.00 or earlier."
+*)
+[@@@warning "-42"]
+
+(* Disable warnings against unused variables. *)
 [@@@warning "-26-27"]
 
 module CST = struct
