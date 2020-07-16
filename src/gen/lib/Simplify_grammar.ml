@@ -139,6 +139,7 @@ let simplify_grammar grammar =
       (translate_name name, simplify rule_body)
     ) grammar.rules
   in
+  let factored_rules = Factorize_grammar.deduplicate_nodes simplified_rules in
   {
     name = grammar.name;
     word = Option.map translate_name grammar.word;
@@ -147,7 +148,7 @@ let simplify_grammar grammar =
     conflicts = List.map (List.map translate_name) grammar.conflicts;
     externals = List.map simplify grammar.externals;
     supertypes = [];
-    rules = simplified_rules;
+    rules = factored_rules;
   }
 
 let run ic oc =
