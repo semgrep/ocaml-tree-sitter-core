@@ -95,6 +95,10 @@ let name_rule_body node =
    Determine the size of a grammar node for the purpose of determinining
    if it's worth deduplicating.
 
+   A parent's size MUST be strictly higher than the size of its child,
+   so as to guarantee bottom-up scanning. (scroll down for algorithm
+   description)
+
    'resolve' maps a node to itself or to its replacement if there's one.
 *)
 let compute_size resolve node =
@@ -107,20 +111,20 @@ let compute_size resolve node =
     | REPEAT x -> 1 + size (resolve x)
     | REPEAT1 x -> 1 + size (resolve x)
     | CHOICE xs ->
-        List.fold_left (fun sum x -> sum + 1 + size (resolve x)) 0 xs
+        1 + List.fold_left (fun sum x -> sum + 1 + size (resolve x)) 0 xs
     | SEQ xs ->
         1 + List.fold_left (fun sum x -> sum + size (resolve x)) 0 xs
 
-    | PREC (_prec, x) -> size x
-    | PREC_DYNAMIC (_prec, x) -> size x
-    | PREC_LEFT (_prec, x) -> size x
-    | PREC_RIGHT (_prec, x) -> size x
-    | ALIAS alias -> size alias.content
-    | FIELD (_field_name, x) -> size x
-    | IMMEDIATE_TOKEN x -> size x
-    | TOKEN x -> size x
+    | PREC (_prec, x) -> 1 + size (resolve x)
+    | PREC_DYNAMIC (_prec, x) -> 1 + size (resolve x)
+    | PREC_LEFT (_prec, x) -> 1 + size (resolve x)
+    | PREC_RIGHT (_prec, x) -> 1 + size (resolve x)
+    | ALIAS alias -> 1 + size (resolve alias.content)
+    | FIELD (_field_name, x) -> 1 + size (resolve x)
+    | IMMEDIATE_TOKEN x -> 1 + size (resolve x)
+    | TOKEN _ -> 0 (* may not contain symbols (rule names) *)
   in
-  size node
+  size (resolve node)
 
 let compute_original_size node =
   compute_size (fun x -> x) node
@@ -159,7 +163,9 @@ let sort_candidates ~min_size orig_rules =
     | ALIAS alias -> add alias.content
     | FIELD (_field_name, x) -> add x
     | IMMEDIATE_TOKEN x -> add x
-    | TOKEN x -> add x
+    | TOKEN _x ->
+        (* children may not contain symbols *)
+        ()
   in
   List.iter (fun (_name, body) -> add body) orig_rules;
 
@@ -199,9 +205,38 @@ let replace_nodes node_names root_node =
         | ALIAS alias -> ALIAS { alias with content = replace alias.content }
         | FIELD (field_name, x) -> FIELD (field_name, replace x)
         | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (replace x)
-        | TOKEN x -> TOKEN (replace x)
+        | TOKEN _ -> node
   in
   replace root_node
+
+(*
+   Sort rules according to the order of the original rules, followed by
+   the newly-introduced rules.
+*)
+let sort_rules orig_rules rules =
+  let tbl = Hashtbl.create 100 in
+  List.iteri (fun i (name, _) ->
+    Hashtbl.add tbl name i
+  ) orig_rules;
+  let with_keys =
+    List.map (fun (name, rule) ->
+      let key =
+        let i =
+          try Hashtbl.find tbl name
+          with Not_found -> max_int
+        in
+        (i, name)
+      in
+      (key, (name, rule))
+    ) rules
+  in
+  let cmp ((i, a), _) ((j, b), _) =
+    let c = compare i j in
+    if c <> 0 then c
+    else String.compare a b
+  in
+  List.sort cmp with_keys
+  |> List.map snd
 
 (*
    1. Group identical nodes in a table, count members in each group.
@@ -215,7 +250,7 @@ let replace_nodes node_names root_node =
    4. Perform top-down substitutions of all the bodies of the named rules,
       including old and new rules.
 *)
-let deduplicate_nodes ?(min_size = 3) orig_rules =
+let deduplicate_nodes ?(min_size = 4) orig_rules =
   let make_name_unique = make_name_translator orig_rules in
   let cur_rules = Hashtbl.create 100 in
   List.iter (fun (name, node) ->
@@ -251,3 +286,4 @@ let deduplicate_nodes ?(min_size = 3) orig_rules =
   List.map (fun (name, orig_node) ->
     (name, replace_nodes node_names orig_node)
   ) all_rules
+  |> sort_rules orig_rules
