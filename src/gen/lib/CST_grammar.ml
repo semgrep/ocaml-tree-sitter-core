@@ -94,13 +94,13 @@ type rule_body =
      (* matches any sequence without consuming it. *)
 
   (* composite (nodes) *)
-  | Repeat of rule_body
-  | Repeat1 of rule_body
+  | Repeat of rule_body (* zero or more *)
+  | Repeat1 of rule_body (* one or more *)
+  | Optional of rule_body (* zero or one *)
   | Choice of (ident * rule_body) list
      (* (name, type) where the name is the name of the ocaml constructor
         suitable for use a classic or polymorphic variant, e.g. "Exp_int". *)
 
-  | Optional of rule_body
   | Seq of rule_body list
 [@@deriving show]
 

@@ -15,25 +15,6 @@ let string_filter s f =
   done;
   Buffer.contents buf
 
-let string_filter_map s f =
-  let buf = Buffer.create 100 in
-  for i = 0 to String.length s - 1 do
-    match f s.[i] with
-    | "" -> ()
-    | chunk -> Buffer.add_string buf chunk
-  done;
-  Buffer.contents buf
-
-let is_lowercase c =
-  match c with
-  | 'a'..'z' -> true
-  | _ -> false
-
-let is_uppercase c =
-  match c with
-  | 'A'..'Z' -> true
-  | _ -> false
-
 (* alphabetic letter? *)
 let is_alpha c =
   match c with
@@ -166,7 +147,7 @@ let hash_hex body =
   let name = Buffer.contents buf in
   hash_string_hex name
 
-let assign opt_rule_name cases =
+let assign_case_names opt_rule_name cases =
   let prefix = make_case_prefix opt_rule_name in
   let initial_naming =
     List.mapi (fun pos rule_body ->

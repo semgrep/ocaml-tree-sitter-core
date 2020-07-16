@@ -225,7 +225,7 @@ let ppx =
       can be used as type annotations by the generated parsers.
 *)
 let format_types grammar =
-  let grammar = Inline.inline_rules grammar in
+  let grammar = Nice_typedefs.rearrange_rules grammar in
   let semi_formatted_defs =
     List.map (fun rule_group ->
       List.map format_rule rule_group

@@ -96,7 +96,7 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
 
   and translate_choice opt_rule_name cases =
     let translated_cases = List.map translate cases in
-    Case_name.assign opt_rule_name translated_cases
+    Type_name.assign_case_names opt_rule_name translated_cases
   in
   translate ~rule_name x
 
