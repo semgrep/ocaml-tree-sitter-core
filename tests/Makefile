@@ -9,7 +9,8 @@ TESTS = \
   recurse \
   arithmetic \
   extras \
-  backtrack
+  backtrack \
+  factorize
 
 # Build and run all the tests.
 .PHONY: test
