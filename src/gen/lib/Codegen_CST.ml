@@ -122,7 +122,13 @@ module Fmt = struct
       if inlined then " (* inlined *)"
       else ""
     in
-    def (sprintf "%s %s%s =" type_ name comment) rhs
+    let code = def (sprintf "%s %s%s =" type_ name comment) rhs in
+    if is_first then code
+    else
+      top_sequence [
+        atom "";
+        code
+      ]
 
   (* Insert the correct 'type' or 'and' from a list of OCaml
      type definitions.
