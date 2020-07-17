@@ -9,30 +9,23 @@ error() {
   exit 1
 }
 
-if which brew > /dev/null 2>&1; then
-  # MacOS with Homebrew
-  echo "Installing tree-sitter library with brew."
-  brew install tree-sitter
-else
-  # Other platforms
-  echo "Installing tree-sitter library directly from git."
-  if [[ ! -e tree-sitter ]]; then
-    git clone --depth 1 https://github.com/tree-sitter/tree-sitter.git
-  fi
-  (
-    cd tree-sitter
-    git clean -dfX
-    make
-    sudo make install
-
-    # Ensure libtree-sitter is found at linking time.
-    # MacOS doesn't have ldconfig. Maybe it works without it?
-    if ldconfig --version > /dev/null; then
-      libdir=$(
-        pkg-config --libs-only-L tree-sitter \
-        | sed -e 's/^-L//'
-      )
-      sudo ldconfig "$libdir"
-    fi
-  )
+echo "Installing tree-sitter library directly from git."
+if [[ ! -e tree-sitter ]]; then
+  git clone --depth 1 https://github.com/tree-sitter/tree-sitter.git
 fi
+(
+  cd tree-sitter
+  git clean -dfX
+  make
+  sudo make install
+
+  # Ensure libtree-sitter is found at linking time.
+  # MacOS doesn't have ldconfig. Maybe it works without it?
+  if ldconfig --version > /dev/null; then
+    libdir=$(
+      pkg-config --libs-only-L tree-sitter \
+      | sed -e 's/^-L//'
+    )
+    sudo ldconfig "$libdir"
+  fi
+)
