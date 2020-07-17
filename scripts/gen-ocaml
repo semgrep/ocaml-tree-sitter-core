@@ -197,13 +197,16 @@ CAMLprim value octs_create_parser_${lang_underscores}(value unit) {
 };
 EOF
 
-
 cat > "$dst_dir"/lib/dune <<EOF
 (library
   (public_name tree-sitter-lang.${lang_dashes})
   (name tree_sitter_${lang_underscores})
   (preprocess (pps ppx_sexp_conv))
   (libraries atdgen-runtime tree-sitter.run)
+
+  ; A copy of the C headers for the tree-sitter library is found locally.
+  ; This is because it's important to use the right version of 'parser.h'.
+  ;
   (foreign_stubs
     (language c)
     (names ${c_files})
@@ -211,7 +214,11 @@ cat > "$dst_dir"/lib/dune <<EOF
            -fPIC
            -I .)
   )
-  (c_library_flags (-L%{env:TREESITTER_LIBRARY_DIR=/usr/local/lib}
+
+  ; TREESITTER_LIBDIR can be set to its correct value using pkg-config:
+  ;   pkg-config --libs-only-L tree-sitter | sed -e 's/^-L//'
+  ;
+  (c_library_flags (-L%{env:TREESITTER_LIBDIR=/usr/local/lib}
                     -lstdc++
                     -ltree-sitter)
   )
