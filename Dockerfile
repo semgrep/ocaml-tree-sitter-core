@@ -22,6 +22,7 @@ RUN sudo chown opam:opam .
 # Slow steps that mostly download and build external stuff.
 RUN ./scripts/setup-node
 RUN ./scripts/setup-opam
+RUN ./scripts/install-tree-sitter-lib
 COPY --chown=opam:opam configure /home/opam/ocaml-tree-sitter/configure
 RUN opam exec -- ./configure
 COPY --chown=opam:opam tree-sitter.opam /home/opam/ocaml-tree-sitter/tree-sitter.opam

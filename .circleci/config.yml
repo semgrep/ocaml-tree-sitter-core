@@ -19,6 +19,9 @@ jobs:
           name: set up opam
           command: ./scripts/setup-opam
       - run:
+          name: install tree-sitter lib
+          command: ./scripts/install-tree-sitter-lib
+      - run:
           name: configure
           command: ./configure
       - run:
