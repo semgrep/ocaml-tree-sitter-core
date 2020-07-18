@@ -16,6 +16,7 @@ error() {
   exit 1
 }
 
+pkg-config --version > /dev/null || error "'pkg-config' command not found."
 pkg-config tree-sitter || error "The tree-sitter library can't be found.
 Consider installing it with './scripts/install-tree-sitter-lib'."
 
