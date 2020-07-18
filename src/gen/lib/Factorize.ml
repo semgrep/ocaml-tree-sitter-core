@@ -122,8 +122,7 @@ let replace_nodes node_names root_node =
    4. Perform top-down substitutions of all the bodies of the named rules,
       including old and new rules.
 *)
-let factorize_rules grammar =
-  let min_size = 4 in
+let factorize_rules ?(min_size = 3) grammar =
   let orig_rules =
     grammar.rules
     |> List.flatten
