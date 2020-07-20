@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 #
 # Install Node.js so that we can install the tree-sitter command-line
-# interface. Intended for Debian/Ubuntu only.
+# interface.
 #
 
 cat > ~/.npmrc <<EOF
@@ -14,7 +14,15 @@ export NODE_PATH="$HOME/.node/lib/node_modules:$NODE_PATH"
 export MANPATH="$HOME/.node/share/man:$MANPATH"
 EOF
 
-sudo apt-get update
-sudo apt-get install -y nodejs npm
+if which apt-get > /dev/null 2>&1; then
+  sudo apt-get update
+  sudo apt-get install -y nodejs npm
+elif which apk > /dev/null 2>&1; then
+  sudo apk update
+  sudo apk add nodejs npm
+else
+  echo "$0: Unknown or unsupported package manager." >&2
+  exit 1
+fi
 
 npm install npm -g
