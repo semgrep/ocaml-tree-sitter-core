@@ -19,7 +19,7 @@ if which apt-get > /dev/null 2>&1; then
   sudo apt-get install -y nodejs npm
 elif which apk > /dev/null 2>&1; then
   sudo apk update
-  sudo apk add nodejs npm
+  sudo apk add nodejs npm python3
 else
   echo "$0: Unknown or unsupported package manager." >&2
   exit 1
