@@ -3,6 +3,7 @@
 # Install the libtree-sitter runtime library.
 # Must run from the ocaml-tree-sitter project root.
 #
+set -eu -o pipefail
 
 error() {
   echo "Error: $@" >&2
@@ -21,7 +22,7 @@ fi
 
   # Ensure libtree-sitter is found at linking time.
   # MacOS doesn't have ldconfig. Maybe it works without it?
-  if ldconfig --version > /dev/null; then
+  if which ldconfig > /dev/null; then
     libdir=$(
       pkg-config --libs-only-L tree-sitter \
       | sed -e 's/^-L//'
