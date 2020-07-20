@@ -12,6 +12,9 @@ jobs:
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
+      - run: whoami
+      - run: echo $HOME
+      - run: pwd
       - run:
           name: set up node
           command: ./scripts/setup-node
