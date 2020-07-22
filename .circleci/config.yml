@@ -8,7 +8,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: ocaml/opam2:debian-stable
+      - image: mjambon/r2c-ocaml:ubuntu
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
@@ -16,8 +16,8 @@ jobs:
           name: set up node
           command: ./scripts/setup-node
       - run:
-          name: set up opam
-          command: ./scripts/setup-opam
+          name: install tree-sitter lib
+          command: ./scripts/install-tree-sitter-lib
       - run:
           name: configure
           command: ./configure

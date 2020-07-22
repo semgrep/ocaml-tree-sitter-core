@@ -7,13 +7,17 @@ dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
 license: "BSD-3-Clause"
 
 build: [
-  ["dune" "build" "-p" name "-j" jobs]
+  ["./configure"]
+  [make]
 ]
+
+install: [make "install"]
 
 depends: [
   "alcotest"
   "atdgen"
   "cmdliner"
+  "conf-pkg-config"
   "dune" {>= "2.1"}
   "ocaml"
   "ppx_deriving"

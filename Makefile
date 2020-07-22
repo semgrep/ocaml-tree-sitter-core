@@ -10,21 +10,18 @@ include config.mk
 
 PROJECT_ROOT = $(shell pwd)
 
-TREESITTER_ROOT = \
-  $(PROJECT_ROOT)/node_modules/tree-sitter/vendor/tree-sitter/lib
-
-TREESITTER_INCLUDE_DIR = $(TREESITTER_ROOT)/include
-export TREESITTER_INCLUDE_DIR
-
 .PHONY: build
 build:
 	dune build
 	test -e bin || ln -s _build/install/default/bin .
 
-# Full development setup
+# Full development setup.
+#
+# Note that the tree-sitter runtime library must be installed in advance,
+# prior to calling ./configure.
+#
 .PHONY: setup
 setup:
-	./scripts/install-tree-sitter-lib
 	./scripts/install-tree-sitter-cli
 	opam install --deps-only -y .
 
