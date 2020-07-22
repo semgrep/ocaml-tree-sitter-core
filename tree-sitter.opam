@@ -11,6 +11,8 @@ build: [
   [make]
 ]
 
+install: [make "install"]
+
 depends: [
   "alcotest"
   "atdgen"
