@@ -7,6 +7,7 @@
 SUPPORTED_LANGUAGES = \
   go \
   java \
+  javascript \
   ruby \
   typescript
 
