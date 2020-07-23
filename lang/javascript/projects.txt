@@ -1,0 +1,12 @@
+# Popular javascript projects
+
+https://github.com/freeCodeCamp/freeCodeCamp.git
+https://github.com/vuejs/vue.git
+https://github.com/facebook/react.git
+https://github.com/twbs/bootstrap.git
+https://github.com/airbnb/javascript.git
+https://github.com/d3/d3.git
+https://github.com/facebook/react-native.git
+https://github.com/facebook/create-react-app.git
+https://github.com/axios/axios.git
+https://github.com/trekhleb/javascript-algorithms.git
