@@ -12,7 +12,8 @@ error() {
 
 echo "Installing tree-sitter library directly from git."
 if [[ ! -e tree-sitter ]]; then
-  git clone --depth 1 https://github.com/tree-sitter/tree-sitter.git
+  git clone --depth 1 --branch 0.16.9 \
+    https://github.com/tree-sitter/tree-sitter.git
 fi
 (
   cd tree-sitter
