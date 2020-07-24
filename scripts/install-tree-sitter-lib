@@ -27,6 +27,7 @@ Options:
 EOF
 }
 
+version="$default_version"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --help)
