@@ -4,8 +4,8 @@
 
    1. Undo the inlining of grammar rules due to the 'inline' field
       of the grammar.
-   3. Factor out and assign a name to large nodes that occur multiple times.
-   4. Inline small definitions that are used only once.
+   2. Factor out and assign a name to large nodes that occur multiple times.
+   3. Inline small definitions that are used only once.
 *)
 
 let rearrange_rules grammar =
