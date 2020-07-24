@@ -41,7 +41,8 @@ let translate_constant opt_rule_name cst =
 let translate_token opt_rule_name body =
   match name_of_body opt_rule_name body with
   | Some name -> Token { name; is_inlined = false; description = Token }
-  | None -> Blank
+  | None -> Blank (* tree-sitter parses but doesn't expose the token
+                     in its output if it doesn't have a name. *)
 
 (*
    Unlike string constants, patterns without a name are omitted from
@@ -95,7 +96,7 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
 
   and translate_choice opt_rule_name cases =
     let translated_cases = List.map translate cases in
-    Case_name.assign opt_rule_name translated_cases
+    Type_name.assign_case_names opt_rule_name translated_cases
   in
   translate ~rule_name x
 

@@ -151,32 +151,35 @@ let gen_rule_mapper_binding ~cst_module_name (rule : rule) =
             (trans name) (mkpat env)
             cst_module_name (trans name));
     Block (gen_mapper_body_multi env);
-    Line "";
   ]
 
 let gen ~cst_module_name grammar =
-  List.map (fun rule_group ->
+  List.filter_map (fun rule_group ->
     let is_rec =
       match rule_group with
       | [x] -> x.is_rec
       | _ -> true
     in
-    let rule_mappers =
-      let bindings =
-        List.filter_map (fun rule ->
-          if rule.is_inlined then
-            None
-          else
-            Some (gen_rule_mapper_binding ~cst_module_name rule)
-        ) rule_group
-      in
-      Codegen_util.format_bindings ~is_rec ~is_local:false bindings
+    let bindings =
+      List.filter_map (fun rule ->
+        if rule.is_inlined then
+          None
+        else
+          Some (gen_rule_mapper_binding ~cst_module_name rule)
+      ) rule_group
     in
-    rule_mappers
+    match bindings with
+    | [] -> None
+    | bindings ->
+        let rule_mappers =
+          Codegen_util.format_bindings ~is_rec ~is_local:false bindings
+        in
+        Some rule_mappers
   ) grammar.rules
+  |> Codegen_util.interleave [Line ""]
   |> List.flatten
 
 let generate ~cst_module_name grammar =
-  let inline_grammar = Inline.inline_rules grammar in
+  let inline_grammar = Nice_typedefs.rearrange_rules grammar in
   let tree = gen ~cst_module_name inline_grammar in
   make_header grammar ^ Indent.to_string tree

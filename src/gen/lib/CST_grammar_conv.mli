@@ -19,3 +19,8 @@
 *)
 
 val of_tree_sitter : Tree_sitter_t.grammar -> CST_grammar.t
+
+(* Sort and group the rules based on interdependencies. This is already
+   done as part of 'of_tree_sitter'. *)
+val tsort_rules :
+  (string * CST_grammar.rule_body) list -> CST_grammar.rule list list

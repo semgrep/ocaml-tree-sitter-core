@@ -3,12 +3,10 @@ module.exports = grammar({
   rules: {
     program: $ => seq(
       $.variable,
-      seq(
-        $.number,
-        $.number
-      )
+      $.number,
+      $.number
     ),
     variable: $ => /[a-z]+/,
-    number: $ => /\d+/
+    number: $ => /[0-9]+/
   }
 });

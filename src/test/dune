@@ -1,0 +1,7 @@
+(executable
+  (name test)
+  (libraries
+    test_tree_sitter_gen
+    test_tree_sitter_run
+  )
+)

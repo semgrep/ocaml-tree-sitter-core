@@ -122,7 +122,13 @@ module Fmt = struct
       if inlined then " (* inlined *)"
       else ""
     in
-    def (sprintf "%s %s%s =" type_ name comment) rhs
+    let code = def (sprintf "%s %s%s =" type_ name comment) rhs in
+    if is_first then code
+    else
+      top_sequence [
+        atom "";
+        code
+      ]
 
   (* Insert the correct 'type' or 'and' from a list of OCaml
      type definitions.
@@ -225,7 +231,7 @@ let ppx =
       can be used as type annotations by the generated parsers.
 *)
 let format_types grammar =
-  let grammar = Inline.inline_rules grammar in
+  let grammar = Nice_typedefs.rearrange_rules grammar in
   let semi_formatted_defs =
     List.map (fun rule_group ->
       List.map format_rule rule_group

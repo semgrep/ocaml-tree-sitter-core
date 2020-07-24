@@ -44,7 +44,10 @@ let load_file src_file =
   }
 
 let load_string ?(src_file = "<source>") src_contents =
-  let lines = String.split_on_char '\n' src_contents in
+  let lines =
+    String.split_on_char '\n' src_contents
+    |> List.map (fun line -> line ^ "\n")
+  in
   {
     filename = src_file;
     lines = Array.of_list lines;

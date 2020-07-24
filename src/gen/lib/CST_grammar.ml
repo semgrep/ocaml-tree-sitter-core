@@ -3,7 +3,7 @@
 *)
 
 type ident = string
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 type token_description =
   | Constant of string
@@ -49,7 +49,7 @@ type token_description =
   | External
       (* a symbol declared in the 'externals' list and produced by an external
          C parser. *)
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 type token = {
   name: string;
@@ -84,7 +84,7 @@ type token = {
   description: token_description;
     (* informational *)
 }
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 type rule_body =
   (* atomic (leaves) *)
@@ -94,15 +94,15 @@ type rule_body =
      (* matches any sequence without consuming it. *)
 
   (* composite (nodes) *)
-  | Repeat of rule_body
-  | Repeat1 of rule_body
+  | Repeat of rule_body (* zero or more *)
+  | Repeat1 of rule_body (* one or more *)
+  | Optional of rule_body (* zero or one *)
   | Choice of (ident * rule_body) list
      (* (name, type) where the name is the name of the ocaml constructor
         suitable for use a classic or polymorphic variant, e.g. "Exp_int". *)
 
-  | Optional of rule_body
   | Seq of rule_body list
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 type rule = {
   name: ident;
@@ -126,7 +126,7 @@ type rule = {
 
   body: rule_body;
 }
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 type grammar = {
   name: string;
@@ -139,11 +139,11 @@ type grammar = {
     (* node names that don't belong to any rule and can occur anywhere,
        such as comments. *)
 }
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 (* alias *)
 type t = grammar
-[@@deriving show]
+[@@deriving show {with_path = false}]
 
 let is_leaf = function
   | Token _

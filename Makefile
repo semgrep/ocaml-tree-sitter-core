@@ -48,8 +48,7 @@ test: build
 # Run unit tests only.
 .PHONY: unit
 unit: build
-	./_build/default/src/gen/test/test.exe
-	./_build/default/src/run/test/test.exe
+	./_build/default/src/test/test.exe
 
 .PHONY: install
 install:
