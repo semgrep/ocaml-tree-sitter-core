@@ -62,11 +62,9 @@ let simplify_rule_body translate_name =
      multiple places but for which you don’t want to create syntax tree
      nodes at runtime.
 
-   We perform this inlining here, on 'grammar.json' so we don't have to do
-   it later.
-
-   Alternatively, we could simply set grammar.inline = [] to disable
-   inlining, going against the preferences of the grammar author.
+   We don't mind those extra nodes in the parse tree, but we must perform
+   this inlining to avoid conflicts in the grammar. This is why we must
+   perform this inline here.
 *)
 let apply_inline grammar =
   let rules = Hashtbl.create 100 in
@@ -77,9 +75,6 @@ let apply_inline grammar =
     | None -> () (* could be a warning *)
     | Some body -> Hashtbl.add inline_rules name body
   ) grammar.inline;
-
-  let is_inlined name =
-    Hashtbl.mem inline_rules name in
 
   let get_inlined_body name =
     Hashtbl.find_opt inline_rules name in
@@ -119,11 +114,8 @@ let apply_inline grammar =
     | TOKEN x -> TOKEN (inline parents x)
   in
   let inline_rules rules =
-    List.filter_map (fun (name, body) ->
-      if is_inlined name then
-        None
-      else
-        Some (name, inline [name] body)
+    List.map (fun (name, body) ->
+      (name, inline [name] body)
     ) rules
   in
   { grammar with

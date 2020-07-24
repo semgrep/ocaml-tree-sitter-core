@@ -5,7 +5,12 @@
 
 val name_rule_body : CST_grammar.rule_body -> string
 
+(*
+   Assign constructor names suitable for classic variants and polymorphic
+   variants, from rule bodies. The containing rule name is only for
+   better error messages.
+*)
 val assign_case_names :
-  string option ->
+  ?rule_name: string ->
   CST_grammar.rule_body list ->
   (string * CST_grammar.rule_body) list

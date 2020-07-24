@@ -57,7 +57,7 @@ let recompute_size replaced_nodes node =
   in
   compute_size resolve node
 
-let sort_candidates ~min_size orig_rules =
+let sort_candidates ~min_uses ~min_size orig_rules =
   let node_counts = Hashtbl.create 100 in
   let rec add node =
     let count =
@@ -80,7 +80,7 @@ let sort_candidates ~min_size orig_rules =
 
   let candidates =
     Hashtbl.fold (fun body count acc ->
-      if count >= 2 then
+      if count >= min_uses then
         let size = compute_original_size body in
         if size >= min_size then
           (size, body) :: acc
@@ -122,7 +122,11 @@ let replace_nodes node_names root_node =
    4. Perform top-down substitutions of all the bodies of the named rules,
       including old and new rules.
 *)
-let factorize_rules ?(min_size = 3) grammar =
+let factorize_rules
+    ?(create_names = true)
+    ?(min_uses = 2)
+    ?(min_size = 3)
+    grammar =
   let orig_rules =
     grammar.rules
     |> List.flatten
@@ -137,25 +141,27 @@ let factorize_rules ?(min_size = 3) grammar =
            name);
     Hashtbl.add cur_rules name node;
   ) orig_rules;
-  let sorted_candidates = sort_candidates ~min_size orig_rules in
+  let sorted_candidates = sort_candidates ~min_uses ~min_size orig_rules in
   let node_names = Hashtbl.create 100 in
   let new_rules = Hashtbl.create 100 in
   List.iter (fun (name, node) ->
     Hashtbl.add node_names node name;
     Hashtbl.add new_rules name node
   ) orig_rules;
-  List.iter (fun (_orig_size, node) ->
-    let size = recompute_size node_names node in
-    if size >= min_size
-    && not (Hashtbl.mem node_names node)
-    then
-      let name = "anon_" ^ Type_name.name_rule_body node |> make_name_unique in
-      assert (not (Hashtbl.mem new_rules name));
-      Hashtbl.add node_names node name;
-      Hashtbl.add new_rules name node
-    else
-      ()
-  ) sorted_candidates;
+  if create_names then
+    List.iter (fun (_orig_size, node) ->
+      let size = recompute_size node_names node in
+      if size >= min_size
+      && not (Hashtbl.mem node_names node)
+      then
+        let name =
+          "anon_" ^ Type_name.name_rule_body node |> make_name_unique in
+        assert (not (Hashtbl.mem new_rules name));
+        Hashtbl.add node_names node name;
+        Hashtbl.add new_rules name node
+      else
+        ()
+    ) sorted_candidates;
   let all_rules =
     Hashtbl.fold (fun name node acc -> (name, node) :: acc) new_rules []
   in
