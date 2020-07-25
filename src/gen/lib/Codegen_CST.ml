@@ -213,7 +213,9 @@ and format_seq l =
   List.map format_body l
 
 let format_rule (rule : rule) =
-  (trans rule.name, rule.is_inlined, format_body ~def_name:rule.name rule.body)
+  (trans rule.name,
+   rule.is_inlined_type,
+   format_body ~def_name:rule.name rule.body)
 
 let ppx =
   Fmt.top_sequence [

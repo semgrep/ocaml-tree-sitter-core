@@ -6,38 +6,12 @@
 open Printf
 open CST_grammar
 
-let string_filter s f =
-  let buf = Buffer.create 100 in
-  for i = 0 to String.length s - 1 do
-    let c = s.[i] in
-    if f c then
-      Buffer.add_char buf c
-  done;
-  Buffer.contents buf
-
 (* alphabetic letter? *)
 let is_alpha c =
   match c with
   | 'A'..'Z'
   | 'a'..'z' -> true
   | _ -> false
-
-(* alphabetic letter or other character allowed in an ocaml variable? *)
-let is_alphanum c =
-  match c with
-  | 'A'..'Z'
-  | 'a'..'z'
-  | '0'..'9'
-  | '_' -> true
-  | _ -> false
-
-let replace_first_char s ~default f =
-  match s with
-  | "" -> default
-  | _ -> f s.[0]
-
-let filter_alphanum s =
-  string_filter s is_alphanum
 
 let capital_prefix = "X_"
 
@@ -49,31 +23,6 @@ let force_capitalize s =
     capital_prefix ^ s
   else
     String.capitalize_ascii s
-
-(*
-   "Ab_c" -> Some "Ab_c"
-   "ab_c" -> Some "Ab_c"
-   "_" -> Some "X__"
-   "53" -> Some "X_53"
-   "" -> None
-   "^%*$" -> None
-*)
-let normalize_case_prefix s =
-  let s = filter_alphanum s in
-  replace_first_char s ~default:None (fun c ->
-    if is_alpha c then
-      Some (String.capitalize_ascii s)
-    else
-      Some ("X_" ^ s)
-  )
-
-let make_case_prefix opt_rule_name =
-  let orig_name =
-    match opt_rule_name with
-    | None -> ""
-    | Some s -> Abbrev.words s
-  in
-  normalize_case_prefix orig_name
 
 let name_of_token (token : token) =
   Punct.to_alphanum token.name
@@ -147,16 +96,11 @@ let hash_hex body =
   let name = Buffer.contents buf in
   hash_string_hex name
 
-let assign_case_names opt_rule_name cases =
-  let prefix = make_case_prefix opt_rule_name in
+let assign_case_names ?rule_name:opt_rule_name cases =
   let initial_naming =
     List.mapi (fun pos rule_body ->
       let case_name = name_rule_body rule_body in
-      let name =
-        match prefix with
-        | None -> force_capitalize case_name
-        | Some prefix -> prefix ^ "_" ^ case_name
-      in
+      let name = force_capitalize case_name in
       (name, (pos, rule_body))
     ) cases
   in

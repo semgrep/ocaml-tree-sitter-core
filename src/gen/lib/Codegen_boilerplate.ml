@@ -162,7 +162,7 @@ let gen ~cst_module_name grammar =
     in
     let bindings =
       List.filter_map (fun rule ->
-        if rule.is_inlined then
+        if rule.is_inlined_type then
           None
         else
           Some (gen_rule_mapper_binding ~cst_module_name rule)

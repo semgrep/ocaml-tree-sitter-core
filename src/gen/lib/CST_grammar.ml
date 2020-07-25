@@ -108,8 +108,15 @@ type rule = {
   name: ident;
   is_rec: bool;
 
-  is_inlined: bool;
-    (* An inlined rule is a type definition that was inlined everywhere
+  is_inlined_rule: bool;
+    (* An inlined rule is a rule name that is ignored in the tree-sitter
+       grammar because it's not the grammar's entry point and no other
+       rule references it. This refers to the inlining performed in
+       Simplify_grammar.ml according to the 'inline' section of grammar.
+    *)
+
+  is_inlined_type: bool;
+    (* An inlined type is a type definition that was inlined everywhere
        it occurs in other type expressions.
 
        For example, consider the rule 'foo':
@@ -122,7 +129,7 @@ type rule = {
 
        The rule 'foo' is now marked as inlined, and it can be ignored for
        some purposes.
-*)
+    *)
 
   body: rule_body;
 }
@@ -154,3 +161,12 @@ let is_leaf = function
   | Choice _
   | Optional _
   | Seq _ -> false
+
+(* Make an efficient rule-lookup function. *)
+let make_rule_lookup grammar =
+  let tbl = Hashtbl.create 100 in
+  List.iter (fun rule_group ->
+    List.iter (fun (rule : rule) -> Hashtbl.add tbl rule.name rule) rule_group
+  ) grammar.rules;
+  fun name ->
+    Hashtbl.find_opt tbl name

@@ -201,7 +201,7 @@ let inline_rules grammar =
           List.filter_map
             (fun (rule : rule) ->
                if get_definitive_times_used rule.name = 0 then (
-                 unused := [{rule with is_inlined = true}] :: !unused;
+                 unused := [{rule with is_inlined_type = true}] :: !unused;
                  None
                )
                else
