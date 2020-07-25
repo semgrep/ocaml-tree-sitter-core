@@ -165,9 +165,20 @@ let factorize_rules
   let all_rules =
     Hashtbl.fold (fun name node acc -> (name, node) :: acc) new_rules []
   in
+  let get_orig_rule = CST_grammar.make_rule_lookup grammar in
   let rules =
     List.map (fun (name, orig_node) ->
-      (name, replace_nodes node_names orig_node)
+      let is_inlined_rule, is_inlined_type =
+        match get_orig_rule name with
+        | None -> false, false
+        | Some x -> x.is_inlined_rule, x.is_inlined_type
+      in
+      let body = replace_nodes node_names orig_node in
+      { name;
+        body;
+        is_rec = true; (* will be set correctly by tsort below *)
+        is_inlined_rule;
+        is_inlined_type }
     ) all_rules
     |> CST_grammar_conv.tsort_rules
   in

@@ -1,10 +1,5 @@
 (*
    Topological sorting of the type definitions.
-
-   We use an off-the-shelf implementation that gives up if any cycle is found.
-   Ideally, we should identify cycles and produce a topologically-sorted
-   list of clusters. Atdgen does this internally but it's not done well
-   and it could be worth revisiting.
 *)
 
 open Printf
@@ -23,11 +18,11 @@ let rec collect_names acc x =
   | Token _
   | Blank -> acc
 
-let extract_rule_deps (name, body) =
-  let deps = collect_names [] body in
+let extract_rule_deps (rule : rule) =
+  let deps = collect_names [] rule.body in
   if debug then
-    printf "%s -> %s\n%!" name (String.concat " " deps);
-  (name, deps)
+    printf "%s -> %s\n%!" rule.name (String.concat " " deps);
+  (rule.name, deps)
 
 (* Generic function on top of Tsort.sort_strongly_connected_components.
    Fails with exception if there's no entry for a dependency. *)

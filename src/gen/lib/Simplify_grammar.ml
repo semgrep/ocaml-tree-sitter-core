@@ -126,6 +126,8 @@ let simplify_grammar grammar =
   let grammar = apply_inline grammar in
   let translate_name = make_name_translator () in
   let simplify = simplify_rule_body translate_name in
+
+  (* Keep inlined rules, which we'll use for deinlining. See Deinlining.ml. *)
   let simplified_rules =
     List.map (fun (name, rule_body) ->
       (translate_name name, simplify rule_body)
@@ -139,7 +141,7 @@ let simplify_grammar grammar =
     conflicts = List.map (List.map translate_name) grammar.conflicts;
     externals = List.map simplify grammar.externals;
     supertypes = [];
-    rules = simplified_rules;
+    rules = simplified_rules; (* includes inlined rules on purpose *)
   }
 
 let run ic oc =

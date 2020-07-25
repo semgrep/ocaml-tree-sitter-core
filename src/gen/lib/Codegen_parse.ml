@@ -403,7 +403,19 @@ let file src_file =
 |}
     (trans grammar.entrypoint)
 
+(*
+   Generate a parsing function for each rule in the tree-sitter grammar
+   ('grammar.json' file).
+*)
 let generate ~cst_module_name grammar =
+  let grammar =
+    let rules =
+      List.map (
+        List.filter (fun rule -> not rule.is_inlined_rule)
+      ) grammar.rules
+    in
+    { grammar with rules }
+  in
   let tree = gen ~cst_module_name grammar in
   let ml_contents = Indent.to_string [
     Inline (preamble grammar);

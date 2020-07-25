@@ -6,6 +6,15 @@ open Printf
 open Tree_sitter_gen
 open CST_grammar
 
+let make_rule name body : rule =
+  {
+    name;
+    body;
+    is_rec = true;
+    is_inlined_rule = false;
+    is_inlined_type = false;
+  }
+
 let make_grammar flat_rules =
   let rules = CST_grammar_conv.tsort_rules flat_rules in
   {
@@ -33,6 +42,9 @@ let flatten rule_groups =
   List.flatten rule_groups
   |> List.map (fun (rule : rule) -> (rule.name, rule.body))
 
+(* Ignore the other fields which may be set along the way. *)
+let as_pair (rule : rule) = (rule.name, rule.body)
+
 let get_anon_names rules =
   List.filter_map (fun (name, _) ->
     if Util_string.starts_with ~prefix:"anon_" name then
@@ -57,22 +69,22 @@ let check_rule name expected_rule rule_groups =
         true (rule = expected_rule)
 
 let test_simple () =
-  let rule = "program", literal "thing" in
+  let rule = make_rule "program" (literal "thing") in
   assert (
     factorize [rule] |> flatten
-    = [rule]
+    = [as_pair rule]
   )
 
 let test_recursive () =
-  let rule = "program", Symbol "program" in
+  let rule = make_rule "program" (Symbol "program") in
   assert (
     factorize [rule] |> flatten
-    = [rule]
+    = [as_pair rule]
   )
 
 let test_no_sharing () =
-  let rule1 = "rule1", literal "thing1" in
-  let rule2 = "rule2", literal "thing2" in
+  let rule1 = make_rule "rule1" (literal "thing1") in
+  let rule2 = make_rule "rule2" (literal "thing2") in
   let res = factorize [rule1; rule2] in
   check_rule "rule1" (literal "thing1") res;
   check_rule "rule2" (literal "thing2") res
@@ -82,8 +94,8 @@ let test_sharing () =
     Choice [ "A", Optional (Repeat (literal "thing"));
              "B", literal "foo" ]
   in
-  let rule1 = "rule1", Repeat1 shared in
-  let rule2 = "rule2", Optional shared in
+  let rule1 = make_rule "rule1" (Repeat1 shared) in
+  let rule2 = make_rule "rule2" (Optional shared) in
   let res = factorize [rule1; rule2] in
   let anon_names = get_anon_names res in
   let anon_name =

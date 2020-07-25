@@ -4,6 +4,50 @@
 
 open CST_grammar
 
+(*
+   Traverse the grammar starting from the entrypoint, return the set of
+   visited rule names.
+*)
+let detect_used ~entrypoint rules =
+  let rule_tbl = Hashtbl.create 100 in
+  List.iter (fun (name, x) -> Hashtbl.add rule_tbl name x) rules;
+  let get_rule name =
+    (* could be an external rule (from the 'externals' field), which
+       doesn't need to be visited. *)
+    Hashtbl.find_opt rule_tbl name
+  in
+  let visited = Hashtbl.create 100 in
+  let mark_visited name = Hashtbl.replace visited name () in
+  let was_visited name = Hashtbl.mem visited name in
+  let rec scan x =
+    match (x : Tree_sitter_t.rule_body) with
+    | SYMBOL name ->
+        if not (was_visited name) then
+          visit name
+    | STRING _
+    | PATTERN _
+    | BLANK -> ()
+    | IMMEDIATE_TOKEN x
+    | TOKEN x
+    | REPEAT x
+    | REPEAT1 x -> scan x
+    | CHOICE l
+    | SEQ l -> List.iter scan l
+    | PREC (_, x)
+    | PREC_DYNAMIC (_, x)
+    | PREC_LEFT (_, x)
+    | PREC_RIGHT (_, x)
+    | FIELD (_, x) -> scan x
+    | ALIAS _alias -> failwith "Aliases are not supported"
+  and visit name =
+    mark_visited name;
+    match get_rule name with
+    | None -> ()
+    | Some x -> scan x
+  in
+  visit entrypoint;
+  was_visited
+
 let name_of_body opt_rule_name body =
   match opt_rule_name with
   | Some rule_name -> Some rule_name
@@ -154,9 +198,10 @@ let tsort_rules rules =
       | [_] -> false
       | _ -> true
     in
-    List.map (fun (is_rec, (name, body)) ->
+    List.map (fun (is_rec, rule) ->
       let is_rec = rec_group || is_rec in
-      { name; is_rec; is_inlined = false; body }) group
+      { rule with is_rec }
+    ) group
   ) sorted
 
 let filter_extras bodies =
@@ -177,8 +222,20 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
     | (name, _) :: _ -> name
     | _ -> "program"
   in
+  let is_used = detect_used ~entrypoint x.rules in
   let grammar_rules = translate_rules x.rules in
-  let all_rules = make_external_rules x.externals @ grammar_rules in
+  let all_rules =
+    make_external_rules x.externals @ grammar_rules
+    |> List.map (fun (name, body) ->
+      {
+        name;
+        body;
+        is_rec = true; (* set correctly by tsort below *)
+        is_inlined_rule = not (is_used name);
+        is_inlined_type = false
+      }
+    )
+  in
   let sorted_rules = tsort_rules all_rules in
   let extras = filter_extras x.extras in
   {
