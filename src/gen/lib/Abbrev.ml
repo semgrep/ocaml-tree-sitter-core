@@ -136,7 +136,7 @@ let is_allcaps s =
     true
   with Exit -> false
 
-let abbreviate_word ?(trunc_len = 4) s =
+let abbreviate_word ?(max_len = 6) ?(trunc_len = 4) s =
   if is_allcaps s then
     s
   else
@@ -144,9 +144,9 @@ let abbreviate_word ?(trunc_len = 4) s =
     | Some abbr -> abbr
     | None ->
         let plural = is_plural s in
+        let max_len = if plural then max_len + 1 else max_len in
         let trunc_len = if plural then trunc_len + 1 else trunc_len in
-        (* if truncating, remove at least 2 letters (3 if it looks plural). *)
-        if String.length s >= trunc_len + 2 then
+        if String.length s > max_len then
           let abbrev = truncate_string s trunc_len in
           if plural then
             abbrev ^ "s"
@@ -160,10 +160,10 @@ let ascii_word_separator = Str.regexp "[^A-Za-z]+"
 (*
    Abbreviate the words identified within a phrase or identifier.
 *)
-let words ?trunc_len s =
+let words ?max_len ?trunc_len s =
   let components = Str.bounded_full_split ascii_word_separator s 0 in
   List.map (function
     | Str.Delim sep -> sep
-    | Str.Text word -> abbreviate_word ?trunc_len word
+    | Str.Text word -> abbreviate_word ?max_len ?trunc_len word
   ) components
   |> String.concat ""
