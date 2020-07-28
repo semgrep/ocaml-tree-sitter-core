@@ -15,52 +15,35 @@
    regular expression.
 *)
 
-(* An element of the input sequence. *)
-module type Token = sig
-  (* A token ID, known in advance and comparable. *)
-  type id
+open Printf
 
-  (* A captured token. *)
-  type t
-  val id : t -> id
-end
+let debug = false
 
-module Make (Token : Token) = struct
-  type token_id = Token.id
+module Make (Token : Matcher.Token) : Matcher.Matcher
+  with type token_kind = Token.kind
+   and type token = Token.t =
+struct
+  open Matcher.Path
+  open Matcher
+
+  type token_kind = Token.kind
   type token = Token.t
   type tokens = token list
 
-  type exp =
-    | Nothing
-    | Token of token_id
-    | Repeat of exp
-    | Alt of exp list
-    | Seq of exp list
+  let show_exp = Matcher.Exp.show Token.show_kind
+  let show_capture = Matcher.Capture.show Token.show
+  let show_match = Matcher.show_match Token.show
 
-  type result =
-    | Nothing
-    | Token of token
-    | Repeat of result list
-    | Alt of int * result
-    | Seq of result list
-
-  type punct =
-    | Enter_repeat
-    | Enter_alt of int
-    | Enter_seq
-    | Leave
-
-  type path_elt =
-    | Token of token
-    | Punct of punct
-
-  type path = path_elt list
+  (* Local type aliases for use in type annotations *)
+  type nonrec exp = token_kind exp
+  type path = token Path.t
+  type nonrec capture = token capture
 
   (* Position in the arrays of states. *)
   type state_id = int
 
   type transition = {
-    trans_tok: token_id option;
+    trans_tok: token_kind option;
     trans_dst: state_id;
     pre_punct: punct list;
     post_punct: punct list;
@@ -80,7 +63,7 @@ module Make (Token : Token) = struct
 
   type state = {
     id: state_id;
-    transitions: (token_id option * path_elt list * state_id) list;
+    transitions: (token_kind option * path * state_id) list;
     mutable selected_path : path option;
     mutable merged_paths : path list;
   }
@@ -91,6 +74,11 @@ module Make (Token : Token) = struct
     states: state array;
   }
 
+  let reset _nfa =
+    ignore (failwith "not implemented")
+
+  let compile (_exp : exp) : nfa =
+    failwith "not implemented"
 (*
   let compile (exp : exp) : nfa =
     let new_id =
@@ -147,12 +135,29 @@ module Make (Token : Token) = struct
     let all_states = src_state :: dst_state :: acc in
     List.sort .... (* sort states, turn into array, annotate start and end *)
 *)
+
+  let match_ _nfa _tokens =
+    failwith "not implemented"
+
+  (* Match and reconstruct. *)
+  let match_tree exp =
+    let nfa = compile exp in
+    fun tokens ->
+      reset nfa;
+      match match_ nfa tokens with
+      | None -> None
+      | Some path ->
+          if debug then
+            printf "path: [\n%s]\n%!" (show_path Token.show path);
+          Some (Capture.reconstruct exp path)
 end
 
 module String_token = struct
-  type id = string
+  type kind = string
   type t = string
-  let id s = s
+  let kind x = x
+  let show_kind s = s
+  let show s = s
 end
 
 module Test = Make (String_token)
