@@ -53,7 +53,14 @@ fi
   cd tree-sitter
   git clean -dfX
   make
-  sudo make install
+
+  # When building from source on homebrew sudo is not allowed
+  # but also not needed
+  if [[ -z "${HOMEBREW_SYSTEM}" ]]; then
+    sudo make install
+  else
+    make install
+  fi
 
   # Ensure libtree-sitter is found at linking time.
   # MacOS doesn't have ldconfig. Maybe it works without it?
