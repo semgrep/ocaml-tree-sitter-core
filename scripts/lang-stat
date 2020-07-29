@@ -60,6 +60,11 @@ parse() {
   ) > "$proj_workspace"/parse.log 2>&1
 }
 
+# Replace '.foo.bar' by '\.foo\.bar'
+escape_ext() {
+  sed -e 's/\./\\./g'
+}
+
 handle_project() {
   name=$(basename "${url%.git}")
   proj_workspace="$tmp"/"$name"
@@ -85,7 +90,8 @@ EOF
     fi
     for ext in "${extensions[@]}"; do
       if [[ -n "$ext" ]]; then
-        find "$name" -name "*$ext" >> inputs
+        esc=$(echo "$ext" | escape_ext)
+        find "$name" | grep -P "/[^.]+$esc"'$' >> inputs
       fi
     done
   )
