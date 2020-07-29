@@ -139,7 +139,7 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
     | ALIAS _alias -> failwith "aliases are not supported"
 
   and translate_choice opt_rule_name cases =
-    let translated_cases = List.map translate cases in
+    let translated_cases = List.map translate cases |> Util_list.deduplicate in
     Type_name.assign_case_names ?rule_name:opt_rule_name translated_cases
   in
   translate ~rule_name x
