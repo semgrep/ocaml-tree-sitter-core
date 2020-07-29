@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-const C = require("tree-sitter-c/grammar")
+const C = require("./c-grammar")
 
 const PREC = Object.assign(C.PREC, {
   LAMBDA: 18,
