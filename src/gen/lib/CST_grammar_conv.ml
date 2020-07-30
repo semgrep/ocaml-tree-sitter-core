@@ -244,3 +244,4 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
     rules = sorted_rules;
     extras;
   }
+  |> Rectypes.prevent_cyclic_type_abbreviations
