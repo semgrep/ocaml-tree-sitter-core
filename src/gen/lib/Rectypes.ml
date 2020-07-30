@@ -18,14 +18,12 @@
 
    This results in the following OCaml type definition:
 
-     and new_declarator = [
-       (
-           Token.t (* "[" *)
-         * expression
-         * Token.t (* "]" *)
-         * new_declarator option
-       )
-     ]
+     and new_declarator = (
+         Token.t (* "[" *)
+       * expression
+       * Token.t (* "]" *)
+       * new_declarator option
+     )
 
    which fails with the following error:
 
@@ -42,13 +40,14 @@
    necessary. This module takes care of detecting such cases so that
    we could turn the rule body into a single-choice alternative, e.g.
 
-     new_declarator: $ => prec.right(seq(
-       '[',
-       field('length', $._expression),
-       ']',
-       optional($.new_declarator)
-     )),
-
+     and new_declarator = [
+       `Rectype of (
+           Token.t (* "[" *)
+         * expression
+         * Token.t (* "]" *)
+         * new_declarator option
+       )
+     ]
 *)
 
 open CST_grammar
