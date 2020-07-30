@@ -56,7 +56,7 @@ fi
 
   # When building from source on homebrew sudo is not allowed
   # but also not needed
-  if [[ -z "${HOMEBREW_SYSTEM}" ]]; then
+  if [[ -z "${HOMEBREW_SYSTEM+x}" ]]; then
     sudo make install
   else
     make install
