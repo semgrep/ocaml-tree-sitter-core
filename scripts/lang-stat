@@ -45,7 +45,8 @@ failed_inputs=stat.fail
 
 # CSV header
 cat > "$csv" <<EOF
-Name,URL,Files,"Failed files",Lines,"Failed lines"
+Name,URL,Files,"Failed files",Lines,"Failed lines",\
+"External errors","Internal errors","Other errors"
 EOF
 
 parser=$(pwd)/ocaml-src/_build/install/default/bin/parse-"$lang"
@@ -58,6 +59,14 @@ parse() {
     cst=out.cst
     "$parser" "$input" > /dev/null
   ) > "$proj_workspace"/parse.log 2>&1
+  status=$?
+  case "$status" in
+    0) ;;
+    11) ext_err_count=$(( ext_err_count + 1 )) ;;
+    12) int_err_count=$(( int_err_count + 1 )) ;;
+    *) other_err_count=$(( other_err_count + 1 ))
+  esac
+  return "$status"
 }
 
 # Replace '.foo.bar' by '\.foo\.bar'
@@ -101,6 +110,11 @@ EOF
   errors=0
   line_count=0
   error_line_count=0
+
+  int_err_count=0
+  ext_err_count=0
+  other_err_count=0
+
   for input in "${inputs[@]}"; do
     echo -n "$input"
     file_line_count=$(wc -l "$proj_workspace/$input" | cut -f1 -d' ')
@@ -117,7 +131,10 @@ EOF
   done
   global_line_count=$(( global_line_count + line_count ))
   global_error_line_count=$(( global_error_line_count + error_line_count ))
-  echo "$name,$url,$num_files,$errors,$line_count,$error_line_count" >> "$csv"
+  cat >> "$csv" <<EOF
+$name,$url,$num_files,$errors,$line_count,$error_line_count,\
+$ext_err_count,$int_err_count,$other_err_count
+EOF
 }
 
 mkdir -p "$tmp"

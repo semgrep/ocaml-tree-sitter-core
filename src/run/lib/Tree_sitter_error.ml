@@ -5,6 +5,9 @@
 open Printf
 open Tree_sitter_bindings.Tree_sitter_output_t
 
+exception External_error of string
+exception Internal_error of string
+
 let format_snippet src start end_ =
   let snippet = Src_file.get_token src start end_ in
   sprintf "%s\n" snippet
@@ -56,6 +59,10 @@ source code:
     snippet
     msg
 
-let fail src node msg =
+let external_error src node msg =
   let msg = prepend_msg src node msg in
-  failwith msg
+  raise (External_error msg)
+
+let internal_error src node msg =
+  let msg = prepend_msg src node msg in
+  raise (Internal_error msg)

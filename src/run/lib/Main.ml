@@ -5,21 +5,44 @@
 
 open Printf
 
+(*
+   Different classes of errors, useful for parsing stats.
+*)
+module Exit = struct
+  let any_error = 1
+  let bad_command_line = 10
+  let external_parsing_error = 11
+  let internal_parsing_error = 12
+end
+
 let safe_run f =
   Printexc.record_backtrace true;
   try f ()
   with e ->
     let trace = Printexc.get_backtrace () in
     flush stdout;
-    let msg =
+    let msg, exit_code, show_trace =
       match e with
-      | Failure msg -> msg
-      | e -> sprintf "exception %s" (Printexc.to_string e)
+      | Tree_sitter_error.External_error msg ->
+          msg, Exit.external_parsing_error, false
+      | Tree_sitter_error.Internal_error msg ->
+          msg, Exit.internal_parsing_error, false
+      | Failure msg ->
+          msg, Exit.any_error, true
+      | e ->
+          let msg = sprintf "exception %s" (Printexc.to_string e) in
+          msg, Exit.any_error, true
     in
-    eprintf "Error: %s\n%s\n%!"
-      msg
-      trace;
-    exit 1
+    (if show_trace then
+       eprintf "Error: %s\n%s\n"
+         msg
+         trace
+     else
+       eprintf "Error: %s\n" msg
+    );
+    eprintf "\nexit %i\n" exit_code;
+    flush stderr;
+    exit exit_code
 
 type input_kind =
   | Source_file
@@ -69,7 +92,7 @@ let run ~lang ~parse_source_file ~parse_input_tree ~dump_tree =
     | [| _; src_file; json_file |] -> src_file, Json_file json_file
     | _ ->
         usage ();
-        exit 1
+        exit Exit.bad_command_line
   in
   safe_run (fun () ->
     parse_and_dump
