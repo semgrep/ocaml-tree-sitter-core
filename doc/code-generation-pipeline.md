@@ -1,13 +1,13 @@
 Code generation pipeline
 ==
 
-This is a high-level view of the transformations of an input grammar,
-to help a contributor the order of things, and where to insert new
-features.
+This is a high-level view of the transformations of an input grammar.
+It is meant for contributors. The grammar exists in the following
+successive states:
 
 1. `grammar.js`
 2. `grammar.json`
-3. simplified `grammar.json` &rarr; `parser.c`
+3. simplified `grammar.json` with inlined rules &rarr; `parser.c`
 4. ocaml types with inlined rules &rarr; `Parse.ml`
 5. ocaml types with deinlined rules &rarr; `CST.ml`, `Boilerplate.ml`
 
@@ -41,8 +41,8 @@ simplifications include:
 Generating OCaml code
 --
 
-The generated OCaml code must be able to read a parse tree produced by
-`parser.c` (`Parse.ml`). It should also preserve the original rule
+The generated OCaml code in `Parse.ml` must be able to read a parse
+tree produced by `parser.c`. It should also preserve the original rule
 names as much as possible and avoid duplications in type definitions
 (`CST.ml`) and in the generated boilerplate code (`Boilerplate.ml`).
 
@@ -67,7 +67,7 @@ type opt_id = [ `Var of string | `Dollar_ref of string ] option
 type id_list = [ `Var of string | `Dollar_ref of string ] list
 ```
 
-but in `CST.ml` and we factor out the known type definition `id`,
+but in `CST.ml` and we factor out the known type definition `identifier`,
 resulting in
 
 ```ocaml
