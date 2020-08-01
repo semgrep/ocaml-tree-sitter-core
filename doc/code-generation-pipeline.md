@@ -67,7 +67,7 @@ type opt_id = [ `Var of string | `Dollar_ref of string ] option
 type id_list = [ `Var of string | `Dollar_ref of string ] list
 ```
 
-but in `CST.ml` and we factor out the known type definition `identifier`,
+but in `CST.ml` we factor out the known type definition `identifier`,
 resulting in
 
 ```ocaml
