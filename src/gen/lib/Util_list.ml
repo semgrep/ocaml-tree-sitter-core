@@ -3,7 +3,7 @@
 *)
 
 let deduplicate l =
-  let tbl = Hashtbl.create 100 in
+  let tbl = Hashtbl.create (2 * List.length l) in
   List.filter_map (fun k ->
     if Hashtbl.mem tbl k then
       None

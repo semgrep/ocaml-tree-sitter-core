@@ -5,6 +5,8 @@
 #
 
 SUPPORTED_LANGUAGES = \
+  c \
+  cpp \
   go \
   java \
   javascript \

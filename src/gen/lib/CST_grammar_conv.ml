@@ -98,6 +98,28 @@ let translate_pattern opt_rule_name pat =
   | None -> Blank
 
 (*
+   Remove constructs that are not relevant to us, such as precedence levels.
+*)
+let rec strip (x : Tree_sitter_t.rule_body) : Tree_sitter_t.rule_body =
+  match x with
+  | SYMBOL _
+  | STRING _
+  | PATTERN _
+  | BLANK as x -> x
+  | IMMEDIATE_TOKEN body -> IMMEDIATE_TOKEN (strip body)
+  | TOKEN body -> TOKEN (strip body)
+  | REPEAT x -> REPEAT (strip x)
+  | REPEAT1 x -> REPEAT1 (strip x)
+  | CHOICE l -> CHOICE (List.map strip l)
+  | SEQ l -> SEQ (List.map strip l)
+  | PREC (_, x)
+  | PREC_DYNAMIC (_, x)
+  | PREC_LEFT (_, x)
+  | PREC_RIGHT (_, x) -> strip x
+  | FIELD (_, x) -> strip x
+  | ALIAS _alias -> failwith "aliases are not supported"
+
+(*
    Simple translation without normalization. Get rid of PREC_*
 
    find_alias takes a rule name and an alias name, and returns the
@@ -131,18 +153,18 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
     | CHOICE [x; BLANK] -> Optional (translate x)
     | CHOICE l -> Choice (translate_choice rule_name l)
     | SEQ l -> Seq (List.map translate l)
-    | PREC (_prio, x) -> translate x
-    | PREC_DYNAMIC (_prio, x) -> translate x
-    | PREC_LEFT (_opt_prio, x) -> translate x
-    | PREC_RIGHT (_opt_prio, x) -> translate x
-    | FIELD (_name, x) -> translate x
-    | ALIAS _alias -> failwith "aliases are not supported"
+    | PREC _ -> assert false
+    | PREC_DYNAMIC _ -> assert false
+    | PREC_LEFT _ -> assert false
+    | PREC_RIGHT _ -> assert false
+    | FIELD _ -> assert false
+    | ALIAS _ -> assert false
 
   and translate_choice opt_rule_name cases =
-    let translated_cases = List.map translate cases in
+    let translated_cases = List.map translate cases |> Util_list.deduplicate in
     Type_name.assign_case_names ?rule_name:opt_rule_name translated_cases
   in
-  translate ~rule_name x
+  translate ~rule_name (strip x)
 
 (*
    Algorithm: convert the nodes of tree from unnormalized to normalized,
@@ -244,3 +266,4 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
     rules = sorted_rules;
     extras;
   }
+  |> Rectypes.prevent_cyclic_type_abbreviations
