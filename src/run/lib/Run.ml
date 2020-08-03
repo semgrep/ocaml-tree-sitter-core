@@ -81,7 +81,7 @@ let make_node_matcher regexps src : node -> matcher_token =
   let rec match_node node =
     match node.type_ with
     | "ERROR" ->
-        Tree_sitter_error.fail src node
+        Tree_sitter_error.external_error src node
           "Source code cannot be parsed by tree-sitter."
     | _ ->
         let kind = node.kind in
@@ -108,7 +108,7 @@ Tree-sitter parse tree could not be interpreted.
 "
                             (Children_matcher.show_exp regexp)
                         in
-                        Tree_sitter_error.fail src node msg
+                        Tree_sitter_error.internal_error src node msg
                     | Some capture ->
                         Children capture
                    )
@@ -120,7 +120,7 @@ Tree-sitter parse tree could not be interpreted.
 "
                        name name
                    in
-                   Tree_sitter_error.fail src node msg
+                   Tree_sitter_error.internal_error src node msg
               )
           | _ -> assert false
         in
