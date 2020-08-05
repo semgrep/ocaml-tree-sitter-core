@@ -1,0 +1,27 @@
+#
+# Circle CI configuration. Runs each time we push a new commit to Github.
+#
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: node:14-stretch
+    steps:
+      - checkout
+
+    - run:
+        name: Setup
+        command: make setup
+    - run:
+        name: Build
+        command: make
+    - run:
+        name: Test
+        command: make test
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - test
