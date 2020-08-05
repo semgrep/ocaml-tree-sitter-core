@@ -18,4 +18,4 @@ test:
 
 .PHONY: clean
 clean:
-	make -C src clean
+	git clean -dfX

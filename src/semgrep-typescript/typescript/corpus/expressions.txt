@@ -1,0 +1,39 @@
+==========================
+Dots as expression
+==========================
+
+a = ...;
+
+---
+
+(program
+  (expression_statement
+    (assignment_expression (identifier) (semgrep_dots))))
+
+==========================
+Dots as statement
+==========================
+
+a = 1;
+...
+b = 2;
+
+---
+
+(program
+  (expression_statement (assignment_expression (identifier) (number)))
+  (expression_statement (semgrep_dots))
+  (expression_statement (assignment_expression (identifier) (number))))
+
+==========================
+Metavar as lvalue, expression, field
+==========================
+
+$AB_42 = $Y.$Z;
+
+---
+
+(program
+  (expression_statement
+    (assignment_expression (identifier)
+    (member_expression (identifier) (property_identifier)))))
