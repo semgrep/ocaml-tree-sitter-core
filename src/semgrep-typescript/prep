@@ -1,0 +1,22 @@
+#! /usr/bin/env bash
+#
+# Import and patch up external files.
+#
+set -eu -o pipefail
+
+mkdir -p common
+ln -sf ../../tree-sitter-typescript/common/scanner.h common
+
+mkdir -p typescript/src
+ln -sf ../../../tree-sitter-typescript/typescript/src/scanner.c typescript/src
+
+mkdir -p tsx/src
+ln -sf ../../../tree-sitter-typescript/typescript/src/scanner.c tsx/src
+
+mkdir -p typescript/corpus
+ln -sf ../../../tree-sitter-typescript/typescript/corpus \
+   typescript/corpus/tree-sitter-typescript
+
+mkdir -p tsx/corpus
+ln -sf ../../../tree-sitter-typescript/tsx/corpus \
+   tsx/corpus/tree-sitter-tsx

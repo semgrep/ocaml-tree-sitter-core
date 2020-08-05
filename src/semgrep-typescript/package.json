@@ -1,0 +1,10 @@
+{
+  "name": "semgrep-typescript",
+  "version": "0.16.1",
+  "description": "Typescript grammar, extended for semgrep",
+  "author": "R2C",
+  "dependencies": {
+    "nan": "^2.14.0",
+    "tree-sitter-typescript": "*"
+  }
+}
