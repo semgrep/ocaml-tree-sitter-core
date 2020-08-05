@@ -10,15 +10,15 @@ jobs:
     steps:
       - checkout
 
-    - run:
-        name: Setup
-        command: make setup
-    - run:
-        name: Build
-        command: make
-    - run:
-        name: Test
-        command: make test
+      - run:
+          name: Setup
+          command: make setup
+      - run:
+          name: Build
+          command: make
+      - run:
+          name: Test
+          command: make test
 
 workflows:
   version: 2
