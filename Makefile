@@ -9,6 +9,7 @@ build:
 # Install the 'tree-sitter' command into node_modules/.bin
 .PHONY: setup
 setup:
+	git submodule update --init --recursive
 	npm install tree-sitter@0.16.1 tree-sitter-cli@0.16.9
 
 # Run parsing tests on our semgrep-* parsers.
