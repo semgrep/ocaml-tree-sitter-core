@@ -6,7 +6,6 @@
 #
 
 PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
-TREE_SITTER = $(PROJECT_ROOT)/node_modules/.bin/tree-sitter
 NAME = $(shell pwd | xargs basename)
 
 .PHONY: build
@@ -27,7 +26,7 @@ prep:
 test:
 	for dir in $$(find . | grep 'grammar.js$$' | xargs dirname); do \
 	  echo "Test $$dir"; \
-	  (cd "$$dir" && $(TREE_SITTER) test); \
+	  (cd "$$dir" && npx tree-sitter test); \
 	done
 
 .PHONY: clean

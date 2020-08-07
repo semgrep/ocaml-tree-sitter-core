@@ -1,13 +1,1 @@
-#! /usr/bin/env bash
-#
-# Import and patch up external files.
-#
-set -eu -o pipefail
-
-mkdir -p src
-rm -f src/scanner.c
-ln -sf ../../tree-sitter-javascript/src/scanner.c src/scanner.c
-
-mkdir -p test/corpus
-rm -f test/corpus/inherited
-ln -sf ../../../tree-sitter-javascript/test/corpus test/corpus/inherited
+../prep.common

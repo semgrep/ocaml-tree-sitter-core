@@ -10,7 +10,7 @@ build:
 .PHONY: setup
 setup:
 	git submodule update --init --recursive
-	which npx || npm install -g npx
+	which npx || npm install -g npx || sudo npm install -g npx
 	npm install tree-sitter@0.16.1 tree-sitter-cli@0.16.9
 
 # Run parsing tests on our semgrep-* parsers.

@@ -1,0 +1,18 @@
+#! /usr/bin/env bash
+#
+# Import and patch up external files.
+#
+# This is a generic script shared among all the languages with a simple
+# setup.
+#
+set -eu -o pipefail
+
+name=$(basename "$(pwd)")
+
+mkdir -p src
+rm -f src/scanner.c
+ln -sf ../../tree-sitter-"$name"/src/scanner.c src/scanner.c
+
+mkdir -p test/corpus
+rm -f test/corpus/inherited
+ln -sf ../../../tree-sitter-"$name"/test/corpus test/corpus/inherited

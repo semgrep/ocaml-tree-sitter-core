@@ -1,5 +1,4 @@
 PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
-TREE_SITTER = npx tree-sitter
 
 # Node packages provided as git submodules.
 TREE_SITTER_PACKAGES = \
