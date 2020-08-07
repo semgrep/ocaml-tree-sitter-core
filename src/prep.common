@@ -10,9 +10,24 @@ set -eu -o pipefail
 name=$(basename "$(pwd)" | sed -e 's/semgrep-//')
 
 mkdir -p src
-rm -f src/scanner.c
-ln -sf ../../tree-sitter-"$name"/src/scanner.c src/scanner.c
+(
+  cd src
+  rm -f scanner.c scanner.cc
+  scanner_c=../../tree-sitter-"$name"/src/scanner.c
+  scanner_cc="$scanner_c"c
+  if [[ -e "$scanner_c" ]]; then
+    ln -sf "$scanner_c" .
+  elif [[ -e "$scanner_cc" ]]; then
+    ln -sf "$scanner_cc" .
+  fi
+)
 
 mkdir -p test/corpus
-rm -f test/corpus/inherited
-ln -sf ../../../tree-sitter-"$name"/test/corpus test/corpus/inherited
+(
+  cd test/corpus
+  rm -f inherited
+  corpus=../../../tree-sitter-"$name"/test/corpus
+  if [[ -e "$corpus" ]]; then
+    ln -sf "$corpus" inherited
+  fi
+)
