@@ -16,7 +16,6 @@ build:
 	  echo "Generate parser in $$dir"; \
 	  (cd "$$dir" && $(TREE_SITTER) generate); \
 	done
-	cd $(PROJECT_ROOT) && npm install src/$(NAME)
 
 # Import, rename, patch etc. in a custom manner, as needed.
 #

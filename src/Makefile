@@ -7,6 +7,7 @@ TREE_SITTER_PACKAGES = \
   tree-sitter-typescript
 
 SEMGREP_PACKAGES = \
+  semgrep-javascript \
   semgrep-typescript
 
 PACKAGES = $(TREE_SITTER_PACKAGES) $(SEMGREP_PACKAGES)
