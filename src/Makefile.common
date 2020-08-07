@@ -13,7 +13,7 @@ build:
 	$(MAKE) prep
 	for dir in $$(find . | grep 'grammar.js$$' | xargs dirname); do \
 	  echo "Generate parser in $$dir"; \
-	  (cd "$$dir" && $(TREE_SITTER) generate); \
+	  (cd "$$dir" && npx tree-sitter generate); \
 	done
 
 # Import, rename, patch etc. in a custom manner, as needed.
