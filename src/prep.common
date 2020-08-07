@@ -7,7 +7,7 @@
 #
 set -eu -o pipefail
 
-name=$(basename "$(pwd)")
+name=$(basename "$(pwd)" | sed -e 's/semgrep-//')
 
 mkdir -p src
 rm -f src/scanner.c
