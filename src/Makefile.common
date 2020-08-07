@@ -11,7 +11,8 @@ NAME = $(shell pwd | xargs basename)
 .PHONY: build
 build:
 	$(MAKE) prep
-	for dir in $$(find . | grep 'grammar.js$$' | xargs dirname); do \
+	for dir in $$(find . | grep 'grammar.js$$' | xargs -I{} dirname {}); \
+	do \
 	  echo "Generate parser in $$dir"; \
 	  (cd "$$dir" && npx tree-sitter generate); \
 	done

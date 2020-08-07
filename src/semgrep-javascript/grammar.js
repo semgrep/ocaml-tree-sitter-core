@@ -1,7 +1,7 @@
 /*
-  semgrep-typescript
+  semgrep-javascript
 
-  Extends the standard typescript grammar with semgrep pattern constructs.
+  Extends the standard javascript grammar with semgrep pattern constructs.
 */
 
 const javascript_grammar = require('tree-sitter-javascript/grammar');

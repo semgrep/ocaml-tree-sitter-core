@@ -1,0 +1,37 @@
+==========================
+Dots as expression
+==========================
+
+a = ...
+
+---
+
+(program (assignment (identifier) (semgrep_dots)))
+
+==========================
+Dots as statement
+==========================
+
+a = 1;
+...
+b = 2
+
+---
+
+(program
+  (assignment (identifier) (integer))
+  (semgrep_dots)
+  (assignment (identifier) (integer)))
+
+==========================
+Metavar as lvalue, expression, field
+==========================
+
+$AB_42 = $Y.thing
+
+---
+
+(program
+  (assignment
+    (global_variable)
+    (call (global_variable) (identifier))))
