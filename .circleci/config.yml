@@ -31,5 +31,14 @@ jobs:
           name: install
           command: opam exec -- make install
       - run:
-          name: test
-          command: opam exec -- make test
+          name: unit tests
+          command: opam exec -- make unit
+      - run:
+          name: end-to-end tests
+          command: opam exec -- make e2e
+      - run:
+          name: fetch submodules
+          command: git submodule update --init --recursive
+      - run:
+          name: test languages
+          command: opam exec -- make lang
