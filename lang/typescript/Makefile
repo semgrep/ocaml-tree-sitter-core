@@ -1,2 +1,1 @@
-LANG = typescript
-include ../Makefile.common
+../Makefile.common

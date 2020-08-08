@@ -15,14 +15,18 @@ SUPPORTED_LANGUAGES = \
 
 .PHONY: build
 build:
+	$(MAKE) -C semgrep-grammars
+	set -e; \
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang build; done
 
 .PHONY: install
 install:
+	set -e; \
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang install; done
 
 .PHONY: test
 test:
+	set -e; \
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang test; done
 
 # Place the generated files into their own repo, to be used by an external
@@ -34,4 +38,5 @@ release:
 
 .PHONY: clean
 clean:
+	set -e; \
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang clean; done
