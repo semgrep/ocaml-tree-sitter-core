@@ -43,12 +43,12 @@ EOF
     echo "$name: Importing initial 'grammar.json'."
     mkdir -p src
     cp -r "$import_from"/src/* src/
-    mv src/grammar.json src/grammar.json.orig
     rm -f src/parser.c
   fi
 fi
 
 echo "$name: Simplifying 'grammar.json' for ocaml-tree-sitter."
+mv src/grammar.json src/grammar.json.orig
 simplify-grammar < src/grammar.json.orig > src/grammar.json
 
 echo "$name: Generating definitive 'parser.c'."
