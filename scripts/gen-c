@@ -31,6 +31,10 @@ EOF
 if [[ -e grammar.js ]]; then
   echo "$name: Generating initial 'grammar.json' from 'grammar.js'."
   npx tree-sitter generate
+  mkdir -p src
+  if [[ -e orig/LICENSE ]]; then cp orig/LICENSE src; fi
+  if [[ -e orig/scanner.c ]]; then cp orig/scanner.c src; fi
+  if [[ -e orig/scanner.cc ]]; then cp orig/scanner.cc src; fi
 else
   orig_grammar_json="$import_from"/src/grammar.json
   if [[ ! -e "$orig_grammar_json" ]]; then
