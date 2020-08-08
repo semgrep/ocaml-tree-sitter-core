@@ -1,2 +1,1 @@
-LANG = ruby
-include ../Makefile.common
+../Makefile.common

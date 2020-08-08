@@ -60,4 +60,5 @@ stat:
 
 .PHONY: clean
 clean:
+	rm -rf stat.tmp
 	git clean -dfX
