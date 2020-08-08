@@ -14,7 +14,7 @@ repo:
 2. Find the GitHub project for the tree-sitter grammar,
    typically named `tree-sitter-X` where `X` is the language name.
 3. Add `tree-sitter-X`
-   [as a submodule](https://github.com/returntocorp/semgrep-grammars/src)
+   [as a submodule](https://github.com/returntocorp/semgrep-grammars/tree/master/src)
    like it's done already for other languages.
 4. Create `src/semgrep-X/grammar.js` such that it extends the original
    grammar with the semgrep pattern constructs (`...`, `$X`). Again,
