@@ -9,7 +9,7 @@ build:
 # Install the 'tree-sitter' command into node_modules/.bin
 .PHONY: setup
 setup:
-	git submodule update --init --recursive
+	git submodule update --init --recursive --depth 1
 	which npx || npm install -g npx || sudo npm install -g npx
 	npm install tree-sitter@0.16.1 tree-sitter-cli@0.16.9
 
