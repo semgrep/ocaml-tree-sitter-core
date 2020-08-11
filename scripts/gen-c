@@ -24,7 +24,7 @@ EOF
 # Generate C source code for the grammar, in two passes:
 #
 # 1. Import files from semgrep-grammars
-# 1. Simplify grammar.json so it's compatible with ocaml-tree-sitter.
+# 2. Simplify grammar.json so it's compatible with ocaml-tree-sitter.
 # 3. Generate 'parser.c' from the simplified 'grammar.json'.
 #
 
