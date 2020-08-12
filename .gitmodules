@@ -1,0 +1,3 @@
+[submodule "lang/semgrep-grammars"]
+	path = lang/semgrep-grammars
+	url = https://github.com/returntocorp/semgrep-grammars.git

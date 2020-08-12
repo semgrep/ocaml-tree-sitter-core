@@ -1,11 +1,18 @@
 #! /usr/bin/env bash
 #
-# Generate C parsers with tree-sitter.
+# Copy tree-sitter grammars from the semgrep-grammars repo into the current
+# language directory.
 #
 set -eu
 
-project_root=$(git rev-parse --show-toplevel)
-tree_sitter="$project_root"/node_modules/.bin/tree-sitter
+name=$(basename "$(pwd)")
+
+# Location of pre-generated grammar.json. This is required
+# if we're using an tree-sitter grammar.
+#
+# It is ignored if 'grammar.js' exists locally.
+#
+import_from=../semgrep-grammars/lang/"$name"
 
 error() {
   cat >&2 <<EOF
@@ -14,21 +21,39 @@ EOF
   exit 1
 }
 
-test -x "$tree_sitter" || error "missing executable $tree_sitter"
-
 # Generate C source code for the grammar, in two passes:
 #
-# 1. Generate the original grammar.json by executing grammar.js.
+# 1. Import files from semgrep-grammars
 # 2. Simplify grammar.json so it's compatible with ocaml-tree-sitter.
-# 3. Generate the C parser.
+# 3. Generate 'parser.c' from the simplified 'grammar.json'.
 #
 
-# 1. Generate from grammar.js
-"$tree_sitter" generate
+if [[ -e grammar.js ]]; then
+  echo "$name: Generating initial 'grammar.json' from 'grammar.js'."
+  npx tree-sitter generate
+  mkdir -p src
+  if [[ -e orig/LICENSE ]]; then cp -L orig/LICENSE src; fi
+  if [[ -e orig/scanner.c ]]; then cp -L orig/scanner.c src; fi
+  if [[ -e orig/scanner.cc ]]; then cp -L orig/scanner.cc src; fi
+else
+  orig_grammar_json="$import_from"/src/grammar.json
+  if [[ ! -e "$orig_grammar_json" ]]; then
+    cat >&2 <<EOF
+Missing local 'grammar.js' and missing '$orig_grammar_json'.
+One of these files must exist.
+EOF
+    exit 1
+  else
+    echo "$name: Importing initial 'grammar.json'."
+    mkdir -p src
+    cp -rL "$import_from"/src/* src/
+    rm -f src/parser.c
+  fi
+fi
 
-# 2. Simplify grammar.json
+echo "$name: Simplifying 'grammar.json' for ocaml-tree-sitter."
 mv src/grammar.json src/grammar.json.orig
 simplify-grammar < src/grammar.json.orig > src/grammar.json
 
-# 3. Generate from grammar.json
-"$tree_sitter" generate src/grammar.json
+echo "$name: Generating definitive 'parser.c'."
+npx tree-sitter generate src/grammar.json

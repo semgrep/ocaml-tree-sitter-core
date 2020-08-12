@@ -25,6 +25,11 @@ setup:
 	./scripts/install-tree-sitter-cli
 	opam install --deps-only -y .
 
+# Shortcut for updating the git submodules.
+.PHONY: update
+update:
+	git submodule update --init --recursive
+
 # Keep things like node_modules that are worth keeping around
 .PHONY: clean
 clean:
@@ -41,14 +46,23 @@ distclean:
 .PHONY: test
 test: build
 	$(MAKE) unit
-	$(MAKE) -C tests
-	$(MAKE) -C lang build
-	$(MAKE) -C lang test
+	$(MAKE) e2e
 
-# Run unit tests only.
+# Run unit tests only (takes a few seconds).
 .PHONY: unit
 unit: build
 	./_build/default/src/test/test.exe
+
+# Run end-to-end tests (takes a few minutes).
+.PHONY: e2e
+e2e: build
+	$(MAKE) -C tests
+
+# Build and test all the production languages.
+.PHONY: lang
+lang: build
+	$(MAKE) -C lang build
+	$(MAKE) -C lang test
 
 .PHONY: install
 install:

@@ -1,44 +1,56 @@
 How to add support for a new language
 ==
 
-These instructions are likely to change as we add more languages and
-we face maintenance and patching issues.
+As a model, you can use the existing setup for `ruby` or `javascript`. Our
+most complicated setup is for `typescript` and `tsx`.
 
-1. Find and clone the GitHub project hosting the tree-sitter grammar,
+First, extend the language with semgrep pattern syntax in the
+[semgrep-grammars](https://github.com/returntocorp/semgrep-grammars)
+repo:
+
+1. Set up a copy of the semgrep-grammars repo. Follow the instructions
+   you may find, ensure the `tree-sitter-*` packages end up installed
+   under `node_modules`.
+2. Find the GitHub project for the tree-sitter grammar,
    typically named `tree-sitter-X` where `X` is the language name.
-2. Copy the files in the expected folders of ocaml-tree-sitter,
-   with the expected names.
-3. Make manual adjustments.
-4. Add a sample input program for testing.
-5. Add a collection of projects on which to run parsing stats.
+3. Add `tree-sitter-X`
+   [as a submodule](https://github.com/returntocorp/semgrep-grammars/tree/master/src)
+   like it's done already for other languages.
+4. Create `src/semgrep-X/grammar.js` such that it extends the original
+   grammar with the semgrep pattern constructs (`...`, `$X`). Again,
+   imitate what's already done for other languages.
+5. Write tests for the new syntax. Run `make && make test` from your
+   `semgrep-X` folder until things work.
+6. Create a symlink for your language under
+   [`lang/`](https://github.com/returntocorp/semgrep-grammars/tree/master/lang).
 
-Here's the file hierarchy for C♯:
+Then, from the ocaml-tree-sitter repo, do the following:
+
+1. Create a `lang/X` folder.
+2. Add sample input programs for testing.
+3. Add a collection of projects on which to run parsing stats.
+
+Here's the file hierarchy for Ruby:
 
 ```shell
-lang/csharp            # language name of the form [a-z][a-z0-9]*
-├── examples
-│   └── ConvexHull.cs.src  # sample input, must end in '.src.'
-├── extensions.txt     # standard name. Required for stats.
-├── grammar.js -> orig/grammar.js  # required. Doesn't have to be a symlink.
-├── Makefile           # must include ../Makefile.common
-└── orig
-│   ├── grammar.js     # standard name. Required. May require other js files.
-│   ├── LICENSE        # required
-│   └── scanner.c      # standard name. Optional. Can also be 'scanner.cc'.
-└── projects.txt       # standard name. Required for stats.
+lang/ruby               # language name of the form [a-z][a-z0-9]*
+├── examples            # sample input files, must end in '.src.'
+│   ├── comment.rb.src
+│   ├── ex1.rb.src
+│   ├── ex2.rb.src
+│   ├── hello.rb.src
+│   └── poly.rb.src
+├── extensions.txt      # standard name. Required for stats.
+├── Makefile -> ../Makefile.common
+└── projects.txt        # standard name. Required for stats.
 ```
 
-The most important files, which are copied from the tree-sitter-X
-project, are `grammar.js` and when present, `scanner.c` or
-`scanner.cc`. They contain the sources that define the parser
-implementation. They will be converted into a large C file `parser.c`
-by `tree-sitter generate`.
+To test a language in ocaml-tree-sitter:
 
-To test a language:
-
-1. Run `make` and `make install` from the project root to install
+1. Update the `semgrep-grammars` submodule to the desired branch.
+2. Run `make` and `make install` from the project root to install
    the `ocaml-tree-sitter` executable and the runtime library.
-2. Run `make` and `make test` from the language's folder.
+3. Run `make` and `make test` from the language's folder.
 
 The following sequence of commands is typical:
 ```bash
@@ -97,7 +109,9 @@ Be thankful for the authors of the original code, keep clearly visible
 license notices, and make it easy to get back to the original projects:
 
 * Group imported files by origin, preferably in the same folder with a
-  `LICENSE` file.
+  `LICENSE` file. Typically, code generated from third-party
+  tree-sitter grammars must be distributed with a copy of the license
+  (read the licencing terms).
 * For sample input in `examples/`, consider Public Domain ("The
   Unlicense") files or write your own, for simplicity.
   [GitHub Search](https://github.com/search/advanced)

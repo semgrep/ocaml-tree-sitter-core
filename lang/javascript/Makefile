@@ -1,2 +1,1 @@
-LANG = javascript
-include ../Makefile.common
+../Makefile.common

@@ -5,8 +5,12 @@
 #
 set -eu
 
+# 'npx' is used as a wrapper for finding executables installed locally in
+# node_modules/.bin. Example: 'npx tree-sitter --version'.
+which npx || npm install -g npx || sudo npm install -g npx
+
 # Install node modules. Should be done at the project root.
 # The tree-sitter executable will be in 'node_modules/.bin'.
 npm install \
-    tree-sitter \
-    tree-sitter-cli
+    tree-sitter@0.16.1 \
+    tree-sitter-cli@0.16.9
