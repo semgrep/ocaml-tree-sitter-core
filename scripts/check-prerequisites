@@ -3,6 +3,7 @@
 # Check for various prerequisites and fail with helpful messages if they're
 # missing.
 #
+set -eu
 
 error() {
   cat 2>&1 <<EOF
