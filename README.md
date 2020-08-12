@@ -18,9 +18,15 @@ installed or used by a wide audience.
    typically `opam install merlin` + some plugin for your editor.
 3. Install the project's dependencies,
    possibly with `opam install --deps-only ocaml-tree-sitter.opam`.
-4. Build with `make`.
-5. Install with `make install`.
-6. Test with `make test`.
+4. Install dependencies and tree-sitter-cli with `make setup`.
+5. Build with `make`. 
+6. Install with `make install`.
+7. Test with `make test`.
+
+### Contributing on MacOS
+
+* Note that you must have Xcode and CLT installed for Mac to run make setup. 
+* If you are having trouble with node setup, reference [node page] (https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md). 
 
 ## Documentation
 
