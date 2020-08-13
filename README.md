@@ -27,6 +27,18 @@ installed or used by a wide audience.
 
 * Note that you must have Xcode and CLT installed for Mac to run make setup. 
 * If you are having trouble with node setup, reference [node page] (https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md). 
+* You must also have bash version 4.0 or higher. To make this your default bash:
+   1. Run `brew install bash` or `brew upgrade bash`
+   2. Go to `/etc/shells` and add `usr/local/bin/bash`
+   3. Run `chsh -s /usr/local/bin/bash`
+   4. Close your shell and reopen. To check your bash version, run `bash --version`.
+
+### Testing Parsing for a Specific Language
+
+1. Go to `ocaml-tree-sitter/lang/semgrep-grammars/src`. 
+2. Build with `make`.
+3. Go to `ocaml-tree-sitter/lang/<language name>`.
+4. Build with `make`. 
 
 ## Documentation
 
