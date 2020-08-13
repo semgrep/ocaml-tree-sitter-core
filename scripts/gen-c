@@ -46,7 +46,7 @@ EOF
   else
     echo "$name: Importing initial 'grammar.json'."
     mkdir -p src
-    cp -rL "$import_from"/src/* src/
+    cp -RL "$import_from"/src/* src/
     rm -f src/parser.c
   fi
 fi
