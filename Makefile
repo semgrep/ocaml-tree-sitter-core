@@ -22,6 +22,7 @@ build:
 #
 .PHONY: setup
 setup:
+	./scripts/check-prerequisites
 	./scripts/install-tree-sitter-cli
 	opam install --deps-only -y .
 

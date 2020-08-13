@@ -1,0 +1,25 @@
+#! /usr/bin/env bash
+#
+# Check for various prerequisites and fail with helpful messages if they're
+# missing.
+#
+set -eu
+
+error() {
+  cat 2>&1 <<EOF
+Error: $*
+EOF
+  exit 1
+}
+
+echo "Check for bash arrays."
+things[0]='' || error "Please upgrade bash. Bash version must be >= 4.0."
+
+echo "Check for 'which'."
+which which > /dev/null || error "Missing command: which"
+
+echo "Check for 'opam'."
+which opam > /dev/null || error "Missing command: opam"
+
+echo "Check for 'npm'."
+which npm > /dev/null || error "Missing command: npm"
