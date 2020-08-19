@@ -7,6 +7,7 @@
 SUPPORTED_LANGUAGES = \
   c \
   cpp \
+  csharp \
   go \
   java \
   javascript \
