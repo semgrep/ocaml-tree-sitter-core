@@ -6,6 +6,18 @@
 open Printf
 open CST_grammar
 
+(*
+   Hash a string with MD5 (it's overkill but standard and sufficiently fast
+   for what we do with it) and keep only the beginning.
+*)
+let hash_string_hex s =
+  let md5_hex =
+    Digest.string s
+    |> Digest.to_hex
+  in
+  assert (String.length md5_hex = 32);
+  String.sub md5_hex 0 7
+
 (* alphabetic letter? *)
 let is_alpha c =
   match c with
@@ -28,6 +40,38 @@ let name_of_token (token : token) =
   Punct.to_alphanum token.name
 
 (*
+   Similar to name_rule_body below but operates on the original tree-sitter
+   grammar type (grammar.json). This is used to generate rule names
+   for tokens and patterns that don't have a name.
+*)
+let name_ts_rule_body (body : Tree_sitter_t.rule_body) =
+  let open Tree_sitter_t in
+  let rec name_rule_body body =
+    match body with
+    | SYMBOL ident -> ident
+    | STRING s -> Punct.to_alphanum s
+    | BLANK -> "blank"
+    | PATTERN pat -> "pat_" ^ hash_string_hex pat
+    | REPEAT x -> "rep_" ^ name_rule_body x
+    | REPEAT1 x -> "rep1_" ^ name_rule_body x
+    | CHOICE (x :: _) -> "choice_" ^ name_rule_body x
+    | CHOICE [] -> "choice"
+    | SEQ xs ->
+        List.map name_rule_body xs
+        |> String.concat "_"
+    | PREC (_, x)
+    | PREC_DYNAMIC (_, x)
+    | PREC_LEFT (_, x)
+    | PREC_RIGHT (_, x) -> name_rule_body x
+    | ALIAS alias -> name_rule_body alias.content
+    | FIELD (field_name, _x) -> field_name
+    | IMMEDIATE_TOKEN x -> "imm_tok_" ^ name_rule_body x
+    | TOKEN x -> "tok_" ^ name_rule_body x
+  in
+  let full_name = name_rule_body body in
+  Abbrev.words full_name
+
+(*
    Derive a name from the structure of a rule, one that's hopefully not
    ambiguous, not too long, and stable over time.
 *)
@@ -48,18 +92,6 @@ let name_rule_body body =
   in
   let full_name = name_rule_body body in
   Abbrev.words full_name
-
-(*
-   Hash a string with MD5 (it's overkill but standard and sufficiently fast
-   for what we do with it) and keep only the beginning.
-*)
-let hash_string_hex s =
-  let md5_hex =
-    Digest.string s
-    |> Digest.to_hex
-  in
-  assert (String.length md5_hex = 32);
-  String.sub md5_hex 0 7
 
 (*
    Similar to name_rule_body but recursively descend into alternatives,

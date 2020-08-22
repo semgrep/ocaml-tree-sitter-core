@@ -10,14 +10,15 @@ let make_translator () =
   fun ~orig_name ~preferred_name ->
     Protect_ident.add_translation ~preferred_dst:preferred_name map orig_name
 
-let extract_pattern_rules_from_body add_pattern_rule body =
+let extract_pattern_rules_from_body add_rule body =
   let rec extract x =
     match x with
     | SYMBOL _
     | STRING _
     | BLANK -> x
-    | PATTERN pat ->
-        let name = add_pattern_rule pat in
+    | PATTERN _ as x ->
+        let preferred_name = Type_name.name_ts_rule_body x in
+        let name = add_rule preferred_name x in
         SYMBOL name
     | REPEAT x -> REPEAT (extract x)
     | REPEAT1 x -> REPEAT1 (extract x)
@@ -29,8 +30,14 @@ let extract_pattern_rules_from_body add_pattern_rule body =
     | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, extract x)
     | ALIAS alias -> ALIAS { alias with content = extract alias.content }
     | FIELD (field_name, x) -> FIELD (field_name, extract x)
-    | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (extract x)
-    | TOKEN x -> TOKEN (extract x)
+    | IMMEDIATE_TOKEN _ as x ->
+        let preferred_name = Type_name.name_ts_rule_body x in
+        let name = add_rule preferred_name x in
+        SYMBOL name
+    | TOKEN _ as x ->
+        let preferred_name = Type_name.name_ts_rule_body x in
+        let name = add_rule preferred_name x in
+        SYMBOL name
   in
   match body with
   | PATTERN _ as x -> x (* already at the root of a rule body *)
@@ -38,18 +45,16 @@ let extract_pattern_rules_from_body add_pattern_rule body =
 
 let extract_pattern_rules add_translation rules =
   let pattern_rules = Hashtbl.create 100 in
-  let add_pattern_rule pat =
-    let rule_body = PATTERN pat in
+  let add_rule preferred_name rule_body =
     let name =
-      let preferred_name = "anon_pat_" ^ Type_name.hash_string_hex pat in
-      add_translation ~orig_name:pat ~preferred_name
+      add_translation ~orig_name:preferred_name ~preferred_name
     in
     Hashtbl.replace pattern_rules name rule_body;
     name
   in
   let rewritten_rules =
     List.map (fun (name, body) ->
-      let body = extract_pattern_rules_from_body add_pattern_rule body in
+      let body = extract_pattern_rules_from_body add_rule body in
       (name, body)
     ) rules
   in

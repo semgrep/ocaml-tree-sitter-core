@@ -5,6 +5,8 @@ module.exports = grammar({
       /[a-z]+/,
       /[a-z]+/,
       /[0-9]+/,
+      token(/x+/),
+      token.immediate(/y+/),
       'end'
     )
   }

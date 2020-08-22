@@ -3,6 +3,7 @@
    enclosing rule name and the contents of the production.
 *)
 
+val name_ts_rule_body : Tree_sitter_t.rule_body -> string
 val name_rule_body : CST_grammar.rule_body -> string
 
 (*
