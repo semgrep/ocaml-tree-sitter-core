@@ -20,7 +20,7 @@ module.exports = grammar(typescript_grammar, {
       semgrep metavariables are already valid javascript/typescript
       identifiers so we do nothing for them.
     */
-
+/*
     semgrep_dots: $ => '...',
 
     _expression: ($, previous) => {
@@ -29,5 +29,6 @@ module.exports = grammar(typescript_grammar, {
         ...previous.members
       );
     }
+*/
   }
 });

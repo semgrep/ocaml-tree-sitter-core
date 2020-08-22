@@ -21,7 +21,7 @@ module.exports = grammar(javascript_grammar, {
       semgrep metavariables are already valid javascript
       identifiers so we do nothing for them.
     */
-
+/*
     semgrep_dots: $ => '...',
 
     _expression: ($, previous) => {
@@ -30,5 +30,6 @@ module.exports = grammar(javascript_grammar, {
         ...previous.members
       );
     }
+*/
   }
 });

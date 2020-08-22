@@ -12,6 +12,7 @@ module.exports = grammar(standard_grammar, {
   rules: {
     /* Ruby global variables start with a '$' ('global_variable'). */
 
+/*
     semgrep_dots: $ => '...',
 
     _expression: ($, previous) => {
@@ -20,5 +21,6 @@ module.exports = grammar(standard_grammar, {
         ...previous.members
       );
     }
+*/
   }
 });
