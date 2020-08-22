@@ -9,12 +9,14 @@ const javascript_grammar = require('tree-sitter-javascript/grammar');
 module.exports = grammar(javascript_grammar, {
   name: 'javascript',
 
+/*
   conflicts: ($, previous) => previous.concat([
     [$.spread_element, $.semgrep_dots],
     [$.rest_parameter, $.semgrep_dots],
     [$.rest_parameter, $.spread_element, $.semgrep_dots],
     [$._statement, $._expression]
   ]),
+*/
 
   rules: {
     /*

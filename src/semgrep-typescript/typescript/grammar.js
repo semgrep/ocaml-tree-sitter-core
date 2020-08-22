@@ -10,10 +10,12 @@ const typescript_grammar =
 module.exports = grammar(typescript_grammar, {
   name: 'typescript',
 
+/*
   conflicts: ($, previous) => previous.concat([
     [$.spread_element, $.semgrep_dots],
     [$._statement, $._expression]
   ]),
+*/
 
   rules: {
     /*
