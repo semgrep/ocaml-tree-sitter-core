@@ -90,7 +90,9 @@ let translate_token opt_rule_name body =
 
 (*
    Unlike string constants, patterns without a name are omitted from
-   tree-sitter's output.
+   tree-sitter's output. This is not desirable. Normally, we apply a pass
+   on the grammar (see Simplify_grammar.ml) to make sure patterns
+   have a name and show up in the parse tree.
 *)
 let translate_pattern opt_rule_name pat =
   match opt_rule_name with

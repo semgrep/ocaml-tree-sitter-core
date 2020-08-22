@@ -3,6 +3,7 @@
    enclosing rule name and the contents of the production.
 *)
 
+val name_ts_rule_body : Tree_sitter_t.rule_body -> string
 val name_rule_body : CST_grammar.rule_body -> string
 
 (*
@@ -14,3 +15,7 @@ val assign_case_names :
   ?rule_name: string ->
   CST_grammar.rule_body list ->
   (string * CST_grammar.rule_body) list
+
+(* Produce a string of 7 hexadecimal digits.
+   This is meant for suggesting stable IDs for arbitrary strings. *)
+val hash_string_hex : string -> string

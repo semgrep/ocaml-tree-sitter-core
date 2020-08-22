@@ -25,10 +25,10 @@ let rec remove_leading_underscores s =
      "_foo" -> "foo_"  // append a suffix because 'foo' is taken
 *)
 let make_name_translator () =
-  let registry = Protect_ident.create ~reserved:[] in
+  let map = Protect_ident.create ~reserved_dst:[] () in
   fun name ->
     let preferred_name = remove_leading_underscores name in
-    Protect_ident.reserve registry ~src:name ~preferred_dst:preferred_name
+    Protect_ident.add_translation map name ~preferred_dst:preferred_name
 
 let simplify_rule_body translate_name =
   let rec simplify x =
@@ -123,6 +123,7 @@ let apply_inline grammar =
     rules = inline_rules grammar.rules }
 
 let simplify_grammar grammar =
+  let grammar = Name_pattern.assign_names_to_patterns grammar in
   let grammar = apply_inline grammar in
   let translate_name = make_name_translator () in
   let simplify = simplify_rule_body translate_name in
