@@ -40,7 +40,9 @@ let extract_pattern_rules_from_body add_rule body =
         SYMBOL name
   in
   match body with
-  | PATTERN _ as x -> x (* already at the root of a rule body *)
+  | PATTERN _
+  | IMMEDIATE_TOKEN _
+  | TOKEN _ as x -> x (* already at the root of a rule body, will have a name *)
   | x -> extract x
 
 let extract_pattern_rules add_translation rules =
