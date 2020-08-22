@@ -1,5 +1,5 @@
 (*
-   Change the name of identifiers that would make unsuitable Reason
+   Change the name of identifiers that would make unsuitable OCaml
    identifiers.
 *)
 
@@ -85,6 +85,10 @@ let ocaml_reserved = ocaml_keywords @ ocaml_builtin_types
    and then filled with identifiers as they are encountered in the program.
 *)
 type t = {
+  (* Reserved identifiers are the valid source identifiers which
+     are invalid destination identifiers. *)
+  reserved: (string, unit) Hashtbl.t;
+
   forward: (string, string) Hashtbl.t;
   backward: (string, string) Hashtbl.t;
 }
@@ -94,30 +98,45 @@ type translation_status =
   | Valid
   | Invalid
 
+let is_reserved map s =
+  Hashtbl.mem map.reserved s
+
+let reserve map s =
+  if Hashtbl.mem map.backward s then
+    invalid_arg (sprintf "Protect_ident.reserve: %S is already in use" s)
+  else
+    Hashtbl.replace map.reserved s ()
+
 (* Check that src could map to dst and vice-versa. *)
-let check x src dst =
-  match Hashtbl.find_opt x.forward src, Hashtbl.find_opt x.backward dst with
-  | None, None -> Available
-  | Some dst', Some src' when src' = src && dst' = dst -> Valid
-  | _ -> Invalid
+let check map src dst =
+  if is_reserved map dst then
+    Invalid
+  else
+    match
+      Hashtbl.find_opt map.forward src, Hashtbl.find_opt map.backward dst with
+    | None, None -> Available
+    | Some dst', Some src' when src' = src && dst' = dst -> Valid
+    | _ -> Invalid
 
-let force_add x a b =
-  Hashtbl.replace x.forward a b;
-  Hashtbl.replace x.backward b a
+let force_add map a b =
+  Hashtbl.replace map.forward a b;
+  Hashtbl.replace map.backward b a
 
-let create ~reserved =
-  let x = {
+let create ?(reserved_dst = []) () =
+  let map = {
+    reserved = Hashtbl.create 100;
     forward = Hashtbl.create 100;
     backward = Hashtbl.create 100;
   } in
+  List.iter (reserve map) reserved_dst;
   List.iter (fun src ->
     let dst = src ^ "_" in
-    match check x src dst with
-    | Available -> force_add x src dst
+    match check map src dst with
+    | Available -> force_add map src dst
     | Valid -> ()
     | Invalid -> invalid_arg (sprintf "Protect_ident.create: %s" src)
-  ) reserved;
-  x
+  ) reserved_dst;
+  map
 
 (* Try these suffixes first before falling back to random numbers. *)
 let good_suffixes = [
@@ -126,7 +145,21 @@ let good_suffixes = [
   "2"; "3"; "4"; "5";
 ]
 
-let find_available x src preferred_dst =
+(*
+   Specify a translation from a string src. Honor it if possible, otherwise
+   use something as close as possible as preferred_dst.
+   Return the actual dst.
+
+   For example, "object" returns "object_" if "object" is reserved.
+   "object_" might then return something like "object__" because the
+   destination "object_" is already taken.
+*)
+let add_translation ?preferred_dst map src =
+  let preferred_dst =
+    match preferred_dst with
+    | None -> src
+    | Some s -> s
+  in
   let rec try_suffix suffixes =
     let candidate_suffix, suffixes =
       match suffixes with
@@ -134,9 +167,9 @@ let find_available x src preferred_dst =
       | x :: xs -> x, xs
     in
     let dst = preferred_dst ^ candidate_suffix in
-    match check x src dst with
+    match check map src dst with
     | Available ->
-        force_add x src dst;
+        force_add map src dst;
         dst
     | Valid ->
         dst
@@ -145,14 +178,5 @@ let find_available x src preferred_dst =
   in
   try_suffix good_suffixes
 
-(*
-   Forward translation of an identifier. For example, "object" returns
-   "object_". "object_" might then return something like "object__".
-*)
-let translate x src =
-  match Hashtbl.find_opt x.forward src with
-  | Some dst -> dst
-  | None -> find_available x src src
-
-let reserve x ~src ~preferred_dst =
-  find_available x src preferred_dst
+let translate map src =
+  Hashtbl.find_opt map.forward src

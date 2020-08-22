@@ -1,10 +1,39 @@
 (*
-   Change the name of identifiers that would make unsuitable OCaml
-   identifiers. This tracks all identifiers to avoid conflicts.
+   Maintain a 1:1 map of translations from 'src' to 'dst', ensuring 'dst'
+   is not reserved or already taken by a different translation.
 *)
 
-(* Registry of translated identifiers. *)
+(* Translation map. *)
 type t
+
+(*
+   Initialize a translation map. 'reserved_dst' specifies forbidden 'dst'
+   elements. It guarantees that no 'src' string will be translated to
+   to one of these reserved elements.
+
+   Additionally, any 'src' in the 'reserved_dst' list is set to be translated
+   with a single underscore appended.
+
+   Example:
+
+     let map = create ~reserved_dst:["let"] () in
+     assert (translate map "let" = "let_")
+*)
+val create : ?reserved_dst:string list -> unit -> t
+
+(* Translate a string 'src' to a string 'dst', ensuring that
+   'dst' is as close as possible to 'preferred_dst' and that
+   nothing else already translates to that 'dst.
+   'preferred_dst' defaults to 'src'.
+
+   This translation is remembered, with the consequence that calling this
+   function later with the same arguments is guaranteed to return the same
+   result.
+*)
+val add_translation : ?preferred_dst:string -> t -> string -> string
+
+(* Check for an existing translation. *)
+val translate : t -> string -> string option
 
 (* Lowercase identifiers that are keywords in OCaml. *)
 val ocaml_keywords : string list
@@ -14,20 +43,3 @@ val ocaml_builtin_types : string list
 
 (* Union of ocaml_keywords and ocaml_builtin_types *)
 val ocaml_reserved : string list
-
-(*
-   Initialize a translation registry, using the specified list of reserved
-   keywords, to which an underscore will be appended.
-*)
-val create : reserved:string list -> t
-
-(* Translate an identifier to a valid identifier, ensuring that
-   the new identifier is as close as possible to the original and that the
-   resulting identifier is not already in use by something else.
-*)
-val translate : t -> string -> string
-
-(* Add a reserved identifier to the registry and request a new, available
-   identifier that's as close as possible to 'preferred_dst'.
-*)
-val reserve : t -> src:string -> preferred_dst:string -> string
