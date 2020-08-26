@@ -5,6 +5,11 @@
 #
 set -eu
 
+error() {
+  echo "Error: $*" >&2
+  exit 1
+}
+
 langs=("$@")
 
 id=$(git rev-parse --short HEAD)
@@ -43,6 +48,8 @@ for lang in "${langs[@]}"; do
     if [[ -f "$lang"/orig/LICENSE ]]; then
       cp -a "$lang"/orig/LICENSE "$dst"/orig
     fi
+  else
+    error "Missing folder $lang/ocaml-src"
   fi
 done
 
