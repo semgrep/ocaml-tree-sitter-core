@@ -35,6 +35,7 @@ test:
 #
 .PHONY: release
 release:
+	$(MAKE) -C semgrep-grammars
 	./release $(SUPPORTED_LANGUAGES)
 
 .PHONY: clean
