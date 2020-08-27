@@ -35,8 +35,16 @@ test:
 #
 .PHONY: release
 release:
+	@test -z "$$(git status --porcelain)" \
+	|| (echo "Commit your work or use 'make dry'."; exit 1)
 	$(MAKE) -C semgrep-grammars
 	./release $(SUPPORTED_LANGUAGES)
+
+# Make a pretend release.
+.PHONY: dry
+dry:
+	$(MAKE) -C semgrep-grammars
+	./release --dry-run $(SUPPORTED_LANGUAGES)
 
 .PHONY: clean
 clean:

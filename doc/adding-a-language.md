@@ -29,6 +29,8 @@ Then, from the ocaml-tree-sitter repo, do the following:
 1. Create a `lang/X` folder.
 2. Add sample input programs for testing.
 3. Add a collection of projects on which to run parsing stats.
+4. Create an `fyi.list` file containing extra files to bundle with the
+   final OCaml/C project.
 
 Here's the file hierarchy for Ruby:
 
@@ -41,6 +43,7 @@ lang/ruby               # language name of the form [a-z][a-z0-9]*
 │   ├── hello.rb.src
 │   └── poly.rb.src
 ├── extensions.txt      # standard name. Required for stats.
+├── fyi.list            # list of informational files to copy. Recommended.
 ├── Makefile -> ../Makefile.common
 └── projects.txt        # standard name. Required for stats.
 ```
@@ -59,6 +62,31 @@ $ cd lang/csharp
 $ make
 $ make test
 ```
+
+The `fyi.list` file
+--
+
+The `fyi.list` file was created to specify informational files that
+should accompany the generated files. These files are typically:
+
+* the source grammar, most often a single `grammar.js` file.
+* the licensing conditions usually specified in a `LICENSE` file.
+
+Example:
+
+```
+# Comments are allowed on their own line.
+# Blank lines are ok.
+
+# Each path is relative to ocaml-tree-sitter/lang
+semgrep-grammars/src/tree-sitter-ruby/LICENSE
+semgrep-grammars/src/tree-sitter-ruby/grammar.js
+semgrep-grammars/src/semgrep-ruby/grammar.js
+```
+
+The files listed in `fyi.list` end up in a `fyi` folder in
+ocaml-tree-sitter-lang. For example,
+[see `ruby/fyi`](https://github.com/returntocorp/ocaml-tree-sitter-lang/tree/master/ruby).
 
 Troubleshooting
 --
@@ -108,10 +136,8 @@ Legal concerns
 Be thankful for the authors of the original code, keep clearly visible
 license notices, and make it easy to get back to the original projects:
 
-* Group imported files by origin, preferably in the same folder with a
-  `LICENSE` file. Typically, code generated from third-party
-  tree-sitter grammars must be distributed with a copy of the license
-  (read the licencing terms).
+* Make sure to preserve the `LICENSE` files. This should be listed in
+  the `fyi.list` file.
 * For sample input in `examples/`, consider Public Domain ("The
   Unlicense") files or write your own, for simplicity.
   [GitHub Search](https://github.com/search/advanced)
@@ -133,3 +159,8 @@ For gathering a good test corpus, you can use
 programming language and use a constraint to select large projects, such
 as "> 100 forks". Collect the repository URLs and put them into
 `projects.txt`.
+
+See also
+--
+
+[How to upgrade the grammar for a language](updating-a-grammar.md)
