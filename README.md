@@ -26,8 +26,7 @@ installed or used by a wide audience.
 ### Contributing on MacOS
 
 * Note that you must have Xcode and CLT installed for Mac to run make setup.
-* If you are having trouble with node setup, reference [node page]
-  (https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md).
+* If you are having trouble with node setup, reference [node page](https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md).
 * You must also have bash version 4.0 or higher. To make this your default bash:
    1. Run `brew install bash` or `brew upgrade bash`
    2. Go to `/etc/shells` and add `usr/local/bin/bash`
@@ -45,8 +44,7 @@ installed or used by a wide audience.
 
 We have limited [documentation](doc) which is mostly targeted at
 early contributors. It's growing organically based on demand, so don't
-hesitate to [file an issue]
-(https://github.com/returntocorp/ocaml-tree-sitter/issues)
+hesitate to [file an issue](https://github.com/returntocorp/ocaml-tree-sitter/issues)
 explaining what you're trying to do.
 
 ## License
