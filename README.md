@@ -19,14 +19,15 @@ installed or used by a wide audience.
 3. Install the project's dependencies,
    possibly with `opam install --deps-only ocaml-tree-sitter.opam`.
 4. Install dependencies and tree-sitter-cli with `make setup`.
-5. Build with `make`. 
+5. Build with `make`.
 6. Install with `make install`.
 7. Test with `make test`.
 
 ### Contributing on MacOS
 
-* Note that you must have Xcode and CLT installed for Mac to run make setup. 
-* If you are having trouble with node setup, reference [node page] (https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md). 
+* Note that you must have Xcode and CLT installed for Mac to run make setup.
+* If you are having trouble with node setup, reference [node page]
+  (https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md).
 * You must also have bash version 4.0 or higher. To make this your default bash:
    1. Run `brew install bash` or `brew upgrade bash`
    2. Go to `/etc/shells` and add `usr/local/bin/bash`
@@ -35,15 +36,18 @@ installed or used by a wide audience.
 
 ### Testing Parsing for a Specific Language
 
-1. Go to `ocaml-tree-sitter/lang/semgrep-grammars/src`. 
+1. Go to `ocaml-tree-sitter/lang/semgrep-grammars/src`.
 2. Build with `make`.
 3. Go to `ocaml-tree-sitter/lang/<language name>`.
-4. Build with `make`. 
+4. Build with `make`.
 
 ## Documentation
 
-* [Contributor documentation](doc/overview.md)
-* No user documentation exists at this time.
+We have limited [documentation](doc) which is mostly targeted at
+early contributors. It's growing organically based on demand, so don't
+hesitate to [file an issue]
+(https://github.com/returntocorp/ocaml-tree-sitter/issues)
+explaining what you're trying to do.
 
 ## License
 
