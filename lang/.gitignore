@@ -7,7 +7,8 @@ Parse_*.ml
 # Various output files
 /*/examples/*.cst
 /*/examples/*.json
-/*/stat.*
+/*/stat.tmp
+/*/stat
 
 node_modules
 package.json

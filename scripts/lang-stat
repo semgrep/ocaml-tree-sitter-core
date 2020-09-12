@@ -24,6 +24,8 @@ error() {
   exit 1
 }
 
+### Command-line parsing ###
+
 [[ "${BASH_VERSION%%.*}" -ge 4 ]] || error "requires bash >= 4"
 
 if [[ $# != 3 ]]; then
@@ -35,22 +37,7 @@ lang="$1"
 projects_file="$2"
 extensions_file="$3"
 
-# Read lines into array after removing comments and blank lines.
-readarray -t urls < <(grep -v '^ *\(#\| *$\)' "$projects_file")
-readarray -t extensions < <(grep -v '^ *\(#\| *$\)' "$extensions_file")
-
-csv=stat.csv
-tmp=stat.tmp
-failed_inputs=stat.fail
-
-# CSV header
-cat > "$csv" <<EOF
-Name,URL,Files,"Failed files",Lines,"Failed lines",\
-"External errors","Internal errors","Other errors"
-EOF
-
-parser=$(pwd)/ocaml-src/_build/install/default/bin/parse-"$lang"
-test -x "$parser" || error "Missing parser '$parser'."
+### Functions ###
 
 parse() {
   (
@@ -58,7 +45,7 @@ parse() {
     json=out.json
     cst=out.cst
     "$parser" "$input" > /dev/null
-  ) > "$proj_workspace"/parse.log 2>&1
+  ) >> "$proj_err_log" 2>&1
   status=$?
   case "$status" in
     0) ;;
@@ -78,6 +65,8 @@ handle_project() {
   name=$(basename "${url%.git}")
   proj_workspace="$tmp"/"$name"
   mkdir -p "$proj_workspace"
+  proj_err_log="$proj_workspace"/parse-error.log
+  rm -f "$proj_err_log"
   (
     cd "$proj_workspace"
     rm -f inputs
@@ -104,6 +93,7 @@ EOF
       fi
     done
   )
+
   readarray -t inputs < <(cat "$proj_workspace"/inputs)
   num_files=${#inputs[@]}
   echo "Found $num_files files."
@@ -129,6 +119,9 @@ EOF
       echo "  ERROR"
     fi
   done
+
+  # Aggregate results with other projects
+  cat "$proj_err_log" >> "$global_err_log"
   global_line_count=$(( global_line_count + line_count ))
   global_error_line_count=$(( global_error_line_count + error_line_count ))
   cat >> "$csv" <<EOF
@@ -137,26 +130,57 @@ $ext_err_count,$int_err_count,$other_err_count
 EOF
 }
 
-mkdir -p "$tmp"
-rm -f "$failed_inputs"
-global_line_count=0
-global_error_line_count=0
-for url in "${urls[@]}"; do
-  handle_project 2>&1 || echo "Failed on $url" 2>&1 \
-    | tee "$tmp"/lang-stat.log
-done
+main() {
+  # Read lines into array after removing comments and blank lines.
+  readarray -t urls < <(grep -v '^ *\(#\| *$\)' "$projects_file")
+  readarray -t extensions < <(grep -v '^ *\(#\| *$\)' "$extensions_file")
 
-line_coverage=$(awk -f - <<EOF
+  # Workspace, which includes cached git repos.
+  tmp=stat.tmp
+
+  # Output folder, wiped out before every run.
+  stat=stat
+  csv="$stat"/stat.csv
+  failed_inputs="$stat"/stat.fail
+  global_err_log="$stat"/parse-error.log
+
+  parser=$(pwd)/ocaml-src/_build/install/default/bin/parse-"$lang"
+  test -x "$parser" || error "Missing parser '$parser'."
+
+  # Initialize output folder
+  rm -rf "$stat"
+  mkdir -p "$stat"
+
+  # Reuse temporary folder
+  mkdir -p "$tmp"
+  rm -f "$failed_inputs"
+
+  # CSV header
+  cat > "$csv" <<EOF
+Name,URL,Files,"Failed files",Lines,"Failed lines",\
+"External errors","Internal errors","Other errors"
+EOF
+
+  # Run the stats on each git project
+  global_line_count=0
+  global_error_line_count=0
+  for url in "${urls[@]}"; do
+    handle_project 2>&1 || echo "Failed on $url" 2>&1 \
+      | tee "$stat"/lang-stat.log
+  done
+
+  line_coverage=$(awk -f - <<EOF
 BEGIN {
   printf "%.3f%%\n",
   100 * (1 - $global_error_line_count / $global_line_count)
 }
 EOF
-)
+  )
 
-cat <<EOF
-Failed inputs: $failed_inputs
-Result file: $csv
+  tee "$stat"/summary.txt <<EOF
 Line count: $global_line_count
 Line coverage: $line_coverage
 EOF
+}
+
+main

@@ -14,6 +14,17 @@ SUPPORTED_LANGUAGES = \
   ruby \
   typescript
 
+# Languages which are set up to run parsing stats. Ideally, this is all
+# the supported languages. See the 'stat' target.
+#
+STAT_LANGUAGES = \
+  csharp \
+  go \
+  java \
+  javascript \
+  ruby \
+  typescript
+
 .PHONY: build
 build:
 	$(MAKE) -C semgrep-grammars
@@ -45,6 +56,16 @@ release:
 dry:
 	$(MAKE) -C semgrep-grammars
 	./release --dry-run $(SUPPORTED_LANGUAGES)
+
+# Run parsing stats for each language.
+# Each needs a list of projects (projects.txt) and file extensions
+# (extensions.txt).
+#
+.PHONY: stat
+stat:
+	set -e; \
+	for lang in $(STAT_LANGUAGES); do $(MAKE) -C $$lang stat; done
+	../scripts/report-stat $(STAT_LANGUAGES) | tee stat.txt
 
 .PHONY: clean
 clean:
