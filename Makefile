@@ -65,6 +65,12 @@ lang: build
 	$(MAKE) -C lang build
 	$(MAKE) -C lang test
 
+# Run parsing stats for the supported languages in lang/.
+.PHONY: stat
+stat:
+	$(MAKE) -C lang build
+	$(MAKE) -C lang stat
+
 .PHONY: install
 install:
 	dune install

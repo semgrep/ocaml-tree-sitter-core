@@ -67,11 +67,11 @@ jobs:
           name: install
           command: opam exec -- make install
       - run:
-          name: build parsers
-          command: opam exec -- make -C lang build
+          name: fetch submodules
+          command: git submodule update --init --recursive
       - run:
           name: run parsing stats
-          command: opam exec -- make -C lang stat
+          command: opam exec -- make stat
       - store_artifacts:
           path: lang/stat.txt
 
@@ -109,4 +109,3 @@ workflows:
             branches:
               only:
                 - stats
-
