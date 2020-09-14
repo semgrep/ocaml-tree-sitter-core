@@ -1,0 +1,46 @@
+#! /usr/bin/env bash
+#
+# Print a summary of the language stats.
+#
+set -eu -o pipefail
+
+prog_name=$(basename "$0")
+
+usage() {
+  cat <<EOF
+Usage: $prog_name [options] LANG1 LANG2 ...
+
+Print a summary of the language stats. Must run from the lang/ folder.
+
+  --help
+      Print this message and exit.
+EOF
+}
+
+langs=()
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      langs+=("$1")
+  esac
+  shift
+done
+
+commit_id=$(git rev-parse --short HEAD)
+
+cat <<EOF
+=== ocaml-tree-sitter language statistics ===
+date: $(date +%F)
+git commit: $commit_id
+EOF
+
+for lang in "${langs[@]}"; do
+  summary="$lang"/stat/summary.txt
+  echo
+  echo "Language: $lang"
+  cat "$summary"
+done

@@ -42,3 +42,70 @@ jobs:
       - run:
           name: test languages
           command: opam exec -- make lang
+  stat:
+    docker:
+      - image: mjambon/r2c-ocaml:ubuntu
+    working_directory: ~/ocaml-tree-sitter
+    steps:
+      - checkout
+      - run:
+          name: set up node
+          command: ./scripts/setup-node
+      - run:
+          name: install tree-sitter lib
+          command: ./scripts/install-tree-sitter-lib
+      - run:
+          name: configure
+          command: ./configure
+      - run:
+          name: install dependencies
+          command: opam exec -- make setup
+      - run:
+          name: build
+          command: opam exec -- make
+      - run:
+          name: install
+          command: opam exec -- make install
+      - run:
+          name: fetch submodules
+          command: git submodule update --init --recursive
+      - run:
+          name: run parsing stats
+          command: opam exec -- make stat
+      - store_artifacts:
+          path: lang/stat.txt
+
+workflows:
+  version: 2
+
+  build-on-commit:
+    # Default trigger, on commit.
+    jobs:
+      - build
+
+  weekly-stats:
+    triggers:
+      - schedule:
+          # Run at 10:00 every Sunday, UTC.
+          cron: "0 10 * * 3"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - stat:
+          # Run only on these branches (each pushing different images)
+          filters:
+            branches:
+              only:
+                - master
+
+  # This is for testing or for forcing a stats job. Requires pushing
+  # to a branch named 'stats'.
+  stats-on-commit:
+    jobs:
+      - stat:
+          filters:
+            branches:
+              only:
+                - stats
