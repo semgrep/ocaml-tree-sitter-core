@@ -78,12 +78,12 @@ jobs:
 workflows:
   version: 2
 
-  commit:
+  build-on-commit:
     # Default trigger, on commit.
     jobs:
       - build
 
-  weekly:
+  weekly-stats:
     triggers:
       - schedule:
           # Run at 10:00 every Sunday, UTC.
@@ -99,3 +99,9 @@ workflows:
             branches:
               only:
                 - master
+
+  # This is for testing or for forcing a stats job. Requires pushing
+  # to a branch named 'stats'.
+  stats-on-commit:
+    jobs:
+      - stat
