@@ -104,4 +104,9 @@ workflows:
   # to a branch named 'stats'.
   stats-on-commit:
     jobs:
-      - stat
+      - stat:
+          filters:
+            branches:
+              only:
+                - stats
+
