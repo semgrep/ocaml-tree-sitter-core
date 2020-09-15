@@ -12,6 +12,7 @@ SUPPORTED_LANGUAGES = \
   java \
   javascript \
   ruby \
+  tsx \
   typescript
 
 # Languages which are set up to run parsing stats. Ideally, this is all
@@ -23,6 +24,7 @@ STAT_LANGUAGES = \
   java \
   javascript \
   ruby \
+  tsx \
   typescript
 
 .PHONY: build
