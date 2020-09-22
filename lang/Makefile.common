@@ -58,6 +58,10 @@ parse-examples:
 stat:
 	$(SCRIPTS)/lang-stat $(LANG) projects.txt extensions.txt
 
+.PHONY: stat-priv
+stat-priv:
+	$(SCRIPTS)/lang-stat $(LANG) projects-priv.txt extensions.txt
+
 .PHONY: clean
 clean:
 	rm -rf stat.tmp

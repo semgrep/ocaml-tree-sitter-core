@@ -69,6 +69,13 @@ stat:
 	for lang in $(STAT_LANGUAGES); do $(MAKE) -C $$lang stat; done
 	../scripts/report-stat $(STAT_LANGUAGES) | tee stat.txt
 
+# Run stats on projects-priv.txt instead of projects.txt.
+.PHONY: stat-priv
+stat-priv:
+	set -e; \
+	for lang in $(STAT_LANGUAGES); do $(MAKE) -C $$lang stat-priv; done
+	../scripts/report-stat $(STAT_LANGUAGES) | tee stat.txt
+
 .PHONY: clean
 clean:
 	set -e; \
