@@ -12,6 +12,7 @@ SUPPORTED_LANGUAGES = \
   java \
   javascript \
   ruby \
+  tsx \
   typescript
 
 # Languages which are set up to run parsing stats. Ideally, this is all
@@ -23,6 +24,7 @@ STAT_LANGUAGES = \
   java \
   javascript \
   ruby \
+  tsx \
   typescript
 
 .PHONY: build
@@ -65,6 +67,13 @@ dry:
 stat:
 	set -e; \
 	for lang in $(STAT_LANGUAGES); do $(MAKE) -C $$lang stat; done
+	../scripts/report-stat $(STAT_LANGUAGES) | tee stat.txt
+
+# Run stats on projects-priv.txt instead of projects.txt.
+.PHONY: stat-priv
+stat-priv:
+	set -e; \
+	for lang in $(STAT_LANGUAGES); do $(MAKE) -C $$lang stat-priv; done
 	../scripts/report-stat $(STAT_LANGUAGES) | tee stat.txt
 
 .PHONY: clean
