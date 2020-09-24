@@ -97,7 +97,7 @@ let name_rule_body body =
    Similar to name_rule_body but recursively descend into alternatives,
    producing a longer name. Which is then hashed and discarded.
 *)
-let hash_hex body =
+let hash_rule_body body =
   let buf = Buffer.create 100 in
   let rec aux = function
     | Symbol ident -> Buffer.add_string buf ident
@@ -144,7 +144,7 @@ let assign_case_names ?rule_name:opt_rule_name cases =
       | [] -> assert false
       | rule_bodies ->
           List.map (fun (pos, rule_body) ->
-            let hex_id = hash_hex rule_body in
+            let hex_id = hash_rule_body rule_body in
             (pos, (name ^ "_" ^ hex_id, rule_body))
           ) rule_bodies
     ) grouped
