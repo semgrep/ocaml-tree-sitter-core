@@ -155,7 +155,9 @@ let factorize_rules
       && not (Hashtbl.mem node_names node)
       then
         let name =
-          "anon_" ^ Type_name.name_rule_body node |> make_name_unique in
+          sprintf "anon_%s_%s"
+            (Type_name.name_rule_body node) (Type_name.hash_rule_body node)
+          |> make_name_unique in
         assert (not (Hashtbl.mem new_rules name));
         Hashtbl.add node_names node name;
         Hashtbl.add new_rules name node
