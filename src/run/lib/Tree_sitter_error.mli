@@ -9,9 +9,26 @@ type kind =
 type t = {
   kind: kind;
   msg: string;
+
+  (*
+     Provides the path to the source file if applicable.
+  *)
   file: Src_file.info;
+
+  (*
+     Beginning and end of the error node reported by tree-sitter.
+     The end position is inclusive, i.e. it's the position of the last
+     character of the selected region.
+  *)
   start_pos: Tree_sitter_bindings.Tree_sitter_output_t.position;
   end_pos: Tree_sitter_bindings.Tree_sitter_output_t.position;
+
+  (*
+     A structured snippet of code extracted from the source input,
+     including lines of context, regions to be highlighted, and ellipses
+     if a string is too long. See Snippet.format for rendering
+     to a terminal or as plain text.
+  *)
   snippet: Snippet.t;
 }
 
