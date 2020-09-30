@@ -35,7 +35,7 @@ let read_lines filename =
     let acc = ref [] in
     (try
        while true do
-         acc := (input_line ic ^ "\n") :: !acc
+         acc := (input_line ic) :: !acc
        done;
        assert false
      with End_of_file ->
@@ -59,10 +59,7 @@ let load_string ?(src_name = "<source>") ?src_file src_contents =
     | None -> { name = src_name; path = None }
     | Some path -> { name = path; path = Some path }
   in
-  let lines =
-    String.split_on_char '\n' src_contents
-    |> List.map (fun line -> line ^ "\n")
-  in
+  let lines = String.split_on_char '\n' src_contents in
   {
     info;
     lines = Array.of_list lines;

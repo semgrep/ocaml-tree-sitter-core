@@ -2,12 +2,15 @@
    Representation of an input file.
 *)
 
-type t
-
 type info = {
   name: string; (* path to the file or to an informal descriptor
                    such as '<stdin>' *)
   path: string option; (* path to the file, if applicable *)
+}
+
+type t = private {
+  info: info;
+  lines: string array;
 }
 
 val info : t -> info

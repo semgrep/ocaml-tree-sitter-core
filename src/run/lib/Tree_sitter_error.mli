@@ -12,7 +12,7 @@ type t = {
   file: Src_file.info;
   start_pos: Tree_sitter_bindings.Tree_sitter_output_t.position;
   end_pos: Tree_sitter_bindings.Tree_sitter_output_t.position;
-  snippet: string * string * string;
+  snippet: Snippet.t;
 }
 
 (* Fatal parsing error. *)
