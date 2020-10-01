@@ -15,6 +15,9 @@ module Exit = struct
   let internal_parsing_error = 12
 end
 
+let use_color () =
+  !ANSITerminal.isatty Unix.stderr
+
 let safe_run f =
   Printexc.record_backtrace true;
   try f ()
@@ -23,10 +26,14 @@ let safe_run f =
     flush stdout;
     let msg, exit_code, show_trace =
       match e with
-      | Tree_sitter_error.External_error msg ->
-          msg, Exit.external_parsing_error, false
-      | Tree_sitter_error.Internal_error msg ->
-          msg, Exit.internal_parsing_error, false
+      | Tree_sitter_error.Error err ->
+          let msg = Tree_sitter_error.to_string ~color:(use_color ()) err in
+          let exit_code =
+            match err.kind with
+            | External -> Exit.external_parsing_error
+            | Internal -> Exit.internal_parsing_error
+          in
+          msg,exit_code, false
       | Failure msg ->
           msg, Exit.any_error, true
       | e ->

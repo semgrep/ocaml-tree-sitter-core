@@ -5,12 +5,21 @@
 open Printf
 open Tree_sitter_bindings.Tree_sitter_output_t
 
-exception External_error of string
-exception Internal_error of string
+type kind =
+  | Internal (* a bug *)
+  | External (* malformed input or bug, but we don't know *)
 
-let format_snippet src start end_ =
-  let snippet = Src_file.get_token src start end_ in
-  sprintf "%s\n" snippet
+type t = {
+  kind: kind;
+  msg: string;
+  file: Src_file.info;
+  start_pos: position;
+  end_pos: position;
+  substring: string;
+  snippet: Snippet.t;
+}
+
+exception Error of t
 
 let string_of_node_type x =
   match x.children with
@@ -32,37 +41,52 @@ children: [
         (List.map (fun x -> sprintf "  %s\n" (string_of_node_type x)) children
          |> String.concat "")
 
+let create kind src node msg =
+  let msg = sprintf "\
+%s
+%s"
+      (string_of_node node)
+      msg
+  in
+  let start_pos = node.start_pos in
+  let end_pos = node.end_pos in
+  {
+    kind;
+    msg;
+    file = Src_file.info src;
+    start_pos;
+    end_pos;
+    substring = Src_file.get_token src start_pos end_pos;
+    snippet = Snippet.extract src ~start_pos ~end_pos;
+  }
+
+let fail kind src node msg =
+  raise (Error (create kind src node msg))
+
+let external_error src node msg =
+  fail External src node msg
+
+let internal_error src node msg =
+  fail Internal src node msg
+
 (* Take an error message and prepend the location information,
    in a human-readable and possibly computer-readable format (TODO check with
    emacs etc.)
 *)
-let prepend_msg src node msg =
-  let start = node.start_pos in
-  let end_ = node.end_pos in
+let to_string ?(color = false) (err : t) =
+  let start = err.start_pos in
+  let end_ = err.end_pos in
   let loc =
     if start.row = end_.row then
       sprintf "Line %i, characters %i-%i:"
-        start.row start.column end_.column
+        (start.row + 1) start.column end_.column
     else
       sprintf "Line %i, character %i to line %i, character %i:"
-        start.row start.column end_.row end_.column
+        (start.row + 1) start.column (end_.row + 1) end_.column
   in
-  let snippet = format_snippet src start end_ in
   sprintf "\
 %s
-%s
-source code:
-%s
-%s"
+%s%s"
     loc
-    (string_of_node node)
-    snippet
-    msg
-
-let external_error src node msg =
-  let msg = prepend_msg src node msg in
-  raise (External_error msg)
-
-let internal_error src node msg =
-  let msg = prepend_msg src node msg in
-  raise (Internal_error msg)
+    (Snippet.format ~color err.snippet)
+    err.msg

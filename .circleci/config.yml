@@ -8,7 +8,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: mjambon/r2c-ocaml:ubuntu
+      - image: returntocorp/ocaml:ubuntu
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
