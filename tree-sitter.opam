@@ -15,7 +15,7 @@ install: [make "install"]
 
 depends: [
   "alcotest"
-  "ansiterminal"
+  "ANSITerminal"
   "atdgen"
   "cmdliner"
   "conf-pkg-config"
