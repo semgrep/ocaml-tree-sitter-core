@@ -30,3 +30,10 @@ val load_file : string -> t
 val load_string : ?src_name:string -> ?src_file:string -> string -> t
 
 val get_token : t -> Loc.pos -> Loc.pos -> string
+
+(*
+   Get the specified line from the line array.
+   The first line (row) is numbered 0.
+   If the requested line is out of range, the empty string is returned.
+*)
+val safe_get_row : t -> int -> string

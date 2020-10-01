@@ -18,21 +18,9 @@ type snippet_line = snippet_fragment list
 
 type t = snippet_line list
 
-(*
-   Same as String.sub but shrink the requested range to a valid range
-   if needed.
-*)
-let safe_string_sub s orig_start orig_len =
-  let s_len = String.length s in
-  let orig_end = orig_start + orig_len in
-  let start = min s_len (max 0 orig_start) in
-  let end_ = min s_len (max 0 orig_end) in
-  let len = max 0 (end_ - start) in
-  String.sub s start len
-
 let split s pos2 =
-  let a = safe_string_sub s 0 pos2 in
-  let b = safe_string_sub s pos2 (String.length s - pos2) in
+  let a = Util_string.safe_sub s 0 pos2 in
+  let b = Util_string.safe_sub s pos2 (String.length s - pos2) in
   a, b
 
 let normal_max_length = 120
@@ -43,8 +31,8 @@ let ellide max_len s =
   let len = String.length s in
   if len > max_len then
     let len2 = max_len/2 in
-    let a = safe_string_sub s 0 len2 in
-    let b = safe_string_sub s (len-len2) len2 in
+    let a = Util_string.safe_sub s 0 len2 in
+    let b = Util_string.safe_sub s (len-len2) len2 in
     Some (a, b)
   else
     None
@@ -90,7 +78,7 @@ let extract
     let line_acc = ref [] in
     let add line = line_acc := line :: !line_acc in
     for line_num = snip_start_line to snip_end_line - 1 do
-      let line = src.lines.(line_num) in
+      let line = Src_file.safe_get_row src line_num in
       if line_num < start_line || line_num >= end_line then
         (* Highlight nothing. *)
         add [Normal line]
