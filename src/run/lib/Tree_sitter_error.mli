@@ -24,6 +24,13 @@ type t = {
   end_pos: Tree_sitter_bindings.Tree_sitter_output_t.position;
 
   (*
+     The region of the code (tree-sitter error node) reported as an error.
+     This could almost be extracted from the snippet field, but here we
+     guarantee no ellipsis.
+  *)
+  substring: string;
+
+  (*
      A structured snippet of code extracted from the source input,
      including lines of context, regions to be highlighted, and ellipses
      if a string is too long. See Snippet.format for rendering

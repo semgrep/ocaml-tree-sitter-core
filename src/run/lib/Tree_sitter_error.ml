@@ -15,6 +15,7 @@ type t = {
   file: Src_file.info;
   start_pos: position;
   end_pos: position;
+  substring: string;
   snippet: Snippet.t;
 }
 
@@ -55,6 +56,7 @@ let create kind src node msg =
     file = Src_file.info src;
     start_pos;
     end_pos;
+    substring = Src_file.get_token src start_pos end_pos;
     snippet = Snippet.extract src ~start_pos ~end_pos;
   }
 
