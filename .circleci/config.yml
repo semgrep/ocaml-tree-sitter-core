@@ -72,6 +72,9 @@ jobs:
       - run:
           name: run parsing stats
           command: opam exec -- make stat
+      - run:
+          name: upload parsing stats
+          command: python3 ./scripts/upload-stat.py lang/stat.txt
       - store_artifacts:
           path: lang/stat.txt
 
@@ -86,8 +89,8 @@ workflows:
   weekly-stats:
     triggers:
       - schedule:
-          # Run at 10:00 every Sunday, UTC.
-          cron: "0 10 * * 3"
+          # Run at 00:00 every day, UTC.
+          cron: "0 0 * * *"
           filters:
             branches:
               only:
