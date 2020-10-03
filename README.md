@@ -50,7 +50,7 @@ explaining what you're trying to do.
 ## License
 
 ocaml-tree-sitter is free software with contributors from multiple
-organizations. The project is driven by R2C.
+organizations. The project is driven by r2c.
 
 - OCaml code developed specifically for this project is
   distributed under the terms of the [GNU GPL v3](LICENSE).

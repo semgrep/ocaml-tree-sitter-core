@@ -24,15 +24,22 @@ let extract_rule_deps (rule : rule) =
     printf "%s -> %s\n%!" rule.name (String.concat " " deps);
   (rule.name, deps)
 
-(* Generic function on top of Tsort.sort_strongly_connected_components.
-   Fails with exception if there's no entry for a dependency. *)
+(*
+   Generic function on top of Tsort.sort_strongly_connected_components.
+   Fails with exception if there's no entry for a dependency.
+
+   The input is presorted so as to make the output insensitive to
+   the input order.
+*)
 let tsort get_deps elts =
   let deps_data =
     List.map (fun elt ->
       let id, deps = get_deps elt in
+      let deps = List.sort compare deps in
       let self_dep = List.mem id deps in
       (id, deps, self_dep, elt)
     ) elts
+    |> List.sort (fun (a, _, _, _) (b, _, _, _) -> compare a b)
   in
   let tbl = Hashtbl.create 100 in
   List.iter (fun ((id, _, _, _) as x) -> Hashtbl.replace tbl id x) deps_data;

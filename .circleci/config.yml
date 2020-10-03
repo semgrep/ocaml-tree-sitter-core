@@ -8,7 +8,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: mjambon/r2c-ocaml:ubuntu
+      - image: returntocorp/ocaml:ubuntu
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
@@ -72,6 +72,9 @@ jobs:
       - run:
           name: run parsing stats
           command: opam exec -- make stat
+      - run:
+          name: upload parsing stats
+          command: python3 ./scripts/upload-stat.py lang/stat.txt
       - store_artifacts:
           path: lang/stat.txt
 

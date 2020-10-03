@@ -7,10 +7,17 @@
    or in characters. Assuming the former for now.
 *)
 
+type info = {
+  name: string;
+  path: string option;
+}
+
 type t = {
-  filename: string;
+  info: info;
   lines: string array;
 }
+
+let info x = x.info
 
 let with_in_channel filename f =
   let ic = open_in filename in
@@ -28,7 +35,7 @@ let read_lines filename =
     let acc = ref [] in
     (try
        while true do
-         acc := (input_line ic ^ "\n") :: !acc
+         acc := (input_line ic) :: !acc
        done;
        assert false
      with End_of_file ->
@@ -39,17 +46,22 @@ let read_lines filename =
 
 let load_file src_file =
   {
-    filename = src_file;
+    info = {
+      name = src_file;
+      path = Some src_file;
+    };
     lines = Array.of_list (read_lines src_file);
   }
 
-let load_string ?(src_file = "<source>") src_contents =
-  let lines =
-    String.split_on_char '\n' src_contents
-    |> List.map (fun line -> line ^ "\n")
+let load_string ?(src_name = "<source>") ?src_file src_contents =
+  let info =
+    match src_file with
+    | None -> { name = src_name; path = None }
+    | Some path -> { name = path; path = Some path }
   in
+  let lines = String.split_on_char '\n' src_contents in
   {
-    filename = src_file;
+    info;
     lines = Array.of_list lines;
   }
 
