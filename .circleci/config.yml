@@ -86,7 +86,7 @@ workflows:
     jobs:
       - build
 
-  weekly-stats:
+  scheduled-stats:
     triggers:
       - schedule:
           # Run at 00:00 every day, UTC.
