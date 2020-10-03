@@ -69,6 +69,11 @@ let external_error src node msg =
 let internal_error src node msg =
   fail Internal src node msg
 
+let string_of_file_info (src_info : Src_file.info) =
+  match src_info.path with
+  | Some path -> sprintf "File %s" path
+  | None -> src_info.name
+
 (* Take an error message and prepend the location information,
    in a human-readable and possibly computer-readable format (TODO check with
    emacs etc.)
@@ -77,11 +82,14 @@ let to_string ?(color = false) (err : t) =
   let start = err.start_pos in
   let end_ = err.end_pos in
   let loc =
+    let src_name = string_of_file_info err.file in
     if start.row = end_.row then
-      sprintf "Line %i, characters %i-%i:"
+      sprintf "%s, line %i, characters %i-%i:"
+        src_name
         (start.row + 1) start.column end_.column
     else
-      sprintf "Line %i, character %i to line %i, character %i:"
+      sprintf "%s, line %i, character %i to line %i, character %i:"
+        src_name
         (start.row + 1) start.column (end_.row + 1) end_.column
   in
   sprintf "\
