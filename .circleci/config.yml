@@ -72,6 +72,9 @@ jobs:
       - run:
           name: run parsing stats
           command: opam exec -- make stat
+      - run:
+          name: upload parsing stats
+          command: python3 ./scripts/upload-stat.py lang/stat.txt
       - store_artifacts:
           path: lang/stat.txt
 
