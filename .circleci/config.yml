@@ -89,8 +89,8 @@ workflows:
   weekly-stats:
     triggers:
       - schedule:
-          # Run at 10:00 every Sunday, UTC.
-          cron: "0 10 * * 3"
+          # Run at 00:00 every day, UTC.
+          cron: "0 0 * * *"
           filters:
             branches:
               only:
