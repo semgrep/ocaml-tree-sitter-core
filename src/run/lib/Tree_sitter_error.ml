@@ -56,7 +56,7 @@ let create kind src node msg =
     file = Src_file.info src;
     start_pos;
     end_pos;
-    substring = Src_file.get_token src start_pos end_pos;
+    substring = Src_file.get_region src start_pos end_pos;
     snippet = Snippet.extract src ~start_pos ~end_pos;
   }
 

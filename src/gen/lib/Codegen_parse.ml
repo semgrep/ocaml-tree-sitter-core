@@ -391,6 +391,7 @@ let parse_input_tree input_tree =
   let src = Tree_sitter_parsing.src input_tree in
   let match_node = Run.make_node_matcher children_regexps src in
   let matched_tree = match_node root_node in
+  Run.check_matched_tree src root_node matched_tree;
   trans_%s matched_tree
 
 let string ?src_file contents =

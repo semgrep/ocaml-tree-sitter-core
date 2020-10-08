@@ -22,9 +22,23 @@ parser=./parse-"$lang"
 
 # Run the parser from source to ocaml CST
 #
+# Input files are examples/*.src
+# If the test is supposed to fail, the pattern is examples/*.err.src
+#
 if [[ -d examples ]]; then
   for src in $(ls examples/*.src || :); do
-    cst=${src%.src}.cst
-    "$parser" "$src" 2>&1 | tee "$cst"
+    prefix=${src%.src}
+    cst=$prefix.cst
+    if [[ $prefix == *.err ]]; then
+      # Expect error status
+      if "$parser" "$src" 2>&1 | tee "$cst"; then
+        echo "Test on input file $src was expected to fail."
+        exit 1
+      fi
+    else
+      # Expect success
+      "$parser" "$src" 2>&1 | tee "$cst"
+    fi
+    echo "OK $src"
   done
 fi

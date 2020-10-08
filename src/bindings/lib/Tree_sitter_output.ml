@@ -12,9 +12,12 @@ let rec of_ts_node get_node_id ts_node =
   let end_pos = Node.end_point ts_node in
   let children = read_children get_node_id ts_node in
   let kind =
-    match children with
-    | None -> Literal type_
-    | Some _ -> Name type_
+    match type_ with
+    | "ERROR" -> Error
+    | _ ->
+        match children with
+        | None -> Literal type_
+        | Some _ -> Name type_
   in
   {
     type_;
