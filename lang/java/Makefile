@@ -1,2 +1,1 @@
-LANG = java
-include ../Makefile.common
+../Makefile.common

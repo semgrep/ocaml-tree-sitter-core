@@ -1,2 +1,1 @@
-LANG = go
-include ../Makefile.common
+../Makefile.common

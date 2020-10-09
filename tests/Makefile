@@ -11,6 +11,8 @@ TESTS = \
   extras \
   backtrack \
   token \
+  anon-pat \
+  prec \
   ignore-error
 
 # Build and run all the tests.
@@ -19,8 +21,8 @@ test:
 	$(MAKE) setup
 	set -eu; \
 	for lang in $(TESTS); do \
-	  make -C $$lang; \
-	  make -C $$lang test; \
+	  $(MAKE) -C $$lang; \
+	  $(MAKE) -C $$lang test; \
 	done
 
 # Generate or update the makefile for each test
