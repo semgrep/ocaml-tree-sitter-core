@@ -79,7 +79,7 @@ let register_children_regexp regexps =
   fun name ->
     Hashtbl.find_opt tbl name
 
-let make_node_matcher regexps src : node -> matcher_token =
+let make_tree_matcher regexps src : node -> matcher_token option =
   let get_children_regexp = register_children_regexp regexps in
   let rec match_node node =
     let kind = node.kind in
@@ -117,7 +117,14 @@ Tree-sitter parse tree could not be interpreted.
         )
     | _ -> assert false
   in
-  match_node
+  fun root_node ->
+    match match_node root_node with
+    | Error, _ -> None (* error bubbled up to the root *)
+    | x -> Some x
+
+let match_tree children_regexps src root_node =
+  let match_tree = make_tree_matcher children_regexps src in
+  match_tree root_node
 
 let matcher_token capture =
   match capture with
@@ -157,7 +164,7 @@ let nothing capture =
    This is meant for reporting errors, especially if the errors can't
    be recovered from.
 *)
-let extract_errors root_node =
+let extract_error_nodes root_node =
   let rec extract acc node =
     match node.kind with
     | Error -> (node :: acc)
@@ -169,19 +176,12 @@ let extract_errors root_node =
   extract [] root_node
   |> List.rev
 
-let check_matched_tree src root_node matched_tree =
-  match matched_tree with
-  | (Error, _) ->
-      let errors = extract_errors root_node in
-      (match errors with
-       | [] ->
-           Tree_sitter_error.internal_error src root_node
-             "Cannot interpret tree-sitter output"
-       | first_error_node :: _ ->
-           Tree_sitter_error.external_error src first_error_node
-             "Unrecoverable parse error"
-      )
-  | _ -> ()
+let extract_errors src root_node =
+  extract_error_nodes root_node
+  |> List.map (fun error_node ->
+    Tree_sitter_error.create Tree_sitter_error.External src error_node
+      "Unrecognized construct"
+  )
 
 let rec filter_nodes keep nodes =
   List.filter_map (filter_node keep) nodes

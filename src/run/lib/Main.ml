@@ -33,7 +33,7 @@ let safe_run f =
             | External -> Exit.external_parsing_error
             | Internal -> Exit.internal_parsing_error
           in
-          msg,exit_code, false
+          msg, exit_code, false
       | Failure msg ->
           msg, Exit.any_error, true
       | e ->
@@ -50,6 +50,13 @@ let safe_run f =
     eprintf "\nexit %i\n" exit_code;
     flush stderr;
     exit exit_code
+
+let print_error err =
+  eprintf "Error: %s\n"
+    (Tree_sitter_error.to_string ~color:(use_color ()) err)
+
+let print_errors errors =
+  List.iter print_error errors
 
 type input_kind =
   | Source_file
@@ -71,11 +78,44 @@ let parse_and_dump
     ~src_file
     ~parse_input_tree
     ~dump_tree
+    ~stat_file
     input_kind =
   let input_tree = load_input_tree ~parse_source_file ~src_file input_kind in
   Tree_sitter_parsing.print input_tree;
-  parse_input_tree input_tree
-  |> dump_tree
+  let some_success, errors =
+    match parse_input_tree input_tree with
+    | Some matched_tree, errors ->
+        dump_tree matched_tree;
+        true, errors
+    | None, errors ->
+        false, errors
+  in
+  let stat = Stat.extract src_file some_success errors in
+  Stat.export ~out_file:stat_file stat;
+  let lines = stat.total_line_count in
+  let err_lines = stat.error_line_count in
+  let success_ratio =
+    if lines > 0 then float (lines - err_lines) /. float lines
+    else 1.
+  in
+  print_errors errors;
+  printf "\
+total lines: %i
+error lines: %i
+error count: %i
+success: %.2f%%
+"
+    stat.total_line_count
+    stat.error_line_count
+    stat.error_count
+    (100. *. success_ratio);
+
+  let success = some_success && errors = [] in
+  let exit_code =
+    if success then 0
+    else Exit.external_parsing_error
+  in
+  exit_code
 
 let usage ~lang () =
   eprintf "\
@@ -102,10 +142,14 @@ let run ~lang ~parse_source_file ~parse_input_tree ~dump_tree =
         exit Exit.bad_command_line
   in
   safe_run (fun () ->
-    parse_and_dump
-      ~parse_source_file
-      ~src_file
-      ~parse_input_tree
-      ~dump_tree
-      input_kind
+    let suggested_exit_code =
+      parse_and_dump
+        ~parse_source_file
+        ~src_file
+        ~parse_input_tree
+        ~dump_tree
+        ~stat_file:"stat.txt" (* TODO: create command-line option for this *)
+        input_kind
+    in
+    exit suggested_exit_code
   )

@@ -43,6 +43,16 @@ type t = {
 exception Error of t
 
 (*
+   Create an error object from a node considered to be the cause of
+   a parsing error.
+*)
+val create :
+  kind ->
+  Src_file.t ->
+  Tree_sitter_bindings.Tree_sitter_output_t.node ->
+  string -> t
+
+(*
    Fail, raising an External_error exception.
    The string argument is an arbitrary message to be printed as part of
    an error message.

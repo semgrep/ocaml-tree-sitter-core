@@ -10,7 +10,8 @@ TESTS = \
   arithmetic \
   extras \
   backtrack \
-  token
+  token \
+  ignore-error
 
 # Build and run all the tests.
 .PHONY: test
