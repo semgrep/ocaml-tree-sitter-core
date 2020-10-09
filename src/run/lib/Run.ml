@@ -101,6 +101,18 @@ let make_tree_matcher regexps src : node -> matcher_token option =
              in
              (match opt_capture with
               | None ->
+                  (*
+                     Propagate the matching error up the tree.
+
+                     It looks like this situation doesn't happen,
+                     which would imply that tree-sitter error nodes occur only
+                     in optional positions ('optional' or 'repeat' constructs).
+
+                     If it turns out this situation sometimes happens,
+                     we should prevent this error from
+                     bubbling up to the root, by ignoring these new error
+                     nodes when matching a repeat or optional pattern.
+                  *)
                   Error, Leaf (get_loc node, get_region src node)
               | Some capture ->
                   kind, Children capture
