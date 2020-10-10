@@ -42,6 +42,10 @@ def parse_stat_file(in_file):
             lang = None
             line_count = None
             parse_success = None
+    if lang is not None and line_count is not None and parse_success is not None:
+        stats.append(
+            {"lang": lang, "line_count": line_count, "parse_success": parse_success}
+        )
     return stats
 
 
