@@ -53,6 +53,11 @@ parse() {
     12) int_err_count=$(( int_err_count + 1 )) ;;
     *) other_err_count=$(( other_err_count + 1 ))
   esac
+  stat_file="$proj_workspace"/stat.txt
+
+  file_line_count=$(cut -f1 -d' ' "$stat_file")
+  file_error_line_count=$(cut -f2 -d' ' "$stat_file")
+  file_error_count=$(cut -f3 -d' ' "$stat_file")
   return "$status"
 }
 
@@ -113,9 +118,9 @@ EOF
     if parse; then
       echo "  OK"
     else
-      error_line_count=$(( error_line_count + file_line_count ))
+      error_line_count=$(( error_line_count + file_error_line_count ))
       echo "$proj_workspace/$input" >> "$failed_inputs"
-      errors=$(( errors + 1 ))
+      errors=$(( errors + file_error_count ))
       echo "  ERROR"
     fi
   done

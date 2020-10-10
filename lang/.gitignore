@@ -9,6 +9,7 @@ Parse_*.ml
 /*/examples/*.json
 /*/stat.tmp
 /*/stat
+/*/stat.txt
 
 node_modules
 package.json
