@@ -1,2 +1,1 @@
-LANG = cpp
-include ../Makefile.common
+../Makefile.common

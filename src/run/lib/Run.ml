@@ -31,7 +31,9 @@ type matcher_token = node_kind * matcher_token_body
    tree-sitter.
 
    'Leaf' is a representation of a node without children, i.e. a token
-   in the grammar handled by tree-sitter.
+   in the grammar handled by tree-sitter. It is also used to represent
+   error nodes which may have children that were discarded because we
+   don't know how to interpret them.
 *)
 and matcher_token_body =
   | Children of matcher_token Matcher.capture
@@ -56,6 +58,7 @@ module Matcher_token = struct
   let show_kind = function
     | Name s -> sprintf "name:%S" s
     | Literal s -> sprintf "literal:%S" s
+    | Error -> "error"
 
   let show (kind, contents) =
     match contents with
@@ -67,8 +70,8 @@ module Children_matcher = Backtrack_matcher.Make (Matcher_token)
 
 let get_loc x = Loc.({ start = x.start_pos; end_ = x.end_pos})
 
-let get_token src x =
-  Src_file.get_token src x.start_pos x.end_pos
+let get_region src x =
+  Src_file.get_region src x.start_pos x.end_pos
 
 let register_children_regexp regexps =
   let tbl = Hashtbl.create (2 * List.length regexps) in
@@ -76,57 +79,64 @@ let register_children_regexp regexps =
   fun name ->
     Hashtbl.find_opt tbl name
 
-let make_node_matcher regexps src : node -> matcher_token =
+let make_tree_matcher regexps src : node -> matcher_token option =
   let get_children_regexp = register_children_regexp regexps in
   let rec match_node node =
-    match node.type_ with
-    | "ERROR" ->
-        Tree_sitter_error.external_error src node
-          "Source code cannot be parsed by tree-sitter."
-    | _ ->
-        let kind = node.kind in
-        let contents =
-          match kind, node.children with
-          | Literal _, None ->
-              Leaf (get_loc node, get_token src node)
-          | Name name, Some children ->
-              (match get_children_regexp name with
-               | Some None ->
-                   (* don't care if there are any children *)
-                   Leaf (get_loc node, get_token src node)
-               | Some (Some regexp) ->
-                   let matched_children = List.map match_node children in
-                   let opt_capture =
-                     Children_matcher.match_tree regexp matched_children
-                   in
-                   (match opt_capture with
-                    | None ->
-                        let msg = sprintf "\
-Cannot match children sequence against the following regular expression:
-%s
-Tree-sitter parse tree could not be interpreted.
-"
-                            (Children_matcher.show_exp regexp)
-                        in
-                        Tree_sitter_error.internal_error src node msg
-                    | Some capture ->
-                        Children capture
-                   )
-               | _ ->
-                   let msg = sprintf "\
+    let kind = node.kind in
+    match kind, node.children with
+    | Error, _ ->
+        (* may happen if error nodes weren't filtered out *)
+        Error, Leaf (get_loc node, get_region src node)
+    | Literal _, None ->
+        kind, Leaf (get_loc node, get_region src node)
+    | Name name, Some children ->
+        (match get_children_regexp name with
+         | Some None ->
+             (* don't care if there are any children *)
+             kind, Leaf (get_loc node, get_region src node)
+         | Some (Some regexp) ->
+             let matched_children = List.map match_node children in
+             let opt_capture =
+               Children_matcher.match_tree regexp matched_children
+             in
+             (match opt_capture with
+              | None ->
+                  (*
+                     Propagate the matching error up the tree.
+
+                     It looks like this situation doesn't happen,
+                     which would imply that tree-sitter error nodes occur only
+                     in optional positions ('optional' or 'repeat' constructs).
+
+                     If it turns out this situation sometimes happens,
+                     we should prevent this error from
+                     bubbling up to the root, by ignoring these new error
+                     nodes when matching a repeat or optional pattern.
+                  *)
+                  Error, Leaf (get_loc node, get_region src node)
+              | Some capture ->
+                  kind, Children capture
+             )
+         | _ ->
+             let msg = sprintf "\
 Wrong node type: confusion between named node %s and literal %S?
 
 Tree-sitter parse tree could not be interpreted.
 "
-                       name name
-                   in
-                   Tree_sitter_error.internal_error src node msg
-              )
-          | _ -> assert false
-        in
-        (kind, contents)
+                 name name
+             in
+             Tree_sitter_error.internal_error src node msg
+        )
+    | _ -> assert false
   in
-  match_node
+  fun root_node ->
+    match match_node root_node with
+    | Error, _ -> None (* error bubbled up to the root *)
+    | x -> Some x
+
+let match_tree children_regexps src root_node =
+  let match_tree = make_tree_matcher children_regexps src in
+  match_tree root_node
 
 let matcher_token capture =
   match capture with
@@ -161,6 +171,30 @@ let nothing capture =
   | Matcher.Capture.Nothing -> ()
   | _ -> assert false
 
+(*
+   Extract the error nodes from the original tree.
+   This is meant for reporting errors, especially if the errors can't
+   be recovered from.
+*)
+let extract_error_nodes root_node =
+  let rec extract acc node =
+    match node.kind with
+    | Error -> (node :: acc)
+    | _ ->
+        match node.children with
+        | None -> acc
+        | Some children -> List.fold_left extract acc children
+  in
+  extract [] root_node
+  |> List.rev
+
+let extract_errors src root_node =
+  extract_error_nodes root_node
+  |> List.map (fun error_node ->
+    Tree_sitter_error.create Tree_sitter_error.External src error_node
+      "Unrecognized construct"
+  )
+
 let rec filter_nodes keep nodes =
   List.filter_map (filter_node keep) nodes
 
@@ -174,10 +208,15 @@ let make_keep ~blacklist =
   let tbl = Hashtbl.create 100 in
   List.iter (fun s -> Hashtbl.replace tbl s ()) blacklist;
   let keep node =
-    not (Hashtbl.mem tbl node.type_)
+    not (node.kind = Error)
+    && not (Hashtbl.mem tbl node.type_)
   in
   keep
 
+(*
+   Remove error nodes and extra nodes, which are nodes that can appear
+   anywhere in the tree.
+*)
 let remove_extras ~extras =
   let keep = make_keep ~blacklist:extras in
   fun root_node ->

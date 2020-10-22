@@ -99,7 +99,7 @@ let safe_add_beginning_of_line buf x row end_col =
    (0, 0)...(0, 1) references a token of length 1 on the first line,
    first character.
 *)
-let get_token x start end_ =
+let get_region x start end_ =
   let open Loc in
   let first_row = start.row in
   let last_row = end_.row in

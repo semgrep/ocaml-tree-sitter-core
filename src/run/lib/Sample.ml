@@ -138,20 +138,12 @@ module Parse = struct
     | _ -> assert false
 
   let parse_input_tree input_tree =
-    let root_node =
-      Tree_sitter_parsing.root input_tree
-      |> Run.remove_extras ~extras
-    in
-    if !debug then (
-      Printf.printf "input from tree-sitter:\n";
-      Tree_sitter_dump.to_stdout [root_node];
-      flush stdout;
-      Printf.printf "ocaml-tree-sitter trace:\n"
-    );
+    let orig_root_node = Tree_sitter_parsing.root input_tree in
     let src = Tree_sitter_parsing.src input_tree in
-    let match_node = Run.make_node_matcher children_regexps src in
-    let matched_tree = match_node root_node in
-    trans_program matched_tree
+    let errors = Run.extract_errors src orig_root_node in
+    let root_node = Run.remove_extras ~extras orig_root_node in
+    let matched_tree = Run.match_tree children_regexps src root_node in
+    (Option.map trans_program matched_tree, errors)
 
   let string ?src_file contents =
     let input_tree = parse_source_string ?src_file contents in

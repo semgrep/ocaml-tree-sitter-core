@@ -8,7 +8,11 @@
      OCaml bindings).
 *)
 
-type node_kind = [ Name of string | Literal of string ] <ocaml repr="classic">
+type node_kind = [
+  | Name of string
+  | Literal of string
+  | Error
+] <ocaml repr="classic">
 
 type node = {
   (* Original 'type' field, which by itself is ambiguous. Use 'kind'

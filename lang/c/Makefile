@@ -1,2 +1,1 @@
-LANG = c
-include ../Makefile.common
+../Makefile.common

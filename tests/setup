@@ -7,16 +7,8 @@
 for lang in $* ; do
   (
     cd "$lang"
-    cat > Makefile <<EOF
-# Don't edit this file directly, as it will be overwritten by '../setup'.
-#
-# Typical usage:
-# - make        # build parsers
-# - make test   # parse
-# - make clean
-#
-LANG = $lang
-include ../../lang/Makefile.common
-EOF
+    if [[ ! -e Makefile ]]; then
+      ln -s ../../lang/Makefile.common Makefile
+    fi
   )
 done

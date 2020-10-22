@@ -29,7 +29,11 @@ val load_file : string -> t
 *)
 val load_string : ?src_name:string -> ?src_file:string -> string -> t
 
-val get_token : t -> Loc.pos -> Loc.pos -> string
+(*
+   Return the substring corresponding to the specified region.
+   It may or may not coincide with the boundaries of a token.
+*)
+val get_region : t -> Loc.pos -> Loc.pos -> string
 
 (*
    Get the specified line from the line array.
