@@ -4,13 +4,15 @@ PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
 TREE_SITTER_PACKAGES = \
   tree-sitter-javascript \
   tree-sitter-ruby \
-  tree-sitter-typescript
+  tree-sitter-typescript \
+  tree-sitter-kotlin 
 
 # Semgrep extensions of the tree-sitter-* packages.
 SEMGREP_PACKAGES = \
   semgrep-javascript \
   semgrep-ruby \
-  semgrep-typescript
+  semgrep-typescript \
+  semgrep-kotlin
 
 .PHONY: build
 build:
