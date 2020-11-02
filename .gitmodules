@@ -1,4 +1,4 @@
-[ubmodule "src/tree-sitter-typescript"]
+[submodule "src/tree-sitter-typescript"]
 	path = src/tree-sitter-typescript
 	url = https://github.com/returntocorp/tree-sitter-typescript.git
 [submodule "src/ext/tree-sitter-javascript"]
