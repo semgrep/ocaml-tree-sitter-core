@@ -112,7 +112,7 @@ EOF
 
   for input in "${inputs[@]}"; do
     echo -n "$input"
-    file_line_count=$(wc -l "$proj_workspace/$input" | cut -f1 -d' ')
+    file_line_count=$(cat "$proj_workspace/$input" | wc -l)
     echo -n " ($file_line_count lines)"
     line_count=$(( line_count + file_line_count ))
     if parse; then
