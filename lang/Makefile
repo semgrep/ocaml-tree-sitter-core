@@ -13,7 +13,8 @@ SUPPORTED_LANGUAGES = \
   javascript \
   ruby \
   tsx \
-  typescript
+  typescript \
+  kotlin
 
 # Languages which are set up to run parsing stats. Ideally, this is all
 # the supported languages. See the 'stat' target.
@@ -25,7 +26,8 @@ STAT_LANGUAGES = \
   javascript \
   ruby \
   tsx \
-  typescript
+  typescript \
+  kotlin
 
 .PHONY: build
 build:
