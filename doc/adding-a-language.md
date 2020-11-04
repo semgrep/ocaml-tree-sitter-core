@@ -123,13 +123,12 @@ programming language and use a constraint to select large projects, such
 as "> 100 forks". Collect the repository URLs and put them into
 `projects.txt`.
 
-Generating a Boilerplate
+Auto-Generating Parsing Code
 --
-
 After you have pushed your ocaml-tree-sitter changes to the main branch, do the following:
 1. In `ocaml-tree-sitter/lang/Makefile`, add language under 'SUPPORTED_LANGUAGES' and 'STAT_LANGUAGES'.
 2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will automatically 
-   add boilerplate code to `ocaml-tree-sitter-lang`. 
+   add code for parsing to `ocaml-tree-sitter-lang`. 
 
 Troubleshooting
 --
