@@ -1,5 +1,22 @@
-How to add support for a new language
-==
+# How to add support for a new language
+
+## Submodules Overview
+
+There are quite a few github repositories involved in porting a language. 
+Here is a basic tree diagram that describes how they are linked.
+
+.
+└── semgrep
+    ├── ocaml-tree-sitter
+    │   └── semgrep-grammars
+    └── semgrep-core
+        ├── ocaml-tree-sitter-lang
+        └── pfff
+
+* One good thing to note is that ocaml-tree-sitter-lang actually only contains auto-generated
+  code. This auto-generated code is created by ocaml-tree-sitter. 
+
+## Setup
 
 As a model, you can use the existing setup for `ruby` or `javascript`. Our
 most complicated setup is for `typescript` and `tsx`.
@@ -7,12 +24,16 @@ most complicated setup is for `typescript` and `tsx`.
 First install tree-sitter-cli and npx following 
 [this doc](https://github.com/returntocorp/ocaml-tree-sitter/blob/f5b29e4198952233833cd989d35030baad7210b0/doc/node-setup.md).
 
-Next, extend the language with semgrep pattern syntax in the
+## semgrep-grammars
+
+Extend the language with semgrep pattern syntax in the
 [semgrep-grammars](https://github.com/returntocorp/semgrep-grammars)
 repo. Follow the instructions in [semgrep-grammars](https://github.com/returntocorp/semgrep-grammars)
 under `Language-porting Instructions`.
 
-Then, from the ocaml-tree-sitter repo, do the following:
+## ocaml-tree-sitter
+
+From the ocaml-tree-sitter repo, do the following:
 
 1. Create a `lang/X` folder.
 2. Make an examples directory. Inside the directory, 
@@ -72,8 +93,7 @@ $ make
 $ make test
 ```
 
-The `fyi.list` file
---
+### The `fyi.list` file
 
 The `fyi.list` file was created to specify informational files that
 should accompany the generated files. These files are typically:
@@ -97,8 +117,7 @@ The files listed in `fyi.list` end up in a `fyi` folder in
 ocaml-tree-sitter-lang. For example,
 [see `ruby/fyi`](https://github.com/returntocorp/ocaml-tree-sitter-lang/tree/master/ruby).
 
-Statistics
---
+### Statistics
 
 From a language's folder such as `lang/csharp`, two targets are
 available to exercise the generated parser:
@@ -123,15 +142,14 @@ programming language and use a constraint to select large projects, such
 as "> 100 forks". Collect the repository URLs and put them into
 `projects.txt`.
 
-Auto-Generating Parsing Code
---
+### Auto-Generating Parsing Code
+
 After you have pushed your ocaml-tree-sitter changes to the main branch, do the following:
 1. In `ocaml-tree-sitter/lang/Makefile`, add language under 'SUPPORTED_LANGUAGES' and 'STAT_LANGUAGES'.
 2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will automatically 
    add code for parsing to `ocaml-tree-sitter-lang`. 
 
-Troubleshooting
---
+### Troubleshooting
 
 Various errors can occur along the way.
 
@@ -172,8 +190,21 @@ We keep failing test cases in a `fail/` folder, preferably in the form
 of the minimal program suitable for a bug report, with a comment
 describing what was expected and what's going on.
 
-Legal concerns
---
+## pfff
+
+Now you need to update pfff, as the generic AST is defined in pfff and
+you will need to specify some details in order to start filling out 
+the auto-generated file.
+
+Look under **Adding a Language** in [pfff](https://github.com/returntocorp/pfff/blob/develop/README.md)
+for step-by-step instructions.
+
+## semgrep-core
+
+After pfff has been updated, you need to add these changes into semgrep-core. 
+Follow the instructions specified in `semgrep-core/docs/port-language.md`.
+
+## Legal concerns
 
 Be thankful for the authors of the original code, keep clearly visible
 license notices, and make it easy to get back to the original projects:
@@ -185,7 +216,6 @@ license notices, and make it easy to get back to the original projects:
   [GitHub Search](https://github.com/search/advanced)
   allows you to filter projects by license and by programming language.
 
-See also
---
+## See also
 
 [How to upgrade the grammar for a language](updating-a-grammar.md)
