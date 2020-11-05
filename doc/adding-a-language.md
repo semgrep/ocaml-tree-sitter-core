@@ -5,6 +5,7 @@
 There are quite a few github repositories involved in porting a language. 
 Here is a basic tree diagram that describes how they are linked.
 
+``` shell
 .
 └── semgrep
     ├── ocaml-tree-sitter
@@ -12,6 +13,7 @@ Here is a basic tree diagram that describes how they are linked.
     └── semgrep-core
         ├── ocaml-tree-sitter-lang
         └── pfff
+```
 
 * One good thing to note is that ocaml-tree-sitter-lang actually only contains auto-generated
   code. This auto-generated code is created by ocaml-tree-sitter. 
