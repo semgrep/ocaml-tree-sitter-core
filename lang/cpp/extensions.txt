@@ -1,0 +1,5 @@
+# File extensions for the C language
+.cc
+.cpp
+
+
