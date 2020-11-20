@@ -27,22 +27,21 @@ Extensions of public tree-sitter grammars used by
  6. Create `src/semgrep-X/grammar.js`. As a first step, create a boilerplate to extending the
     grammar. You do not need to add semgrep pattern constructs just yet.
     Later, you will want to add on to `src/semgrep-X/grammar.js` such that it extends the original
-    grammar with the semgrep pattern constructs (`...`, `$X`). 
- 7. Run `make` in `src/semgrep-X` to generate tree-sitter files.
- 8. Create directory `test/corpus` inside of `src/semgrep-X` and add
+    grammar with the semgrep pattern constructs (`...`, `$X`).
+ 7. Add `tree-sitter-X` to `TREE_SITTER_PACKAGES` and `semgrep-X` to
+    SEMGREP_PACKAGES in `src/Makefile`.
+ 8. Run `make` to generate tree-sitter files.
+ 9. Create directory `test/corpus` inside of `src/semgrep-X` and add
     language files to the corpus. You can also just take the tree-sitter test
     files by symlinking them:
     `ln -s ../../../tree-sitter-X/<path-to-test-corpus> inherited`
- 9. Write tests for the new syntax if you have specific tests you want to check.
+ 10. Write tests for the new syntax if you have specific tests you want to check.
     Run `make test` from your
     `semgrep-X` folder until things work. You will know that tests have run
     and passed when you see green check marks next to test names.
- 10. Create a symlink for your language under
+ 11. Create a symlink for your language under
     [`lang/`](https://github.com/returntocorp/semgrep-grammars/tree/master/lang)
     with the command:
     `ln -s ../src/semgrep-X X`
     in the `lang` folder.
- 11. Add `tree-sitter-X` to TREE_SITTER_PACKAGES and `semgrep-X` to SEMGREP_PACKAGES in src/Makefile.
-    Try running `make && make test` to make sure things are still functioning.
-
-
+ 12. Try running `make && make test` to make sure things are still functioning.
