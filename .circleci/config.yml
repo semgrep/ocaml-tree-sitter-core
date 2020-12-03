@@ -25,6 +25,9 @@ jobs:
           name: install dependencies
           command: opam exec -- make setup
       - run:
+          name: check code formatting
+          command: ./scripts/lint
+      - run:
           name: build
           command: opam exec -- make
       - run:
