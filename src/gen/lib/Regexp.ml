@@ -42,11 +42,11 @@ type seq = seq_elt list
 
 and seq_elt =
   | Opaque of Param.code
-      (* expression returning one element, of type:
-           nodes -> (res * nodes) option
+  (* expression returning one element, of type:
+       nodes -> (res * nodes) option
 
-         which may call check_tail.
-      *)
+     which may call check_tail.
+  *)
   | Seq of seq_elt list
   | Repeat of rep_kind * seq
   | Choice of (string * seq) list
@@ -115,17 +115,17 @@ type exp =
                                       | None -> e2 *)
 
   | Flatten of exp * int * (string -> string) option
-     (* match e with
-        | Some ((e1, (e2, e3))), nodes) ->
-           Some (wrap (e1, e2, e3), nodes)
-        | None -> None
-     *)
+  (* match e with
+     | Some ((e1, (e2, e3))), nodes) ->
+        Some (wrap (e1, e2, e3), nodes)
+     | None -> None
+  *)
 
   | Check_tail of exp
-     (* check_seq f check_tail *)
+  (* check_seq f check_tail *)
 
   | Seq of exp
-     (* parse_seq f parse_tail *)
+  (* parse_seq f parse_tail *)
 
 let rec compile_seq seq =
   match seq with

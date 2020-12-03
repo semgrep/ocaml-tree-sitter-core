@@ -90,27 +90,27 @@ var (
 	CONST_SEARCH_FILE_NAME      = DATA_DIR + "/search.txt"
 	CONST_UPLOAD_COUNTER_KEY    = "__CONST_UPLOAD_COUNTER_KEY__"
 	logConfigStr                = `
-<seelog type="asynctimer" asyncinterval="1000" minlevel="trace" maxlevel="error">  
-	<outputs formatid="common">  
-		<buffered formatid="common" size="1048576" flushperiod="1000">  
-			<rollingfile type="size" filename="{DOCKER_DIR}log/fileserver.log" maxsize="104857600" maxrolls="10"/>  
+<seelog type="asynctimer" asyncinterval="1000" minlevel="trace" maxlevel="error">
+	<outputs formatid="common">
+		<buffered formatid="common" size="1048576" flushperiod="1000">
+			<rollingfile type="size" filename="{DOCKER_DIR}log/fileserver.log" maxsize="104857600" maxrolls="10"/>
 		</buffered>
-	</outputs>  	  
+	</outputs>
 	 <formats>
-		 <format id="common" format="%Date %Time [%LEV] [%File:%Line] [%Func] %Msg%n" />  
-	 </formats>  
+		 <format id="common" format="%Date %Time [%LEV] [%File:%Line] [%Func] %Msg%n" />
+	 </formats>
 </seelog>
 `
 	logAccessConfigStr = `
-<seelog type="asynctimer" asyncinterval="1000" minlevel="trace" maxlevel="error">  
-	<outputs formatid="common">  
-		<buffered formatid="common" size="1048576" flushperiod="1000">  
-			<rollingfile type="size" filename="{DOCKER_DIR}log/access.log" maxsize="104857600" maxrolls="10"/>  
+<seelog type="asynctimer" asyncinterval="1000" minlevel="trace" maxlevel="error">
+	<outputs formatid="common">
+		<buffered formatid="common" size="1048576" flushperiod="1000">
+			<rollingfile type="size" filename="{DOCKER_DIR}log/access.log" maxsize="104857600" maxrolls="10"/>
 		</buffered>
-	</outputs>  	  
+	</outputs>
 	 <formats>
-		 <format id="common" format="%Date %Time [%LEV] [%File:%Line] [%Func] %Msg%n" />  
-	 </formats>  
+		 <format id="common" format="%Date %Time [%LEV] [%File:%Line] [%Func] %Msg%n" />
+	 </formats>
 </seelog>
 `
 )
@@ -3722,17 +3722,17 @@ func (this *Server) Index(w http.ResponseWriter, r *http.Request) {
 			uploadBigUrl = fmt.Sprintf("/%s%s", Config().Group, CONST_BIG_UPLOAD_PATH_SUFFIX)
 		}
 		uppy = `<html>
-			  
+
 			  <head>
 				<meta charset="utf-8" />
 				<title>go-fastdfs</title>
 				<style>form { bargin } .form-line { display:block;height: 30px;margin:8px; } #stdUpload {background: #fafafa;border-radius: 10px;width: 745px; }</style>
 				<link href="https://transloadit.edgly.net/releases/uppy/v0.30.0/dist/uppy.min.css" rel="stylesheet"></head>
-			  
+
 			  <body>
                 <div>标准上传(强列建议使用这种方式)</div>
 				<div id="stdUpload">
-				  
+
 				  <form action="%s" method="post" enctype="multipart/form-data">
 					<span class="form-line">文件(file):
 					  <input type="file" id="file" name="file" /></span>
@@ -3753,7 +3753,7 @@ func (this *Server) Index(w http.ResponseWriter, r *http.Request) {
 				</div>
                  <div>断点续传（如果文件很大时可以考虑）</div>
 				<div>
-				 
+
 				  <div id="drag-drop-area"></div>
 				  <script src="https://transloadit.edgly.net/releases/uppy/v0.30.0/dist/uppy.min.js"></script>
 				  <script>var uppy = Uppy.Core().use(Uppy.Dashboard, {

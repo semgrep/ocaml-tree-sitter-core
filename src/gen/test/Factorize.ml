@@ -72,14 +72,14 @@ let test_simple () =
   let rule = make_rule "program" (literal "thing") in
   assert (
     factorize [rule] |> flatten
-    = [as_pair rule]
+                        = [as_pair rule]
   )
 
 let test_recursive () =
   let rule = make_rule "program" (Symbol "program") in
   assert (
     factorize [rule] |> flatten
-    = [as_pair rule]
+                        = [as_pair rule]
   )
 
 let test_no_sharing () =
