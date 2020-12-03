@@ -25,6 +25,7 @@ setup:
 	./scripts/check-prerequisites
 	./scripts/install-tree-sitter-cli
 	opam install --deps-only -y .
+	opam install ocp-indent
 
 # Shortcut for updating the git submodules.
 .PHONY: update

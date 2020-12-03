@@ -30,4 +30,3 @@ if __name__ == "__main__":
     with open('projects.txt', 'w') as f:
         for repo in pretty_json["items"]:
             f.write(repo["html_url"]+"\n")
-

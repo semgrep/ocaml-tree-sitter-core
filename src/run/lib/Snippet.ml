@@ -83,32 +83,32 @@ let extract
         (* Highlight nothing. *)
         add [Normal line]
       else
-        if start_line = end_line - 1 then
-          (* Highlight substring in the middle of a line. *)
-          let ab, c = split line end_pos.column in
-          let a, b = split ab start_pos.column in
-          add [
-            Normal a;
-            Highlight b;
-            Normal c;
-          ]
-        else if line_num = start_line then
-          (* Highlight the end of the line. *)
-          let a, b = split line start_pos.column in
-          add [
-            Normal a;
-            Highlight b;
-          ]
-        else if line_num = end_line - 1 then
-          (* Highlight the beginning of the line. *)
-          let a, b = split line end_pos.column in
-          add [
-            Highlight a;
-            Normal b;
-          ]
-        else
-          (* Highlight everything. *)
-          add [Highlight line]
+      if start_line = end_line - 1 then
+        (* Highlight substring in the middle of a line. *)
+        let ab, c = split line end_pos.column in
+        let a, b = split ab start_pos.column in
+        add [
+          Normal a;
+          Highlight b;
+          Normal c;
+        ]
+      else if line_num = start_line then
+        (* Highlight the end of the line. *)
+        let a, b = split line start_pos.column in
+        add [
+          Normal a;
+          Highlight b;
+        ]
+      else if line_num = end_line - 1 then
+        (* Highlight the beginning of the line. *)
+        let a, b = split line end_pos.column in
+        add [
+          Highlight a;
+          Normal b;
+        ]
+      else
+        (* Highlight everything. *)
+        add [Highlight line]
     done;
     List.rev !line_acc
     |> shorten_snippet_lines

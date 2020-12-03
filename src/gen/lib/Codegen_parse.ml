@@ -201,12 +201,12 @@ let gen_trans_token () =
 *)
 type exp =
   | Code of Indent.t
-      (* opaque code *)
+  (* opaque code *)
   | Fun of (string -> exp)
-      (* parametrized function body *)
+  (* parametrized function body *)
   | App of exp * string
-      (* application of a function to a precomputed value,
-         such as a variable *)
+  (* application of a function to a precomputed value,
+     such as a variable *)
 
 let rec compile_exp exp : Indent.t =
   match exp with

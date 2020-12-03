@@ -16,7 +16,7 @@ fun main() {
     println(user.copy())                                   // 5
     println(user.copy("Max"))                              // 6
     println(user.copy(id = 2))                             // 7
-    
+
     println("name = ${user.component1()}")                 // 8
     println("id = ${user.component2()}")
 }

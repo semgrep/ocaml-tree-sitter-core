@@ -10,7 +10,7 @@ open Indent.Types
 let trans = Codegen_util.translate_ident
 
 let make_header grammar = sprintf
-{|(**
+    {|(**
    Boilerplate to be used as a template when mapping the %s CST
    to another type of tree.
 *)

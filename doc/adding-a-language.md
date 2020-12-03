@@ -2,7 +2,7 @@
 
 ## Submodules Overview
 
-There are quite a few github repositories involved in porting a language. 
+There are quite a few github repositories involved in porting a language.
 Here is a basic tree diagram that describes how they are linked.
 
 ``` shell
@@ -16,14 +16,14 @@ Here is a basic tree diagram that describes how they are linked.
 ```
 
 * One good thing to note is that ocaml-tree-sitter-lang actually only contains auto-generated
-  code. This auto-generated code is created by ocaml-tree-sitter. 
+  code. This auto-generated code is created by ocaml-tree-sitter.
 
 ## Setup
 
 As a model, you can use the existing setup for `ruby` or `javascript`. Our
 most complicated setup is for `typescript` and `tsx`.
 
-First install tree-sitter-cli and npx following 
+First install tree-sitter-cli and npx following
 [this doc](https://github.com/returntocorp/ocaml-tree-sitter/blob/f5b29e4198952233833cd989d35030baad7210b0/doc/node-setup.md).
 
 ## semgrep-grammars
@@ -38,8 +38,8 @@ under `Language-porting Instructions`.
 From the ocaml-tree-sitter repo, do the following:
 
 1. Create a `lang/X` folder.
-2. Make an examples directory. Inside the directory, 
-   create a simple `hello-world` program for the language you are porting. 
+2. Make an examples directory. Inside the directory,
+   create a simple `hello-world` program for the language you are porting.
    Name the program `hello-world.<ext>.src`.
 3. Now make a file called `extensions.txt` and input all the language extensions
    (.rb, .kt, etc) for your language in the file.
@@ -51,7 +51,7 @@ From the ocaml-tree-sitter repo, do the following:
 5. Link the Makefile.common to a Makefile in the directory with:
    `ln -s ../Makefile.common Makefile`
 6. Create a test corpus. You can do this by:
-   * Running `scripts/most-starred-for-language.py` in order to gather projects 
+   * Running `scripts/most-starred-for-language.py` in order to gather projects
      on which to run parsing stats. Run with the following command:
      `python scripts/most-starred-for-language.py <lang> <github_username> <api_key>`
    * Using github advanced search to find the most starred or most forked repositories.
@@ -130,8 +130,8 @@ available to exercise the generated parser:
   reporting parsing success in the form of a CSV file.
 
 *** WARNING ***
-If you are using `make stat` on OSX, OSX recently updated grep so that the 
-installed version does not include the -P option used in the script. In order to make 
+If you are using `make stat` on OSX, OSX recently updated grep so that the
+installed version does not include the -P option used in the script. In order to make
 this work, run
 `brew install grep`
 and export the path to the new grep with:
@@ -148,8 +148,8 @@ as "> 100 forks". Collect the repository URLs and put them into
 
 After you have pushed your ocaml-tree-sitter changes to the main branch, do the following:
 1. In `ocaml-tree-sitter/lang/Makefile`, add language under 'SUPPORTED_LANGUAGES' and 'STAT_LANGUAGES'.
-2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will automatically 
-   add code for parsing to `ocaml-tree-sitter-lang`. 
+2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will automatically
+   add code for parsing to `ocaml-tree-sitter-lang`.
 
 ### Troubleshooting
 
@@ -195,7 +195,7 @@ describing what was expected and what's going on.
 ## pfff
 
 Now you need to update pfff, as the generic AST is defined in pfff and
-you will need to specify some details in order to start filling out 
+you will need to specify some details in order to start filling out
 the auto-generated file.
 
 Look under **Adding a Language** in [pfff](https://github.com/returntocorp/pfff/blob/develop/README.md)
@@ -203,7 +203,7 @@ for step-by-step instructions.
 
 ## semgrep-core
 
-After pfff has been updated, you need to add these changes into semgrep-core. 
+After pfff has been updated, you need to add these changes into semgrep-core.
 Follow the instructions specified in `semgrep-core/docs/port-language.md`.
 
 ## Legal concerns

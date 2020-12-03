@@ -73,7 +73,7 @@ and make_seq (body : rule_body) : seq_elt list =
      let rec f = g
      and g = f
 
-  Instead we would write:
+   Instead we would write:
 
      let rec f = fun x -> g x
      and g = fun x -> f x
