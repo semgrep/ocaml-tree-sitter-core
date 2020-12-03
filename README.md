@@ -22,6 +22,10 @@ installed or used by a wide audience.
 5. Build with `make`.
 6. Install with `make install`.
 7. Test with `make test`.
+8. Install `pre-commit` with `pip3 install pre-commit` and run
+   `pre-commit install` to set up the pre-commit hook.
+   This will re-indent code in a consistent fashion each time you call
+   `git commit`.
 
 ### Contributing on MacOS
 
