@@ -32,13 +32,13 @@ let mli_contents grammar : string =
 *)
 val string :
   ?src_file:string -> string ->
-  CST.%s option * Tree_sitter_run.Tree_sitter_error.t list
+  CST.%s Tree_sitter_run.Parsing_result.t
 
 (** Parse a %s program from a file into a typed OCaml CST.
     See the [string] function above for details. *)
 val file :
   string ->
-  CST.%s option * Tree_sitter_run.Tree_sitter_error.t list
+  CST.%s Tree_sitter_run.Parsing_result.t
 
 (** Whether to print debugging information. Default: false. *)
 val debug : bool ref
