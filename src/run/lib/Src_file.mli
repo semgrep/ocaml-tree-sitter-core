@@ -15,6 +15,9 @@ type t = private {
 
 val info : t -> info
 
+(* Return the number of lines (O(1)) *)
+val get_num_lines : t -> int
+
 (*
    Load an input file. It gets resolved into lines and columns.
 *)

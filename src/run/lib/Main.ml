@@ -82,16 +82,18 @@ let parse_and_dump
     input_kind =
   let input_tree = load_input_tree ~parse_source_file ~src_file input_kind in
   Tree_sitter_parsing.print input_tree;
-  let some_success, errors =
-    match parse_input_tree input_tree with
-    | Some matched_tree, errors ->
+  let res : _ Parsing_result.t = parse_input_tree input_tree in
+  let some_success =
+    match res.program with
+    | Some matched_tree ->
         dump_tree matched_tree;
-        true, errors
-    | None, errors ->
-        false, errors
+        true
+    | None ->
+        false
   in
-  let stat = Stat.extract src_file some_success errors in
-  Stat.export ~out_file:stat_file stat;
+  let errors = res.errors in
+  let stat = res.stat in
+  Parsing_result.export_stat ~out_file:stat_file stat;
   let lines = stat.total_line_count in
   let err_lines = stat.error_line_count in
   let success_ratio =

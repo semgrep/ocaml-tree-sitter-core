@@ -32,13 +32,13 @@ let mli_contents grammar : string =
 *)
 val string :
   ?src_file:string -> string ->
-  CST.%s option * Tree_sitter_run.Tree_sitter_error.t list
+  CST.%s Tree_sitter_run.Parsing_result.t
 
 (** Parse a %s program from a file into a typed OCaml CST.
     See the [string] function above for details. *)
 val file :
   string ->
-  CST.%s option * Tree_sitter_run.Tree_sitter_error.t list
+  CST.%s Tree_sitter_run.Parsing_result.t
 
 (** Whether to print debugging information. Default: false. *)
 val debug : bool ref
@@ -56,7 +56,7 @@ val parse_source_file : string -> Tree_sitter_run.Tree_sitter_parsing.t
 (** Parse a tree-sitter CST into an OCaml typed CST. *)
 val parse_input_tree :
   Tree_sitter_run.Tree_sitter_parsing.t ->
-  CST.%s option * Tree_sitter_run.Tree_sitter_error.t list
+  CST.%s Tree_sitter_run.Parsing_result.t
 |}
     lang
     lang (trans root_type)
@@ -399,7 +399,8 @@ let parse_input_tree input_tree =
   let errors = Run.extract_errors src orig_root_node in
   let root_node = Run.remove_extras ~extras orig_root_node in
   let matched_tree = Run.match_tree children_regexps src root_node in
-  (Option.map trans_%s matched_tree, errors)
+  let opt_program = Option.map trans_%s matched_tree in
+  Parsing_result.create src opt_program errors
 
 let string ?src_file contents =
   let input_tree = parse_source_string ?src_file contents in

@@ -19,6 +19,8 @@ type t = {
 
 let info x = x.info
 
+let get_num_lines x = Array.length x.lines
+
 let with_in_channel filename f =
   let ic = open_in filename in
   let finally () = close_in_noerr ic in
