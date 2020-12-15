@@ -22,3 +22,6 @@ _build
 
 /config.sh
 /config.mk
+
+# for codemap stuff of pad
+/skip_list.txt
