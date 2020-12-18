@@ -10,3 +10,6 @@
 [submodule "src/tree-sitter-kotlin"]
 	path = src/tree-sitter-kotlin
 	url = https://github.com/returntocorp/tree-sitter-kotlin.git
+[submodule "src/tree-sitter-c-sharp"]
+	path = src/tree-sitter-c-sharp
+	url = https://github.com/tree-sitter/tree-sitter-c-sharp.git
