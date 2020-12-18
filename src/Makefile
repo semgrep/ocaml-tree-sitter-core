@@ -10,7 +10,7 @@ TREE_SITTER_PACKAGES = \
 
 # Semgrep extensions of the tree-sitter-* packages.
 SEMGREP_PACKAGES = \
-  semgrep-csharp \
+  semgrep-c-sharp \
   semgrep-javascript \
   semgrep-kotlin \
   semgrep-ruby \
