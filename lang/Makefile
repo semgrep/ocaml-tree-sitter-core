@@ -7,7 +7,7 @@
 SUPPORTED_LANGUAGES = \
   c \
   cpp \
-  csharp \
+  c-sharp \
   go \
   java \
   javascript \
@@ -20,7 +20,7 @@ SUPPORTED_LANGUAGES = \
 # the supported languages. See the 'stat' target.
 #
 STAT_LANGUAGES = \
-  csharp \
+  c-sharp \
   go \
   java \
   javascript \
