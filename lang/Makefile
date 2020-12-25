@@ -11,6 +11,7 @@ SUPPORTED_LANGUAGES = \
   go \
   java \
   javascript \
+  lua \
   ruby \
   tsx \
   typescript \
@@ -24,6 +25,7 @@ STAT_LANGUAGES = \
   go \
   java \
   javascript \
+  lua \
   ruby \
   tsx \
   typescript \
