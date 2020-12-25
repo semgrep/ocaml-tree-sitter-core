@@ -13,3 +13,6 @@
 [submodule "src/tree-sitter-c-sharp"]
 	path = src/tree-sitter-c-sharp
 	url = https://github.com/tree-sitter/tree-sitter-c-sharp.git
+[submodule "src/tree-sitter-lua"]
+	path = src/tree-sitter-lua
+	url = https://github.com/Azganoth/tree-sitter-lua
