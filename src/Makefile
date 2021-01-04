@@ -18,8 +18,23 @@ SEMGREP_PACKAGES = \
 
 .PHONY: build
 build:
+	$(MAKE) check-submodules
 	$(MAKE) build-tree-sitter
 	$(MAKE) build-semgrep
+
+# Sanity check before running npm install.
+.PHONY: check-submodules
+check-submodules:
+	set -e ; \
+	for pkg in $(TREE_SITTER_PACKAGES); do \
+	  echo "Check submodule $$pkg"; \
+	  if ! test -f "$$pkg"/package.json; then \
+	    echo "Missing $$pkg/package.json." >&2; \
+	    echo "Make sure you ran the following:" >&2; \
+	    echo "  git submodule update --init --recursive" >&2; \
+	    exit 1; \
+	  fi; \
+	done
 
 # Install node modules required by the semgrep-* packages.
 .PHONY: build-tree-sitter
@@ -27,7 +42,7 @@ build-tree-sitter:
 	set -e; \
 	for pkg in $(TREE_SITTER_PACKAGES); do \
 	  echo "Install $$pkg"; \
-	  (cd $(PROJECT_ROOT) && npm install src/$$pkg); \
+	  (cd $(PROJECT_ROOT) && npm install ./src/$$pkg); \
 	done
 
 # Generate parsers for the semgrep-* packages.
