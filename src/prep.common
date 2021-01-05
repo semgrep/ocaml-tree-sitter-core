@@ -26,8 +26,12 @@ mkdir -p test/corpus
 (
   cd test/corpus
   rm -f inherited
-  corpus=../../../tree-sitter-"$name"/test/corpus
-  if [[ -e "$corpus" ]]; then
-    ln -sf "$corpus" inherited
-  fi
+  # The root of the tests is either 'test/corpus' or 'corpus' as per
+  # tree-sitter documentation.
+  for dir in test/corpus corpus; do
+    corpus=../../../tree-sitter-"$name"/$dir
+    if [[ -e "$corpus" ]]; then
+      ln -sf "$corpus" inherited
+    fi
+  done
 )

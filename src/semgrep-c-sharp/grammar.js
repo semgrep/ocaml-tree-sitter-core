@@ -23,7 +23,58 @@ module.exports = grammar(standard_grammar, {
   */
   name: 'c_sharp',
 
+  conflicts: ($, previous) => {
+    return previous.concat([
+      // conflicts due to allowing toplevel expressions
+      [$._simple_name, $.destructor_declaration],
+      [$.parameter, $.tuple_element],
+
+      // conflicts between '...;' and just '...'
+      [$._expression, $._statement],
+    ]);
+  },
+
   rules: {
 
+    // Allow toplevel expressions, to be used as semgrep patterns
+    compilation_unit: ($, previous) => {
+      return choice(
+        previous,
+        //$._expression // <-- doesn't work!
+      );
+    },
+
+    // Metavariables
+    identifier: ($, previous) => {
+      return token(
+        choice(
+          previous,
+          /\$[A-Z_][A-Z_0-9]*/
+        )
+      );
+    },
+
+    // Statement ellipsis
+    _statement: ($, previous) => {
+      return choice(
+        ...previous.members,
+        $.ellipsis
+      );
+    },
+
+    // Expression ellipsis
+    _expression: ($, previous) => {
+      return choice(
+        ...previous.members,
+        $.ellipsis,
+        $.deep_ellipsis
+      );
+    },
+
+    deep_ellipsis: $ => seq(
+      '<...', $._expression, '...>'
+    ),
+
+    ellipsis: $ => '...',
   }
 });

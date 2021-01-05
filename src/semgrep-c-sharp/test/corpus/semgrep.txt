@@ -1,0 +1,156 @@
+=====================================
+Metavariables
+=====================================
+
+class $CLASS {
+  void $FUNC($TYPE $PARAM) {
+    $COND ? $V1 : $V2;
+  }
+}
+
+---
+
+(compilation_unit
+  (class_declaration
+    (identifier)
+    (declaration_list
+      (method_declaration
+        (void_keyword)
+        (identifier)
+        (parameter_list (parameter (identifier) (identifier)))
+        (block
+          (expression_statement
+            (conditional_expression (identifier) (identifier) (identifier))
+          )
+        )
+      )
+    )
+  )
+)
+
+=====================================
+Ellipsis for expression
+=====================================
+
+class Foo {
+  void Bar() {
+    a = 0;
+    ...;
+    b = 0;
+  }
+}
+
+---
+
+(compilation_unit
+  (class_declaration
+    (identifier)
+    (declaration_list
+      (method_declaration
+        (void_keyword)
+        (identifier)
+        (parameter_list)
+        (block
+          (expression_statement
+            (assignment_expression
+              (identifier) (assignment_operator) (integer_literal))
+          )
+          (expression_statement (ellipsis))
+          (expression_statement
+            (assignment_expression
+              (identifier) (assignment_operator) (integer_literal)
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+=====================================
+Ellipsis for statements
+=====================================
+
+class Foo {
+  void Bar() {
+    a = 0;
+    ...
+    b = 0;
+  }
+}
+
+---
+
+(compilation_unit
+  (class_declaration
+    (identifier)
+    (declaration_list
+      (method_declaration
+        (void_keyword)
+        (identifier)
+        (parameter_list)
+        (block
+          (expression_statement
+            (assignment_expression
+              (identifier)
+              (assignment_operator)
+              (integer_literal)
+            )
+          )
+          (ellipsis)
+          (expression_statement
+            (assignment_expression
+              (identifier)
+              (assignment_operator)
+              (integer_literal)
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+=====================================
+Deep expression ellipsis
+=====================================
+
+class Foo {
+  void Bar() {
+    a = <... 0 ...>;
+  }
+}
+
+---
+
+(compilation_unit
+  (class_declaration
+    (identifier)
+    (declaration_list
+      (method_declaration
+        (void_keyword)
+        (identifier)
+        (parameter_list)
+        (block
+          (expression_statement
+            (assignment_expression
+              (identifier)
+              (assignment_operator)
+              (deep_ellipsis (integer_literal))
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+=====================================
+Toplevel expression
+=====================================
+
+42
+
+---
+
+(compilation_unit (integer_literal))
