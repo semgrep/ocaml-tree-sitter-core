@@ -13,6 +13,6 @@ module.exports = grammar(standard_grammar, {
 
     rules: {
         // could also do: identifier: ($, previous) => { choice(previous, ...)}
-        identifier: $ => /\$[a-zA-Z_][a-zA-Z0-9_]*/
+        identifier: $ => /\$?[a-zA-Z_][a-zA-Z0-9_]*/
     }
 });
