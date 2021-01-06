@@ -1,5 +1,5 @@
 /*
- * semgrep-kotlin
+ * semgrep-lua
  *
  * TODO: Extend the standard lua grammar with ellipsis and metavariable pattern constructs
  */
