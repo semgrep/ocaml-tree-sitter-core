@@ -25,5 +25,49 @@ module.exports = grammar(standard_grammar, {
 
   rules: {
 
+    // Entry point
+    compilation_unit: ($, previous) => {
+      return choice(
+        previous,
+        $.semgrep_expression
+      );
+    },
+
+    // Alternate "entry point". Allows parsing a standalone expression.
+    semgrep_expression: $ => seq('__SEMGREP_EXPRESSION', $._expression),
+
+    // Metavariables
+    identifier: ($, previous) => {
+      return token(
+        choice(
+          previous,
+          /\$[A-Z_][A-Z_0-9]*/
+        )
+      );
+    },
+
+    // Statement ellipsis: '...' not followed by ';'
+    expression_statement: ($, previous) => {
+      return choice(
+        previous,
+        prec.right(100, seq($.ellipsis, ';')),  // expression ellipsis
+        prec.right(100, $.ellipsis),  // statement ellipsis
+      );
+    },
+
+    // Expression ellipsis
+    _expression: ($, previous) => {
+      return choice(
+        ...previous.members,
+        $.ellipsis,
+        $.deep_ellipsis
+      );
+    },
+
+    deep_ellipsis: $ => seq(
+      '<...', $._expression, '...>'
+    ),
+
+    ellipsis: $ => '...',
   }
 });
