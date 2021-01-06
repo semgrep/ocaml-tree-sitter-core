@@ -23,26 +23,18 @@ module.exports = grammar(standard_grammar, {
   */
   name: 'c_sharp',
 
-  conflicts: ($, previous) => {
-    return previous.concat([
-      // conflicts due to allowing toplevel expressions
-      [$._simple_name, $.destructor_declaration],
-      [$.parameter, $.tuple_element],
-
-      // conflicts between '...;' and just '...'
-      [$._expression, $._statement],
-    ]);
-  },
-
   rules: {
 
-    // Allow toplevel expressions, to be used as semgrep patterns
+    // Entry point
     compilation_unit: ($, previous) => {
       return choice(
         previous,
-        //$._expression // <-- doesn't work!
+        $.semgrep_expression
       );
     },
+
+    // Alternate "entry point". Allows parsing a standalone expression.
+    semgrep_expression: $ => seq('__SEMGREP_EXPRESSION', $._expression),
 
     // Metavariables
     identifier: ($, previous) => {
@@ -54,11 +46,12 @@ module.exports = grammar(standard_grammar, {
       );
     },
 
-    // Statement ellipsis
-    _statement: ($, previous) => {
+    // Statement ellipsis: '...' not followed by ';'
+    expression_statement: ($, previous) => {
       return choice(
-        ...previous.members,
-        $.ellipsis
+        previous,
+        prec.right(100, seq($.ellipsis, ';')),  // expression ellipsis
+        prec.right(100, $.ellipsis),  // statement ellipsis
       );
     },
 

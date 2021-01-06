@@ -97,7 +97,7 @@ class Foo {
               (integer_literal)
             )
           )
-          (ellipsis)
+          (expression_statement (ellipsis))
           (expression_statement
             (assignment_expression
               (identifier)
@@ -149,8 +149,27 @@ class Foo {
 Toplevel expression
 =====================================
 
+__SEMGREP_EXPRESSION
 42
 
 ---
 
-(compilation_unit (integer_literal))
+(compilation_unit (semgrep_expression (integer_literal)))
+
+=====================================
+Argument ellipsis
+=====================================
+
+__SEMGREP_EXPRESSION
+foo(...)
+
+---
+
+(compilation_unit
+  (semgrep_expression
+    (invocation_expression
+      (identifier)
+      (argument_list (argument (ellipsis)))
+    )
+  )
+)
