@@ -5,6 +5,7 @@ TREE_SITTER_PACKAGES = \
   tree-sitter-c-sharp \
   tree-sitter-javascript \
   tree-sitter-kotlin \
+  tree-sitter-lua \
   tree-sitter-ruby \
   tree-sitter-typescript
 
@@ -13,6 +14,7 @@ SEMGREP_PACKAGES = \
   semgrep-c-sharp \
   semgrep-javascript \
   semgrep-kotlin \
+  semgrep-lua \
   semgrep-ruby \
   semgrep-typescript
 
