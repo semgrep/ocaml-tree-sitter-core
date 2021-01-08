@@ -7,6 +7,7 @@ TREE_SITTER_PACKAGES = \
   tree-sitter-kotlin \
   tree-sitter-lua \
   tree-sitter-ruby \
+  tree-sitter-rust \
   tree-sitter-typescript
 
 # Semgrep extensions of the tree-sitter-* packages.
@@ -16,6 +17,7 @@ SEMGREP_PACKAGES = \
   semgrep-kotlin \
   semgrep-lua \
   semgrep-ruby \
+  semgrep-rust \
   semgrep-typescript
 
 .PHONY: build

@@ -16,3 +16,6 @@
 [submodule "src/tree-sitter-lua"]
 	path = src/tree-sitter-lua
 	url = https://github.com/Azganoth/tree-sitter-lua
+[submodule "src/tree-sitter-rust"]
+	path = src/tree-sitter-rust
+	url = git://github.com/Ruin0x11/tree-sitter-rust.git
