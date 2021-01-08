@@ -13,6 +13,7 @@ SUPPORTED_LANGUAGES = \
   javascript \
   lua \
   ruby \
+  rust \
   tsx \
   typescript \
   kotlin
@@ -27,6 +28,7 @@ STAT_LANGUAGES = \
   javascript \
   lua \
   ruby \
+  rust \
   tsx \
   typescript \
   kotlin
