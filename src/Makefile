@@ -8,6 +8,7 @@ TREE_SITTER_PACKAGES = \
   tree-sitter-lua \
   tree-sitter-r \
   tree-sitter-ruby \
+  tree-sitter-rust \
   tree-sitter-typescript
 
 # Semgrep extensions of the tree-sitter-* packages.
@@ -18,6 +19,7 @@ SEMGREP_PACKAGES = \
   semgrep-lua \
   semgrep-r \
   semgrep-ruby \
+  semgrep-rust \
   semgrep-typescript
 
 .PHONY: build
