@@ -19,3 +19,6 @@
 [submodule "src/tree-sitter-rust"]
 	path = src/tree-sitter-rust
 	url = git://github.com/Ruin0x11/tree-sitter-rust.git
+[submodule "src/tree-sitter-r"]
+	path = src/tree-sitter-r
+	url = https://github.com/r-lib/tree-sitter-r
