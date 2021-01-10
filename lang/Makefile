@@ -12,6 +12,7 @@ SUPPORTED_LANGUAGES = \
   java \
   javascript \
   lua \
+  r \
   ruby \
   rust \
   tsx \
@@ -27,6 +28,7 @@ STAT_LANGUAGES = \
   java \
   javascript \
   lua \
+  r \
   ruby \
   rust \
   tsx \
