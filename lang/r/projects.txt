@@ -28,3 +28,5 @@ https://github.com/jwyang/faster-rcnn.pytorch
 https://github.com/jennybc/happy-git-with-r
 https://github.com/aspnet/SignalR
 https://github.com/zengarden/light_head_rcnn
+https://github.com/tidyverse/ggplot2
+https://github.com/tidyverse/dplyr
