@@ -38,11 +38,9 @@ module.exports = grammar(standard_grammar, {
 
     // Metavariables
     identifier: ($, previous) => {
-      return token(
-        choice(
-          previous,
-          /\$[A-Z_][A-Z_0-9]*/
-        )
+      return choice(
+        previous,
+        token(/\$[A-Z_][A-Z_0-9]*/)
       );
     },
 
