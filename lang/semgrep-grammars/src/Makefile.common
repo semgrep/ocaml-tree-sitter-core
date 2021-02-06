@@ -8,13 +8,16 @@
 PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
 NAME = $(shell pwd | xargs basename)
 
+# If grammar.js was present at a fixed location, we could define a simple
+# make target like 'src/parser.c: grammar.js'.
 .PHONY: build
 build:
 	$(MAKE) prep
-	for dir in $$(find $$(pwd) -name grammar.js | xargs -I{} dirname {}); \
+	for dir in $$(find . -name grammar.js | xargs -I{} dirname {}); \
 	do \
-	  echo "Generate parser in $$dir"; \
-	  if [ "$$dir/grammar.js" -nt "$$dir/src/parser.c" ]; then \
+	  echo "Generate parser in $$(pwd)/$$dir"; \
+	  if ! [ -e "$$dir/src/parser.c" ] \
+	     || [ "$$dir/grammar.js" -nt "$$dir/src/parser.c" ]; then \
 	    (cd "$$dir" && npx tree-sitter generate); \
 	  else \
 	    echo "$$dir/src/parser.c is up to date."; \
