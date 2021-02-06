@@ -15,7 +15,6 @@ _build
 
 # Node at root
 /node_modules
-/package-lock.json
 
 # Read-only cloned repo
 /tree-sitter
