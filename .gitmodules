@@ -1,0 +1,24 @@
+[submodule "lang/semgrep-grammars/src/tree-sitter-typescript"]
+	path = lang/semgrep-grammars/src/tree-sitter-typescript
+	url = https://github.com/returntocorp/tree-sitter-typescript.git
+[submodule "lang/semgrep-grammars/src/ext/tree-sitter-javascript"]
+	path = lang/semgrep-grammars/src/tree-sitter-javascript
+	url = https://github.com/returntocorp/tree-sitter-javascript.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-ruby"]
+	path = lang/semgrep-grammars/src/tree-sitter-ruby
+	url = https://github.com/tree-sitter/tree-sitter-ruby.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-kotlin"]
+	path = lang/semgrep-grammars/src/tree-sitter-kotlin
+	url = https://github.com/returntocorp/tree-sitter-kotlin.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-c-sharp"]
+	path = lang/semgrep-grammars/src/tree-sitter-c-sharp
+	url = https://github.com/tree-sitter/tree-sitter-c-sharp.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-lua"]
+	path = lang/semgrep-grammars/src/tree-sitter-lua
+	url = https://github.com/Azganoth/tree-sitter-lua
+[submodule "lang/semgrep-grammars/src/tree-sitter-rust"]
+	path = lang/semgrep-grammars/src/tree-sitter-rust
+	url = git://github.com/Ruin0x11/tree-sitter-rust.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-r"]
+	path = lang/semgrep-grammars/src/tree-sitter-r
+	url = https://github.com/r-lib/tree-sitter-r
