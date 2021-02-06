@@ -1,0 +1,35 @@
+#
+# Generic makefile to symlinked or to be included at the root of the
+# semgrep-* folders as follows:
+#
+#   include ../common.mk
+#
+
+PROJECT_ROOT = $(shell git rev-parse --show-toplevel)
+NAME = $(shell pwd | xargs basename)
+
+.PHONY: build
+build:
+	$(MAKE) prep
+	for dir in $$(find . | grep 'grammar.js$$' | xargs -I{} dirname {}); \
+	do \
+	  echo "Generate parser in $$dir"; \
+	  (cd "$$dir" && npx tree-sitter generate); \
+	done
+
+# Import, rename, patch etc. in a custom manner, as needed.
+#
+.PHONY: prep
+prep:
+	if [ -x prep ]; then ./prep; fi
+
+.PHONY: test
+test:
+	for dir in $$(find . | grep 'grammar.js$$' | xargs dirname); do \
+	  echo "Test $$dir"; \
+	  (cd "$$dir" && npx tree-sitter test); \
+	done
+
+.PHONY: clean
+clean:
+	git clean -dfX
