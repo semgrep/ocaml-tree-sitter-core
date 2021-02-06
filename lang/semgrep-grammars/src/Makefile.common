@@ -25,7 +25,7 @@ prep:
 
 .PHONY: test
 test:
-	for dir in $$(find . | grep 'grammar.js$$' | xargs dirname); do \
+	for dir in $$(find . | grep 'grammar.js$$' | xargs -L1 dirname); do \
 	  echo "Test $$dir"; \
 	  (cd "$$dir" && npx tree-sitter test); \
 	done
