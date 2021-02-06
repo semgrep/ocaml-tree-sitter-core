@@ -1,0 +1,20 @@
+#! /usr/bin/env bash
+#
+# Thorough cleanup and rebuild for development purposes.
+#
+# See 'Dockerfile' or '.circleci/config.yml' for similar steps that are
+# continuously tested.
+#
+set -eu
+
+git submodule update --init --recursive --depth 1
+make distclean
+./scripts/setup-node
+./scripts/install-tree-sitter-lib
+./configure
+eval $(opam env)
+make setup
+make
+make install
+make test
+make -C lang
