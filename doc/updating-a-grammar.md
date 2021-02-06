@@ -1,3 +1,5 @@
+*Heads up: simplifications to this setup are in progress. Friday 2021-02-05*
+
 How to upgrade the grammar for a language
 ==
 
