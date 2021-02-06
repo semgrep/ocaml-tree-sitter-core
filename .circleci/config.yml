@@ -41,7 +41,7 @@ jobs:
           command: opam exec -- make e2e
       - run:
           name: fetch submodules
-          command: git submodule update --init --recursive
+          command: git submodule update --init --recursive --depth 1
       - run:
           name: test languages
           command: opam exec -- make lang
@@ -71,7 +71,7 @@ jobs:
           command: opam exec -- make install
       - run:
           name: fetch submodules
-          command: git submodule update --init --recursive
+          command: git submodule update --init --recursive --depth 1
       - run:
           name: run parsing stats
           command: opam exec -- make stat

@@ -37,7 +37,7 @@ check-submodules:
 	  if ! test -f "$$pkg"/package.json; then \
 	    echo "Missing $$pkg/package.json." >&2; \
 	    echo "Make sure you ran the following:" >&2; \
-	    echo "  git submodule update --init --recursive" >&2; \
+	    echo "  git submodule update --init --recursive --depth 1" >&2; \
 	    exit 1; \
 	  fi; \
 	done

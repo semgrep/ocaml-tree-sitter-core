@@ -57,7 +57,7 @@ might be something like this:
 ```
 git clone https://github.com/returntocorp/semgrep-grammars
 cd semgrep-grammars
-  git submodule update --init --recursive
+  git submodule update --init --recursive --depth 1
   cd src/tree-sitter-X
     git fetch origin
     git checkout 602f12b
@@ -78,7 +78,7 @@ this is ordinary use of a submodule. Commands would look like this:
 git clone https://github.com/returntocorp/ocaml-tree-sitter
 cd ocaml-tree-sitter
 git checkout -b upgrade-X
-git submodule update --init --recursive
+git submodule update --init --recursive --depth 1
 cd lang
   cd semgrep-grammars
     git pull origin master
