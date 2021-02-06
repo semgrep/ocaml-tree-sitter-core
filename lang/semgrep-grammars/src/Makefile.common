@@ -11,10 +11,14 @@ NAME = $(shell pwd | xargs basename)
 .PHONY: build
 build:
 	$(MAKE) prep
-	for dir in $$(find . | grep 'grammar.js$$' | xargs -I{} dirname {}); \
+	for dir in $$(find $$(pwd) -name grammar.js | xargs -I{} dirname {}); \
 	do \
 	  echo "Generate parser in $$dir"; \
-	  (cd "$$dir" && npx tree-sitter generate); \
+	  if [ "$$dir/grammar.js" -nt "$$dir/src/parser.c" ]; then \
+	    (cd "$$dir" && npx tree-sitter generate); \
+	  else \
+	    echo "$$dir/src/parser.c is up to date."; \
+	  fi; \
 	done
 
 # Import, rename, patch etc. in a custom manner, as needed.
