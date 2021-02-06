@@ -19,7 +19,7 @@ module.exports = grammar(standard_grammar, {
             $.semgrep_expression
           );
         },
-    
+
         // Alternate "entry point". Allows parsing a standalone expression.
         semgrep_expression: $ => seq('__SEMGREP_EXPRESSION', $._expression),
 
@@ -30,7 +30,7 @@ module.exports = grammar(standard_grammar, {
                 /\$[a-zA-Z_][a-zA-Z_0-9]*/
             )
         },
-        
+
         // Statement ellipsis: '...' not followed by ';'
         _expression: ($, previous) => {
             return choice(
