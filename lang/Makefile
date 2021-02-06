@@ -48,6 +48,7 @@ install:
 
 .PHONY: test
 test:
+	$(MAKE) -C semgrep-grammars test
 	set -e; \
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang test; done
 
