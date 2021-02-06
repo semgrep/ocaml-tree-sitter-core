@@ -12,20 +12,38 @@ installed or used by a wide audience.
 
 ## Contributing
 
+Development setup:
+
 1. Install [opam](https://opam.ocaml.org/doc/Install.html).
 2. Install [ocaml dev tools for your favorite
    editor](https://github.com/janestreet/install-ocaml):
    typically `opam install merlin` + some plugin for your editor.
-3. Install the project's dependencies,
-   possibly with `opam install --deps-only ocaml-tree-sitter.opam`.
-4. Install dependencies and tree-sitter-cli with `make setup`.
-5. Build with `make`.
-6. Install with `make install`.
-7. Test with `make test`.
-8. Install `pre-commit` with `pip3 install pre-commit` and run
+3. Install `pre-commit` with `pip3 install pre-commit` and run
    `pre-commit install` to set up the pre-commit hook.
    This will re-indent code in a consistent fashion each time you call
    `git commit`.
+
+For building or rebuilding everything after big changes, use this script:
+```
+./scripts/rebuild-everything
+```
+
+For working with the OCaml source code for the ocaml-tree-sitter code
+generator, the normal development commands are:
+1. `make`
+2. `make install` - necessary for generating parser code in the steps below.
+3. `make test`
+
+For updating a tree-sitter grammar, the typical process is:
+1. Edit the `tree-sitter-X` project on GitHub corresponding to
+   the target language X.
+2. Go to `lang/semgrep-grammars/src/tree-sitter-X` and pull the git
+   commit you want to test.
+3. Optionally update the semgrep syntax extensions in
+   `lang/semgrep-grammars/src/semgrep-X`.
+4. Run `make -C lang` and `make -C lang test` to build and test the
+   extended grammar for language X.
+5. Publish the generated code with `make -C lang release`.
 
 ### Contributing on MacOS
 

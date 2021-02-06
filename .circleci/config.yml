@@ -16,6 +16,9 @@ jobs:
           name: set up node
           command: ./scripts/setup-node
       - run:
+          name: fetch submodules
+          command: git submodule update --init --recursive --depth 1
+      - run:
           name: install tree-sitter lib
           command: ./scripts/install-tree-sitter-lib
       - run:
@@ -39,9 +42,6 @@ jobs:
       - run:
           name: end-to-end tests
           command: opam exec -- make e2e
-      - run:
-          name: fetch submodules
-          command: git submodule update --init --recursive --depth 1
       - run:
           name: test languages
           command: opam exec -- make lang
