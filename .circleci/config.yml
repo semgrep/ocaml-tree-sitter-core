@@ -9,6 +9,11 @@ jobs:
   build:
     docker:
       - image: returntocorp/ocaml:ubuntu
+
+    # 'tree-sitter generate' needs 4 GB of memory for c-sharp.
+    # 'medium+' gives us 6 GB.
+    resource_class: medium+
+
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
@@ -47,7 +52,12 @@ jobs:
           command: opam exec -- make lang
   stat:
     docker:
-      - image: mjambon/r2c-ocaml:ubuntu
+      - image: returntocorp/ocaml:ubuntu
+
+    # 'tree-sitter generate' needs 4 GB of memory for c-sharp.
+    # 'medium+' gives us 6 GB.
+    resource_class: medium+
+
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
