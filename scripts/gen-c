@@ -8,7 +8,7 @@ set -eu
 name=$(basename "$(pwd)")
 
 # Location of pre-generated grammar.json. This is required
-# if we're using an tree-sitter grammar.
+# if we're using a tree-sitter grammar.
 #
 # It is ignored if 'grammar.js' exists locally.
 #
