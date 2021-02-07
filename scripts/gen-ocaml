@@ -240,6 +240,11 @@ cat > "$dst_dir"/bin/dune <<EOF
 )
 EOF
 
+cat > "$dst_dir"/dune-project <<EOF
+(lang dune 2.0)
+(name tree-sitter-$lang)
+EOF
+
 # This is needed for building with dune.
 #
 touch "$dst_dir"/tree-sitter-lang.opam
