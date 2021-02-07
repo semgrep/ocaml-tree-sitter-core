@@ -1,0 +1,55 @@
+=====================================
+Metavariables
+=====================================
+
+class $CLASS {
+    fun $FOO($VAR:$TYPE) {
+        foo($X, 2)
+    }
+}
+
+---
+
+(source_file
+  (class_declaration
+    (type_identifier)
+    (class_body
+      (function_declaration
+        (simple_identifier)
+        (parameter
+          (simple_identifier)
+          (user_type
+            (type_identifier)))
+        (function_body
+          (statements
+            (call_expression
+              (simple_identifier)
+              (call_suffix
+                (value_arguments
+                  (value_argument
+                    (simple_identifier))
+                  (value_argument
+                    (integer_literal)))))))))))
+
+
+=====================================
+Ellipsis
+=====================================
+
+class Foo {
+  fun bar() {
+    ...
+  }
+}
+
+---
+
+(source_file
+  (class_declaration
+    (type_identifier)
+    (class_body
+      (function_declaration
+        (simple_identifier)
+        (function_body
+          (statements
+            (ellipsis)))))))

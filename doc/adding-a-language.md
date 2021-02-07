@@ -1,24 +1,23 @@
-*Heads up: simplifications to this setup are in progress. Friday 2021-02-05*
-
 # How to add support for a new language
 
 ## Submodules Overview
 
 There are quite a few github repositories involved in porting a language.
-Here is a basic tree diagram that describes how they are linked.
+Here is a basic tree diagram that describes how they are linked
+in the [semgrep repository](https://github.com/returntocorp/semgrep):
 
 ``` shell
 .
 └── semgrep
-    ├── ocaml-tree-sitter
-    │   └── semgrep-grammars
+    ├── ocaml-tree-sitter  # runtime library for tree-sitter parsers
     └── semgrep-core
-        ├── ocaml-tree-sitter-lang
-        └── pfff
+        ├── ocaml-tree-sitter-lang  # generated tree-sitter parsers
+        └── pfff                    # non-tree-sitter parsers
 ```
 
-* One good thing to note is that ocaml-tree-sitter-lang actually only contains auto-generated
-  code. This auto-generated code is created by ocaml-tree-sitter.
+* One good thing to note is that ocaml-tree-sitter-lang actually only
+  contains auto-generated code. This code is generated
+  from the ocaml-tree-sitter repo.
 
 ## Setup
 
@@ -26,14 +25,13 @@ As a model, you can use the existing setup for `ruby` or `javascript`. Our
 most complicated setup is for `typescript` and `tsx`.
 
 First install tree-sitter-cli and npx following
-[this doc](https://github.com/returntocorp/ocaml-tree-sitter/blob/f5b29e4198952233833cd989d35030baad7210b0/doc/node-setup.md).
+[this doc](https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md).
 
 ## semgrep-grammars
 
 Extend the language with semgrep pattern syntax in the
-[semgrep-grammars](https://github.com/returntocorp/semgrep-grammars)
-repo. Follow the instructions in [semgrep-grammars](https://github.com/returntocorp/semgrep-grammars)
-under `Language-porting Instructions`.
+[semgrep-grammars](https://github.com/returntocorp/ocaml-tree-sitter/tree/master/lang/semgrep-grammars)
+folder. Follow the [instructions under "Language-porting Instructions"](https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/semgrep-grammars.md).
 
 ## ocaml-tree-sitter
 
@@ -76,26 +74,14 @@ lang/ruby               # language name of the form [a-z][a-z0-9]*
 └── projects.txt        # standard name. Required for stats.
 ```
 
-To test a language in ocaml-tree-sitter:
-
-1. Update the `semgrep-grammars` submodule to the desired branch.
-2. To ensure that the language is installed correctly in the newly pulled
-   `semgrep-grammars` repository, run `make setup` and `make` in `semgrep-grammars`.
-3. Run `make` and `make install` from the `ocaml-tree-sitter` (the root) to install
-   the `ocaml-tree-sitter` executable and the runtime library.
-4. Run `make` and `make test` from the language's folder.
-
-The following sequence of commands is typical in the `ocaml-tree-sitter` repository:
-```bash
-$ cd lang/semgrep-grammars
-$ make setup
-$ make
-$ cd ../..
-$ make && make install
-$ cd lang/csharp
-$ make
-$ make test
-```
+To test a language in ocaml-tree-sitter, you must build the
+ocaml-tree-sitter OCaml code generator, run it to produce a parser,
+then run some tests for the parser. Full instructions for this
+are given in [updating-a-grammar](updating-a-grammar.md) under
+"Testing". The short instructions are:
+1. For the first time, build everything with `./scripts/rebuild-everything`.
+2. Subsequently, work from the `lang/X` folder and run
+   `make` and `make test`.
 
 ### The `fyi.list` file
 

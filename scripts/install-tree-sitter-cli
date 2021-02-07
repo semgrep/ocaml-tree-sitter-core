@@ -9,8 +9,7 @@ set -eu
 # node_modules/.bin. Example: 'npx tree-sitter --version'.
 which npx || npm install -g npx || sudo npm install -g npx
 
-# Install node modules. Should be done at the project root.
+# Install node modules as listed in package.json.
+# Should be done at the project root.
 # The tree-sitter executable will be in 'node_modules/.bin'.
-npm install \
-    tree-sitter@0.16.1 \
-    tree-sitter-cli@0.16.9
+npm install

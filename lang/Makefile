@@ -48,16 +48,27 @@ install:
 
 .PHONY: test
 test:
+	$(MAKE) -C semgrep-grammars test
 	set -e; \
 	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang test; done
+
+.PHONY: release
+release:
+	@echo "'make release' is no longer supported so as to avoid"
+	@echo "accidentally pushing changes for other languages."
+	@echo "- If you really want to publish changes for all languages,"
+	@echo "  use 'make release-all'."
+	@echo "- If you want to release just one language named 'foo', run:"
+	@echo ""
+	@echo "    ./release foo"
+	@echo ""
+	exit 1
 
 # Place the generated files into their own repo, to be used by an external
 # repo as a submodule.
 #
-.PHONY: release
-release:
-	@test -z "$$(git status --porcelain)" \
-	|| (echo "Commit your work or use 'make dry'."; exit 1)
+.PHONY: release-all
+release-all:
 	$(MAKE) -C semgrep-grammars
 	./release $(SUPPORTED_LANGUAGES)
 

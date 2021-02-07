@@ -30,7 +30,7 @@ setup:
 # Shortcut for updating the git submodules.
 .PHONY: update
 update:
-	git submodule update --init --recursive
+	git submodule update --init --recursive --depth 1
 
 # Keep things like node_modules that are worth keeping around
 .PHONY: clean

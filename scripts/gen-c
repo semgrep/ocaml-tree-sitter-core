@@ -8,7 +8,7 @@ set -eu
 name=$(basename "$(pwd)")
 
 # Location of pre-generated grammar.json. This is required
-# if we're using an tree-sitter grammar.
+# if we're using a tree-sitter grammar.
 #
 # It is ignored if 'grammar.js' exists locally.
 #
@@ -57,3 +57,6 @@ simplify-grammar < src/grammar.json.orig > src/grammar.json
 
 echo "$name: Generating definitive 'parser.c'."
 npx tree-sitter generate src/grammar.json
+
+# Make sure we get an error in case of OOM leading to no src/parser.c
+test -f src/parser.c || error "tree-sitter didn't generate src/parser.c"

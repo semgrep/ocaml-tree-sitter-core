@@ -9,12 +9,20 @@ jobs:
   build:
     docker:
       - image: returntocorp/ocaml:ubuntu
+
+    # 'tree-sitter generate' needs 4 GB of memory for c-sharp.
+    # 'medium+' gives us 6 GB.
+    resource_class: medium+
+
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
       - run:
           name: set up node
           command: ./scripts/setup-node
+      - run:
+          name: fetch submodules
+          command: git submodule update --init --recursive --depth 1
       - run:
           name: install tree-sitter lib
           command: ./scripts/install-tree-sitter-lib
@@ -40,14 +48,16 @@ jobs:
           name: end-to-end tests
           command: opam exec -- make e2e
       - run:
-          name: fetch submodules
-          command: git submodule update --init --recursive
-      - run:
           name: test languages
           command: opam exec -- make lang
   stat:
     docker:
-      - image: mjambon/r2c-ocaml:ubuntu
+      - image: returntocorp/ocaml:ubuntu
+
+    # 'tree-sitter generate' needs 4 GB of memory for c-sharp.
+    # 'medium+' gives us 6 GB.
+    resource_class: medium+
+
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
@@ -71,7 +81,7 @@ jobs:
           command: opam exec -- make install
       - run:
           name: fetch submodules
-          command: git submodule update --init --recursive
+          command: git submodule update --init --recursive --depth 1
       - run:
           name: run parsing stats
           command: opam exec -- make stat

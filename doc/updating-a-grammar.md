@@ -1,26 +1,32 @@
-*Heads up: simplifications to this setup are in progress. Friday 2021-02-05*
-
 How to upgrade the grammar for a language
 ==
 
 Let's call our language "X".
 
-Here's the chain of relevant git repositories, in dependency order:
+Here are the main components:
 
-* tree-sitter-X e.g.,
+* the OCaml code generator
+  [ocaml-tree-sitter](https://github.com/returntocorp/ocaml-tree-sitter):
+  generates OCaml parsing code from tree-sitter grammars extended
+  with `...` and such. Publishes code into the git repo
+  `ocaml-tree-sitter-lang`.
+* the original tree-sitter grammar `tree-sitter-X` e.g.,
   [tree-sitter-ruby](https://github.com/tree-sitter/tree-sitter-ruby):
   the original tree-sitter grammar for the language.
-  Git submodule of semgrep-grammars.
-* [semgrep-grammars](https://github.com/returntocorp/semgrep-grammars):
-  the collection of tree-sitter grammars supported by semgrep,
-  with semgrep-specific extensions such as dots (`...`) and
-  metavariables (`$FOO`). Uses tree-sitter-X as a git submodule. Is a
-  submodule of ocaml-tree-sitter.
-* [ocaml-tree-sitter](https://github.com/returntocorp/ocaml-tree-sitter):
-  generates OCaml parsing code from tree-sitter grammars provided by
-  semgrep-grammars and publishes that code into
-  ocaml-tree-sitter-lang. Uses semgrep-grammars as a submodule. Writes
-  to ocaml-tree-sitter-lang.
+  This is the git submodule `lang/semgrep-grammars/src/tree-sitter-X`
+  in ocaml-tree-sitter. It is installed at the project's root
+  in `node_modules` by invoking `npm install`.
+* syntax extensions to support semgrep patterns, such as ellipses
+  (`...`) and metavariables (`$FOO`).
+  This is `lang/semgrep-grammars/src/semgrep-X`. It can be tested from
+  that folder with `make && make test`.
+* an automatically-modified grammar for language X in `lang/X`.
+  It is modified so as to accommodate various requirements of the
+  ocaml-tree-sitter code generator. `lang/X/src` and
+  `lang/X/ocaml-src` contain the C/C++/OCaml code that will published
+  into
+  [ocaml-tree-sitter-lang](https://github.com/returntocorp/ocaml-tree-sitter-lang)
+  and used by semgrep.
 * [ocaml-tree-sitter-lang](https://github.com/returntocorp/ocaml-tree-sitter-lang):
   provides generated OCaml/C parsers as a dune project. Is a submodule
   of semgrep.
@@ -29,9 +35,9 @@ Here's the chain of relevant git repositories, in dependency order:
   program's CST or pattern's CST is further transformed into an AST
   suitable for pattern matching.
 
-We're going to work mostly with semgrep-grammars and with
-ocaml-tree-sitter. The above should be clear in your mind before
-proceeding further.
+Make sure the above is clear in your mind before proceeding further.
+If you have questions, the best way is reach out on our
+[community Slack channel](https://r2c.dev/slack).
 
 Before upgrading
 --
@@ -45,51 +51,28 @@ source.
 
 How: See [How to add support for a new language](adding-a-language.md).
 
-Upgrade the submodule in semgrep-grammars
+Upgrade the tree-sitter-X submodule
 --
 
 Say you want to upgrade (or downgrade) tree-sitter-X from some old
 commit to commit `602f12b`. This uses the git submodule way, without
-anything weird. Go to a copy of the `semgrep-grammars` repo and change
-the commit of the `tree-sitter-X` submodule to `602f12b`. The commands
-might be something like this:
+anything weird. The commands might be something like this:
 
 ```
-git clone https://github.com/returntocorp/semgrep-grammars
-cd semgrep-grammars
-  git submodule update --init --recursive
-  cd src/tree-sitter-X
-    git fetch origin
-    git checkout 602f12b
-    cd ..
-  git status
-  git commit -a
-  git push origin master
-```
-
-Upgrade the submodule in ocaml-tree-sitter
---
-
-Since semgrep-grammars itself is a submodule of ocaml-tree-sitter and
-we just pushed a commit to it, we need to update it as well. Again,
-this is ordinary use of a submodule. Commands would look like this:
-
-```
-git clone https://github.com/returntocorp/ocaml-tree-sitter
-cd ocaml-tree-sitter
+git submodule update --init --recursive --depth 1
 git checkout -b upgrade-X
-git submodule update --init --recursive
-cd lang
-  cd semgrep-grammars
-    git pull origin master
+cd lang/semgrep-grammars/src/tree-sitter-X
+  git fetch origin --unshallow
+  git checkout 602f12b
+  cd ..
+npm install
 ```
 
 Testing
 --
 
 First, build and install ocaml-tree-sitter normally, based on the
-instructions found in the [main README](../README.md) or in the
-[Dockerfile](../Dockerfile).
+instructions found in the [main README](../README.md).
 
 ```
 ./configure
@@ -107,8 +90,15 @@ cd lang
   make test
 ```
 
-If this works, we're all set and we can consider publishing the code
-to ocaml-tree-sitter-lang.
+If this works, we're all set. Commit the new commit for the
+tree-sitter-X submodule:
+```
+git status
+git commit -a
+git push origin upgrade-X
+```
+
+We can now consider publishing the code to ocaml-tree-sitter-lang.
 
 Publishing
 --
@@ -120,17 +110,9 @@ changes to ocaml-tree-sitter-lang.
 
 ```
 cd lang
-  make dry      # a dry-run release
-  ...           # inspect things
-  make release  # commit and push ocaml-tree-sitter-lang
-```
-
-If something goes wrong for a particular language, it is faster to
-call the `release` script directly, only for the specific language X:
-
-```
-cd lang
-  ./release --dry-run X
+  ./release --dry-run X  # dry-run release
+  ...                    # inspect things
+  ./release X  # commit and push to a new branch in ocaml-tree-sitter-lang
 ```
 
 Using the parsers

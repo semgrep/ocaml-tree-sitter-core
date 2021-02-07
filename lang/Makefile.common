@@ -36,12 +36,23 @@ install:
 test:
 	$(MAKE) parse-examples
 
+# A source grammar.json in semgrep-grammars is not required by gen-c, that's
+# why the following recipe is complicated.
+TS_PARSER_SRC = ../semgrep-grammars/lang/$(LANG)/src/grammar.json
 .PHONY: gen-c
-gen-c:
-	$(SCRIPTS)/gen-c
+gen-c: src/grammar.json
+src/grammar.json:
+	if [ ! -e src/parser.c ] \
+          || [ ! -e "$(TS_PARSER_SRC)" ] \
+          || [ "$(TS_PARSER_SRC)" -nt src/parser.c ]; then \
+	  $(SCRIPTS)/gen-c; \
+	else \
+	  echo "src/parser.c for $(LANG) is up to date."; \
+	fi
 
 .PHONY: gen-ocaml
-gen-ocaml:
+gen-ocaml: ocaml-src/tree-sitter-lang.opam
+ocaml-src/tree-sitter-lang.opam: src/grammar.json
 	$(SCRIPTS)/gen-ocaml --lang $(LANG) $(GEN_OCAML_OPTIONS)
 
 .PHONY: build-ocaml
