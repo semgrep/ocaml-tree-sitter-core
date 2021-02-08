@@ -12,8 +12,8 @@ usage() {
 Usage: $prog_name LANG
 Options:
   --dry-run
-      Do everything except committing the result to the git repo for
-      ocaml-tree-sitter-lang. Also, this mode allows running without a
+      Do everything except committing the result to the git repo
+      semgrep-LANG. Also, this mode allows running without a
       clean git status in ocaml-tree-sitter. This is useful for testing.
   --help
       Print this message and exit.

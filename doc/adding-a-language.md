@@ -9,15 +9,20 @@ in the [semgrep repository](https://github.com/returntocorp/semgrep):
 ``` shell
 .
 └── semgrep
-    ├── ocaml-tree-sitter  # runtime library for tree-sitter parsers
+    ├── ocaml-tree-sitter      # runtime library for tree-sitter parsers
     └── semgrep-core
-        ├── ocaml-tree-sitter-lang  # generated tree-sitter parsers
-        └── pfff                    # non-tree-sitter parsers
+        ├── pfff               # non-tree-sitter parsers
+        └── tree-sitter-lang   # generated tree-sitter parsers
+            ├── semgrep-java
+            ...
+            └── semgrep-ruby
 ```
 
-* One good thing to note is that ocaml-tree-sitter-lang actually only
+* One good thing to note is that tree-sitter-lang actually only
   contains auto-generated code. This code is generated
   from the ocaml-tree-sitter repo.
+* You'll need a new repo semgrep-X to host the generated parser code.
+  Ask someone at r2c to create one for you.
 
 ## Setup
 
@@ -104,8 +109,8 @@ semgrep-grammars/src/semgrep-ruby/grammar.js
 ```
 
 The files listed in `fyi.list` end up in a `fyi` folder in
-ocaml-tree-sitter-lang. For example,
-[see `ruby/fyi`](https://github.com/returntocorp/ocaml-tree-sitter-lang/tree/master/ruby).
+tree-sitter-lang. For example,
+[see `ruby/fyi`](https://github.com/returntocorp/semgrep-ruby/tree/main).
 
 ### Statistics
 
@@ -137,7 +142,7 @@ as "> 100 forks". Collect the repository URLs and put them into
 After you have pushed your ocaml-tree-sitter changes to the main branch, do the following:
 1. In `ocaml-tree-sitter/lang/Makefile`, add language under 'SUPPORTED_LANGUAGES' and 'STAT_LANGUAGES'.
 2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will automatically
-   add code for parsing to `ocaml-tree-sitter-lang`.
+   add code for parsing to `semgrep-X`.
 
 ### Troubleshooting
 
@@ -182,9 +187,10 @@ describing what was expected and what's going on.
 
 ## pfff
 
-Now you need to update pfff, as the generic AST is defined in pfff and
-you will need to specify some details in order to start filling out
-the auto-generated file.
+Pfff defines a list programming languages, some of which have parsers
+in pfff itself. Others are tree-sitter parsers which are otherwise
+independent from pfff. You need to add the new language to the list of
+languages in pfff.
 
 Look under **Adding a Language** in [pfff](https://github.com/returntocorp/pfff/blob/develop/README.md)
 for step-by-step instructions.

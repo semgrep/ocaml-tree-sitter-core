@@ -8,8 +8,8 @@ Here are the main components:
 * the OCaml code generator
   [ocaml-tree-sitter](https://github.com/returntocorp/ocaml-tree-sitter):
   generates OCaml parsing code from tree-sitter grammars extended
-  with `...` and such. Publishes code into the git repo
-  `ocaml-tree-sitter-lang`.
+  with `...` and such. Publishes code into the git repos of the
+  form `semgrep-X`.
 * the original tree-sitter grammar `tree-sitter-X` e.g.,
   [tree-sitter-ruby](https://github.com/tree-sitter/tree-sitter-ruby):
   the original tree-sitter grammar for the language.
@@ -24,14 +24,14 @@ Here are the main components:
   It is modified so as to accommodate various requirements of the
   ocaml-tree-sitter code generator. `lang/X/src` and
   `lang/X/ocaml-src` contain the C/C++/OCaml code that will published
-  into
-  [ocaml-tree-sitter-lang](https://github.com/returntocorp/ocaml-tree-sitter-lang)
+  into semgrep-X e.g.
+  [semgrep-ruby](https://github.com/returntocorp/semgrep-ruby)
   and used by semgrep.
-* [ocaml-tree-sitter-lang](https://github.com/returntocorp/ocaml-tree-sitter-lang):
+* [semgrep-X](https://github.com/returntocorp/semgrep-ruby):
   provides generated OCaml/C parsers as a dune project. Is a submodule
   of semgrep.
 * [semgrep](https://github.com/returntocorp/semgrep): uses the parsers
-  provided by ocaml-tree-sitter-lang, which produce a CST. The
+  provided by semgrep-X, which produce a CST. The
   program's CST or pattern's CST is further transformed into an AST
   suitable for pattern matching.
 
@@ -98,7 +98,7 @@ git commit -a
 git push origin upgrade-X
 ```
 
-We can now consider publishing the code to ocaml-tree-sitter-lang.
+We can now consider publishing the code to semgrep-X.
 
 Publishing
 --
@@ -106,19 +106,19 @@ Publishing
 From the `lang` folder of ocaml-tree-sitter, we'll perform the
 release. This step redoes some of the work that was done earlier and
 checks that everything is clean before committing and pushing the
-changes to ocaml-tree-sitter-lang.
+changes to semgrep-X.
 
 ```
 cd lang
   ./release --dry-run X  # dry-run release
   ...                    # inspect things
-  ./release X  # commit and push to a new branch in ocaml-tree-sitter-lang
+  ./release X  # commit and push to semgrep-X
 ```
 
 Using the parsers
 --
 
-From the semgrep repository, point to the latest ocaml-tree-sitter-lang
+From the semgrep repository, point to the latest semgrep-X
 and see what changes. If the source `grammar.js` was included, `git
 diff` should help figure out the changes since the last version.
 
