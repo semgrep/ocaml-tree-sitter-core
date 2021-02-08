@@ -45,7 +45,10 @@ For updating a tree-sitter grammar, the typical process is:
    `lang/semgrep-grammars/src/semgrep-X`.
 5. Run `make -C lang` and `make -C lang test` to build and test the
    extended grammar for language X.
-6. Publish the generated code with `make -C lang release`.
+6. Publish the generated code with `(cd lang && ./release X)`.
+7. In the semgrep repo, update the submodule for language X:
+`git -C semgrep-core/tree-sitter-lang/semgrep-X pull origin main`
+and commit.
 
 ### Contributing on MacOS
 
