@@ -70,13 +70,15 @@ release:
 .PHONY: release-all
 release-all:
 	$(MAKE) -C semgrep-grammars
-	./release $(SUPPORTED_LANGUAGES)
+	set -eu; \
+        for lang in $(SUPPORTED_LANGUAGES); do ./release $$lang; done
 
 # Make a pretend release.
 .PHONY: dry
 dry:
 	$(MAKE) -C semgrep-grammars
-	./release --dry-run $(SUPPORTED_LANGUAGES)
+	set -eu; \
+        for lang in $(SUPPORTED_LANGUAGES); do ./release $$lang --dry-run; done
 
 # Run parsing stats for each language.
 # Each needs a list of projects (projects.txt) and file extensions

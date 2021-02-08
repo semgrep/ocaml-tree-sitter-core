@@ -30,4 +30,5 @@ node-types.json
 /*/parse-*
 
 # Repo to which we publish generated code.
-ocaml-tree-sitter-lang
+/ocaml-tree-sitter-lang
+/export
