@@ -45,10 +45,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "Installing tree-sitter library directly from git."
-if [[ ! -e tree-sitter ]]; then
-  git clone --depth 1 --branch "$version" \
-    https://github.com/tree-sitter/tree-sitter.git
+if [[ -d tree-sitter ]]; then
+  echo "Removing previous copy of tree-sitter."
+  rm -rf tree-sitter
 fi
+echo "Fetching tree-sitter from git, branch $version."
+git clone --depth 1 --branch "$version" \
+    https://github.com/tree-sitter/tree-sitter.git
+
 (
   cd tree-sitter
   git clean -dfX
