@@ -9,6 +9,17 @@ prog_name=$(basename "$0")
 
 usage() {
   cat <<EOF
+** This may be done only after running 'test-lang'. **
+
+Publish generated code to an external repository for a specific language.
+
+Sublanguages defined in the same tree-sitter-LANG project are considered
+different at this stage, e.g. 'tree-sitter-typescript' provides grammars
+for 'typescript' and for 'tsx'. You need to release both:
+
+  ./$prog_name typescript
+  ./$prog_name tsx
+
 Usage: $prog_name LANG
 Options:
   --dry-run

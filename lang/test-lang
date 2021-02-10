@@ -1,0 +1,72 @@
+#! /usr/bin/env bash
+#
+# Build and test support for a language
+#
+set -eu -o pipefail
+
+prog_name=$(basename "$0")
+
+usage() {
+  cat <<EOF
+Build and test support for a language. For example,
+
+  ./$prog_name typescript
+
+will take care of rebuilding and testing the components for the sublanguages
+'typescript' and 'tsx' whose original grammars are defined in the
+'tree-sitter-typescript' project.
+
+Usage: $prog_name LANG
+Options:
+  --help
+      Print this message and exit.
+EOF
+}
+
+error() {
+  echo "Error in '$prog_name': $*" >&2
+  exit 1
+}
+
+lang=''
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      if [[ -n "$lang" ]]; then
+        error "Exactly one language must be specified on the command line"
+      fi
+      lang="$1"
+  esac
+  shift
+done
+
+echo "Installing tree-sitter-$lang using npm."
+npm install --force ./semgrep-grammars/src/tree-sitter-"$lang"
+
+echo "Building the extended parser semgrep-$lang."
+(
+  cd semgrep-grammars/src/semgrep-"$lang"
+  make clean
+  make
+  make test
+)
+
+sublangs="$lang"
+if [[ "$lang" = typescript ]]; then
+  sublangs="typescript tsx"
+fi
+
+echo "Testing C/OCaml code generation for sublanguages: $sublangs"
+for sublang in $sublangs; do
+  (
+    cd "$sublang"
+    make clean
+    make
+    make test
+  )
+done
