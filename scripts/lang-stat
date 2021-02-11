@@ -94,7 +94,7 @@ EOF
     for ext in "${extensions[@]}"; do
       if [[ -n "$ext" ]]; then
         esc=$(echo "$ext" | escape_ext)
-        find "$name" | grep -P "/[^.]+$esc"'$' >> inputs
+        find "$name" | grep "/[^.]\+$esc"'$' >> inputs
       fi
     done
   )

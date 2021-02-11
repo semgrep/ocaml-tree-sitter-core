@@ -122,27 +122,21 @@ available to exercise the generated parser:
   parses the files whose extension matches those in `extensions.txt`,
   reporting parsing success in the form of a CSV file.
 
-*** WARNING ***
-If you are using `make stat` on OSX, OSX recently updated grep so that the
-installed version does not include the -P option used in the script. In order to make
-this work, run
-`brew install grep`
-and export the path to the new grep with:
-`PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"`.
-
-For gathering a good test corpus, you can use
-[GitHub Search](https://github.com/search/advanced) or the script
-provided in `scripts/most-starred-for-language.py`. For github searches, filter by
-programming language and use a constraint to select large projects, such
-as "> 100 forks". Collect the repository URLs and put them into
+For gathering a good test corpus, you can use [GitHub
+Search](https://github.com/search/advanced) or the script provided in
+`scripts/most-starred-for-language.py`. For github searches, filter by
+programming language and use a constraint to select large projects,
+such as "> 100 forks". Collect the repository URLs and put them into
 `projects.txt`.
 
 ### Auto-Generating Parsing Code
 
-After you have pushed your ocaml-tree-sitter changes to the main branch, do the following:
-1. In `ocaml-tree-sitter/lang/Makefile`, add language under 'SUPPORTED_LANGUAGES' and 'STAT_LANGUAGES'.
-2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will automatically
-   add code for parsing to `semgrep-X`.
+After you have pushed your ocaml-tree-sitter changes to the main
+branch, do the following:
+1. In `ocaml-tree-sitter/lang/Makefile`, add language under
+   'SUPPORTED_LANGUAGES' and 'STAT_LANGUAGES'.
+2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will
+   automatically add code for parsing to `semgrep-X`.
 
 ### Troubleshooting
 

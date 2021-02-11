@@ -65,7 +65,6 @@ cd lang/semgrep-grammars/src/tree-sitter-X
   git fetch origin --unshallow
   git checkout 602f12b
   cd ..
-npm install
 ```
 
 Testing
@@ -81,22 +80,26 @@ make
 make install
 ```
 
-Then, build support for the languages in `lang/`. The following
-commands will build and test all languages at once:
+Then, build support for your language in `lang/`. The following
+commands will build and test the language:
 
 ```
 cd lang
-  make
-  make test
+  ./test-lang X
 ```
 
 If this works, we're all set. Commit the new commit for the
 tree-sitter-X submodule:
 ```
 git status
-git commit -a
+git commit semgrep-languages/semgrep-X
 git push origin upgrade-X
 ```
+
+Then make a pull request to merge this into ocaml-tree-sitter's
+main branch. It's ok to merge at this point, even if the generated code
+hasn't been exported (**Publishing** section below) or if you haven't
+done the necessary changes in semgrep (**Semgrep integration** below).
 
 We can now consider publishing the code to semgrep-X.
 
@@ -112,15 +115,20 @@ changes to semgrep-X.
 cd lang
   ./release --dry-run X  # dry-run release
   ...                    # inspect things
-  ./release X  # commit and push to semgrep-X
+  ./release X  # commits and pushes to semgrep-X
 ```
 
-Using the parsers
+This step is safe. Semgrep at this point is unaffected by those changes.
+
+Semgrep integration
 --
 
-From the semgrep repository, point to the latest semgrep-X
-and see what changes. If the source `grammar.js` was included, `git
-diff` should help figure out the changes since the last version.
+From the semgrep repository, point the submodule for semgrep-X to the
+latest commit from the "Publishing" step. Then rebuild semgrep-core,
+which will normally fail if the grammar changed. If the source
+`grammar.js` was included in the `fyi` folder for `semgrep-X` (as it
+should), `git diff HEAD^` should help figure out the changes since the
+last version.
 
 Conclusion
 --
