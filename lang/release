@@ -130,6 +130,7 @@ dst="$export_dir"/"$repo"
 if [[ -d "$lang"/ocaml-src ]]; then
   cp -a "$lang"/ocaml-src/lib "$dst"
   cp -a "$lang"/ocaml-src/bin "$dst"
+  cp -a "$lang"/ocaml-src/.gitignore "$dst"
 
   # legacy
   if [[ -d "$lang"/orig ]]; then
