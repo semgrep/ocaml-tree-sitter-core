@@ -98,8 +98,8 @@ git push origin upgrade-X
 
 Then make a pull request to merge this into ocaml-tree-sitter's
 main branch. It's ok to merge at this point, even if the generated code
-hasn't been exported ("Publishing" section below) or if you haven't
-done the necessary changes in semgrep ("Semgrep integration" below).
+hasn't been exported (**Publishing** section below) or if you haven't
+done the necessary changes in semgrep (**Semgrep integration** below).
 
 We can now consider publishing the code to semgrep-X.
 
