@@ -3,6 +3,19 @@ How to upgrade the grammar for a language
 
 Let's call our language "X".
 
+Summary
+--
+
+1. Update submodule tree-sitter-X.
+2. From `lang/`, run `./test-lang X`.
+3. From `lang/`, run `./release X`.
+4. In the semgrep repo, update submodule semgrep-X.
+5. In the semgrep repo, update the OCaml code than maps the CST to the
+   generic AST.
+
+Components
+--
+
 Here are the main components:
 
 * the OCaml code generator
