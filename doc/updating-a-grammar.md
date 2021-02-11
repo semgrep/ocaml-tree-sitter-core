@@ -10,7 +10,7 @@ Summary
 2. From `lang/`, run `./test-lang X`.
 3. From `lang/`, run `./release X`.
 4. In the semgrep repo, update submodule semgrep-X.
-5. In the semgrep repo, update the OCaml code than maps the CST to the
+5. In the semgrep repo, update the OCaml code that maps the CST to the
    generic AST.
 
 Components
