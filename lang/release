@@ -121,6 +121,7 @@ repo="semgrep-$lang"
 )
 
 branch=$(git -C "$export_dir/$repo" rev-parse --abbrev-ref HEAD)
+git -C "$export_dir/$repo" pull origin "$branch" --ff-only
 
 # Copy the files that we find.
 #
