@@ -6,11 +6,16 @@ ocaml-tree-sitter
 Generate OCaml parsers based on
 [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.
 
+Ocaml-tree-sitter is a dependency of
+[semgrep](https://github.com/returntocorp/semgrep).
+
 Installation
 --
 
-ocaml-tree-sitter is under initial development and is not ready to be
-installed or used by a wide audience.
+Installing `ocaml-tree-sitter` alone isn't of great use at the
+moment. It is useful as part of the flow for generating OCaml parsers
+from tree-sitter grammars, which is done from the `lang/` folder.
+See the **Contributing** instructions below.
 
 Contributing
 --
