@@ -32,7 +32,7 @@ Contributing
 
 For building or rebuilding everything after big changes, use this script:
 ```
-./scripts/rebuild-everything
+./scripts/rebuild-everything  # needs root access to install libtree-sitter
 ```
 
 ### Testing a language

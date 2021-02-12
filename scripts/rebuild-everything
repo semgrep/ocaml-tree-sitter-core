@@ -8,9 +8,23 @@
 set -eu
 
 git submodule update --init --recursive --depth 1
-make distclean
-./scripts/setup-node
+git clean -dfX
+
+if ! npm --version > /dev/null; then
+  cat >&2 <<EOF
+npm not found.
+Try the following:
+
+  ./scripts/setup-node
+
+(needs root access to install system packages)
+EOF
+  exit 1
+fi
+
+# needs root access to install the tree-sitter library on non-brew systems
 ./scripts/install-tree-sitter-lib
+
 ./configure
 eval $(opam env)
 make setup
