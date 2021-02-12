@@ -4,10 +4,8 @@ ocaml-tree-sitter
 [![CircleCI](https://circleci.com/gh/returntocorp/ocaml-tree-sitter.svg?style=svg)](https://circleci.com/gh/returntocorp/ocaml-tree-sitter)
 
 Generate OCaml parsers based on
-[tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.
-
-Ocaml-tree-sitter is a dependency of
-[semgrep](https://github.com/returntocorp/semgrep).
+[tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars,
+for [semgrep](https://github.com/returntocorp/semgrep).
 
 Installation
 --
