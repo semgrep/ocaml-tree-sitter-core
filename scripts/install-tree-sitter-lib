@@ -63,6 +63,7 @@ git clone --depth 1 --branch "$version" \
   if [[ -z "${HOMEBREW_SYSTEM+x}" ]]; then
     sudo make install
   else
+    # brew is present
     make install
   fi
 

@@ -1,18 +1,24 @@
-# ocaml-tree-sitter
+ocaml-tree-sitter
+==
 
 [![CircleCI](https://circleci.com/gh/returntocorp/ocaml-tree-sitter.svg?style=svg)](https://circleci.com/gh/returntocorp/ocaml-tree-sitter)
 
 Generate OCaml parsers based on
-[tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.
+[tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars,
+for [semgrep](https://github.com/returntocorp/semgrep).
 
-## Installation
+Installation
+--
 
-ocaml-tree-sitter is under initial development and is not ready to be
-installed or used by a wide audience.
+Installing `ocaml-tree-sitter` alone isn't of great use at the
+moment. It is useful as part of the flow for generating OCaml parsers
+from tree-sitter grammars, which is done from the `lang/` folder.
+See the **Contributing** instructions below.
 
-## Contributing
+Contributing
+--
 
-Development setup:
+### Development setup
 
 1. Install [opam](https://opam.ocaml.org/doc/Install.html).
 2. Install [ocaml dev tools for your favorite
@@ -22,67 +28,46 @@ Development setup:
    `pre-commit install` to set up the pre-commit hook.
    This will re-indent code in a consistent fashion each time you call
    `git commit`.
+4. Check out the [extra instructions for MacOS](doc/macos.md).
 
 For building or rebuilding everything after big changes, use this script:
 ```
-./scripts/rebuild-everything
+./scripts/rebuild-everything  # needs root access to install libtree-sitter
 ```
 
-For working with the OCaml source code for the ocaml-tree-sitter code
-generator, the normal development commands are:
-1. `make`
-2. `make install` - necessary for generating parser code in the steps below.
-3. `make test`
+### Testing a language
 
-For updating a tree-sitter grammar, the typical process is:
-1. Edit the `tree-sitter-X` project on GitHub corresponding to
-   the target language X.
-2. Go to `lang/semgrep-grammars/src/tree-sitter-X` and pull the git
-   commit you want to test.
-3. Run `npm install` from the project root to install the updated
-   `tree-sitter-X`.
-4. Optionally update the semgrep syntax extensions in
-   `lang/semgrep-grammars/src/semgrep-X`.
-5. Run `make -C lang` and `make -C lang test` to build and test the
-   extended grammar for language X.
-6. Publish the generated code with `(cd lang && ./release X)`.
-7. In the semgrep repo, update the submodule for language X:
-`git -C semgrep-core/tree-sitter-lang/semgrep-X pull origin main`
-and commit.
+Say you want to build and test support for kotlin, you would run this:
 
-### Contributing on MacOS
+```
+$ cd lang
+$ ./test-lang kotlin
+```
 
-* Note that you must have Xcode and CLT installed for Mac to run make setup.
-* If you are having trouble with node setup, reference [node page](https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md).
-* You must also have bash version 4.0 or higher. To make this your default bash:
-   1. Run `brew install bash` or `brew upgrade bash`
-   2. Go to `/etc/shells` and add `usr/local/bin/bash`
-   3. Run `chsh -s /usr/local/bin/bash`
-   4. Close your shell and reopen. To check your bash version, run `bash --version`.
+For details, see [How to upgrade the grammar for a
+language](doc/updating-a-grammar.md).
 
-### Testing Parsing for a Specific Language
+### Adding a new language
 
-1. Go to `ocaml-tree-sitter/lang/semgrep-grammars/src`.
-2. Build with `make`.
-3. Go to `ocaml-tree-sitter/lang/<language name>`.
-4. Build with `make`.
+See [How to add support for a new language](doc/adding-a-language.md).
 
-## Documentation
+Documentation
+--
 
 We have limited [documentation](doc) which is mostly targeted at
 early contributors. It's growing organically based on demand, so don't
 hesitate to [file an issue](https://github.com/returntocorp/ocaml-tree-sitter/issues)
 explaining what you're trying to do.
 
-## License
+License
+--
 
 ocaml-tree-sitter is free software with contributors from multiple
-organizations. The project is driven by r2c.
+organizations. The project is driven by [r2c](https://github.com/returntocorp).
 
 - OCaml code developed specifically for this project is
   distributed under the terms of the [GNU GPL v3](LICENSE).
 - The OCaml bindings to tree-sitter's C API were created by Bryan
   Phelps as part of the reason-tree-sitter project.
-- The tree-sitter grammars for major programming languages were imported
-  from their respective projects, and we try to keep them in sync.
-  Each comes with its own license.
+- The tree-sitter grammars for major programming languages are
+  external projects. Each comes with its own license.
