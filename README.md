@@ -63,7 +63,7 @@ License
 --
 
 ocaml-tree-sitter is free software with contributors from multiple
-organizations. The project is driven by r2c.
+organizations. The project is driven by [r2c](https://github.com/returntocorp).
 
 - OCaml code developed specifically for this project is
   distributed under the terms of the [GNU GPL v3](LICENSE).
