@@ -69,6 +69,5 @@ organizations. The project is driven by r2c.
   distributed under the terms of the [GNU GPL v3](LICENSE).
 - The OCaml bindings to tree-sitter's C API were created by Bryan
   Phelps as part of the reason-tree-sitter project.
-- The tree-sitter grammars for major programming languages were imported
-  from their respective projects, and we try to keep them in sync.
-  Each comes with its own license.
+- The tree-sitter grammars for major programming languages are
+  external projects. Each comes with its own license.
