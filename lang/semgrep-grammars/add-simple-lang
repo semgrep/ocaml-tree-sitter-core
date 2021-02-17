@@ -1,0 +1,141 @@
+#! /usr/bin/env bash
+#
+# Get started with adding a new language in this folder.
+#
+set -eu
+
+cmd="$0 $*"
+prog_name=./add-simple-lang
+
+usage() {
+  cat <<EOF
+Initialize files for a single tree-sitter grammar, from a git URL
+pointing to a repo with the usual structure.
+
+Usage:
+
+1. Create a branch.
+2. Attempt the following command:
+
+  $prog_name URL
+
+where URL is a publicly-readable git URL. For example:
+
+  $prog_name https://github.com/tree-sitter/tree-sitter-java.git
+
+If it fails, run 'git status' to see what was done and fix things accordingly.
+EOF
+}
+
+error() {
+  cat >&2 <<EOF
+Command: $cmd
+Error: $*
+
+Try --help.
+EOF
+  exit 1
+}
+
+url=''
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    http*|git*)
+      url="$1"
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      error "Unsupported command-line argument '$1'"
+  esac
+  shift
+done
+
+if [[ -z "$url" ]]; then
+  error "Missing command-line argument"
+fi
+
+repo_name=$(basename "$url" .git)
+case "$repo_name" in
+  tree-sitter-*)
+    echo "Remote URL: $url"
+    echo "Repository name: $repo_name"
+    lang="${repo_name#tree-sitter-}"
+    echo "Language name: $lang"
+    ;;
+  *)
+    error "Repo name does not start with 'tree-sitter-': '$repo_name'"
+esac
+
+if [[ -d "src/$repo_name" ]]; then
+    echo <<EOF
+src/$repo_name already exists.
+Skipping and assuming it's in a good state.
+EOF
+else
+  (
+    cd src
+    git submodule add "$url"
+  )
+fi
+
+(
+  cd src
+  if [[ -e semgrep-"$lang" ]]; then
+    error "$(pwd)/semgrep-$lang already exists. Remove and retry."
+  fi
+  mkdir semgrep-"$lang"
+
+  cd semgrep-"$lang"
+  ln -s ../Makefile.common Makefile
+  ln -s ../prep.common prep
+  mkdir -p test/corpus
+  ln -s ../../../"$repo_name"/test/corpus test/corpus/inherited
+  touch test/corpus/semgrep.txt
+
+  cat > grammar.js <<EOF
+/*
+  semgrep-$lang
+
+  Extends the standard $lang grammar with semgrep pattern constructs.
+*/
+
+const base_grammar = require('tree-sitter-$lang/grammar');
+
+module.exports = grammar(base_grammar, {
+  name: '$lang',
+
+  conflicts: (\$, previous) => previous.concat([
+  ]),
+
+  /*
+     Support for semgrep ellipsis ('...') and metavariables ('\$FOO'),
+     if they're not already part of the base grammar.
+  */
+  rules: {
+  /*
+    semgrep_ellipsis: \$ => '...',
+
+    _expression: (\$, previous) => {
+      return choice(
+        \$.semgrep_ellipsis,
+        ...previous.members
+      );
+    }
+  */
+  }
+});
+EOF
+  git add .
+)
+
+if [[ -L lang/"$lang" ]]; then
+  rm -f lang/"$lang"
+fi
+ln -s ../src/semgrep-"$lang" lang/"$lang"
+git add lang/"$lang"
+
+echo "Successfully created lang/$lang. Check 'git status'."
