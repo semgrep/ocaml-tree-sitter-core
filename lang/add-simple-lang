@@ -95,9 +95,10 @@ if [[ -d "$lang" ]]; then
   if [[ "$force" = true ]]; then
     echo "Removing '$lang/'."
     rm -rf "$lang"
-  fi
-  error "$lang/ already exists.
+  else
+    error "$lang/ already exists.
 Remove or rename, then retry. Or use '--force.'"
+  fi
 fi
 
 mkdir "$lang"
