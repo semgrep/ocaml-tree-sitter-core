@@ -19,13 +19,17 @@ Usage:
 1. Create a branch.
 2. Attempt the following command:
 
-  $prog_name URL
+  $prog_name URL [--force]
 
 where URL is a publicly-readable git URL. For example:
 
   $prog_name https://github.com/tree-sitter/tree-sitter-java.git
 
 If it fails, run 'git status' to see what was done and fix things accordingly.
+
+Options:
+  --force
+        Remove destination folders and their contents if they already exist.
 EOF
 }
 
@@ -39,12 +43,16 @@ EOF
   exit 1
 }
 
+force="false"
 url=''
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     http*|git*)
       url="$1"
+      ;;
+    --force)
+      force=true
       ;;
     --help)
       usage
@@ -87,7 +95,13 @@ fi
 (
   cd src
   if [[ -e semgrep-"$lang" ]]; then
-    error "$(pwd)/semgrep-$lang already exists. Remove and retry."
+    if [[ "$force" = true ]]; then
+      echo "Removing 'semgrep-$lang'."
+      rm -rf "semgrep-$lang"
+    else
+      error "'$(pwd)/semgrep-$lang' already exists.
+Remove and retry, or use '--force'."
+    fi
   fi
   mkdir semgrep-"$lang"
 

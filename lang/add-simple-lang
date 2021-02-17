@@ -18,13 +18,17 @@ Usage:
 1. Create a branch.
 2. Attempt the following command:
 
-  $prog_name URL
+  $prog_name URL [--force]
 
 where URL is a publicly-readable git URL. For example:
 
   $prog_name https://github.com/tree-sitter/tree-sitter-java.git
 
 If it fails, run 'git status' to see what was done and fix things accordingly.
+
+Options:
+  --force
+        Remove destination folders and their contents if they already exist.
 EOF
 }
 
@@ -38,12 +42,16 @@ EOF
   exit 1
 }
 
+force=false
 url=''
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     http*|git*)
       url="$1"
+      ;;
+    --force)
+      force=true
       ;;
     --help)
       usage
@@ -74,20 +82,29 @@ esac
 echo "[$lang] Setting up tree-sitter grammar in semgrep-grammars."
 (
   cd semgrep-grammars
-  ./sg-add-simple-lang
+  options=""
+  if [[ "$force" = true ]]; then
+    options="--force"
+  fi
+  ./sg-add-simple-lang $options "$url"
 )
 
-echo "[$lang] Creating stubs for in lang/$lang."
+echo "[$lang] Creating stubs in lang/$lang."
 
 if [[ -d "$lang" ]]; then
-  error "$lang/ already exists. Remove or rename, then retry."
+  if [[ "$force" = true ]]; then
+    echo "Removing '$lang/'."
+    rm -rf "$lang"
+  fi
+  error "$lang/ already exists.
+Remove or rename, then retry. Or use '--force.'"
 fi
 
 mkdir "$lang"
 (
   cd "$lang"
 
-  ls -s ../Makefile.common Makefile
+  ln -s ../Makefile.common Makefile
 
   cat > fyi.list <<EOF
 semgrep-grammars/src/tree-sitter-$lang/LICENSE
