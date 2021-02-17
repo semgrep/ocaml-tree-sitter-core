@@ -29,6 +29,8 @@ EOF
 #
 
 if [[ -e grammar.js ]]; then
+  # TODO remove this branch once we're done migrating from the old setup
+
   echo "$name: Generating initial 'grammar.json' from 'grammar.js'."
   npx tree-sitter generate
   mkdir -p src

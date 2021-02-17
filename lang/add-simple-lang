@@ -1,0 +1,129 @@
+#! /usr/bin/env bash
+#
+# Get started with adding a new language.
+#
+set -eu
+
+cmd="$0 $*"
+prog_name=./add-simple-lang
+
+usage() {
+  cat <<EOF
+Initialize files for a single tree-sitter grammar, from a git URL
+pointing to a repo with the usual structure. For a repo providing multiple
+language variants, see what was done for typescript and tsx.
+
+Usage:
+
+1. Create a branch.
+2. Attempt the following command:
+
+  $prog_name URL
+
+where URL is a publicly-readable git URL. For example:
+
+  $prog_name https://github.com/tree-sitter/tree-sitter-java.git
+
+If it fails, run 'git status' to see what was done and fix things accordingly.
+EOF
+}
+
+error() {
+  cat >&2 <<EOF
+Command: $cmd
+Error: $*
+
+Try --help.
+EOF
+  exit 1
+}
+
+url=''
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    http*|git*)
+      url="$1"
+      ;;
+    --help)
+      usage
+      exit 0
+      ;;
+    *)
+      error "Unsupported command-line argument '$1'"
+  esac
+  shift
+done
+
+if [[ -z "$url" ]]; then
+  error "Missing command-line argument"
+fi
+
+repo_name=$(basename "$url" .git)
+case "$repo_name" in
+  tree-sitter-*)
+    echo "Remote URL: $url"
+    echo "Repository name: $repo_name"
+    lang="${repo_name#tree-sitter-}"
+    echo "Language name: $lang"
+    ;;
+  *)
+    error "Repo name does not start with 'tree-sitter-': '$repo_name'"
+esac
+
+echo "[$lang] Setting up tree-sitter grammar in semgrep-grammars."
+(
+  cd semgrep-grammars
+  ./sg-add-simple-lang
+)
+
+echo "[$lang] Creating stubs for in lang/$lang."
+
+if [[ -d "$lang" ]]; then
+  error "$lang/ already exists. Remove or rename, then retry."
+fi
+
+mkdir "$lang"
+(
+  cd "$lang"
+
+  ls -s ../Makefile.common Makefile
+
+  cat > fyi.list <<EOF
+semgrep-grammars/src/tree-sitter-$lang/LICENSE
+semgrep-grammars/src/tree-sitter-$lang/grammar.js
+semgrep-grammars/src/semgrep-$lang/grammar.js
+EOF
+
+  cat > extensions.txt <<EOF
+# File extensions for the target language, one per line. This is used for
+# collecting parsing stats from the repos specified in 'projects.txt'. e.g.:
+#
+# .h
+# .c
+#
+EOF
+
+  cat > projects.txt <<EOF
+# Git URLs of publicly-accessible projects to be used for parsing stats,
+# one per line.
+#
+EOF
+
+  git add .
+)
+
+cat <<EOF
+
+Success!
+
+Next steps:
+- Check 'git status'.
+- Test everything with './test-lang $lang'.
+- Commit your work.
+- [optional] Extend the grammar to support semgrep patterns
+  in 'semgrep-grammars/src/semgrep-$lang/grammar.js'.
+- Add URLs of large public projects in '$lang/projects.txt'.
+- Add the file extensions for the language in '$lang/extensions.txt'.
+- Run parsing stats with 'make -C $lang stat'.
+EOF

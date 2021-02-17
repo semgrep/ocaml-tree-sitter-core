@@ -5,10 +5,12 @@
 set -eu
 
 cmd="$0 $*"
-prog_name=./add-simple-lang
+prog_name=./sg-add-simple-lang
 
 usage() {
   cat <<EOF
+*** helper script for ../add-simple-lang ***
+
 Initialize files for a single tree-sitter grammar, from a git URL
 pointing to a repo with the usual structure.
 
