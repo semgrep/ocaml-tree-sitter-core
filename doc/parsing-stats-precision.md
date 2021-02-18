@@ -16,7 +16,7 @@ For now, we will assume that having an error on one line is
 independent of having an error on the next line.
 
 Under this assumption, the number of lines of code affected by
-a parse error error follows a [Poisson
+a parse error follows a [Poisson
 distribution](https://en.wikipedia.org/wiki/Poisson_distribution).
 A Poisson distribution is parametrized by lambda, which is the mean of
 the distribution. The standard deviation is the square root of the
@@ -81,8 +81,8 @@ than 6%, which is solid.
 What if errors span multiple lines?
 --
 
-Assuming that each errors spans exactly 10 lines, we can divide the
-corpus into blocks of 10 lines instead single lines. This brings us
+Assuming that each error spans exactly 10 lines, we can divide the
+corpus into blocks of 10 lines instead of single lines. This brings us
 back to the previous problem, but n now represents blocks of 10 lines.
 
 Under this new assumption, we get for a corpus of 10,000,000 lines:
