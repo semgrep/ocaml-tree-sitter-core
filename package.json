@@ -4,6 +4,7 @@
     "tree-sitter-c": "file:lang/semgrep-grammars/src/tree-sitter-c",
     "tree-sitter-c-sharp": "file:lang/semgrep-grammars/src/tree-sitter-c-sharp",
     "tree-sitter-cli": "^0.18.0",
+    "tree-sitter-cpp": "file:lang/semgrep-grammars/src/tree-sitter-cpp",
     "tree-sitter-go": "file:lang/semgrep-grammars/src/tree-sitter-go",
     "tree-sitter-java": "file:lang/semgrep-grammars/src/tree-sitter-java",
     "tree-sitter-javascript": "file:lang/semgrep-grammars/src/tree-sitter-javascript",

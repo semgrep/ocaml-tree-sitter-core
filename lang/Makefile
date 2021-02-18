@@ -4,15 +4,15 @@
 # ocaml-tree-sitter must have been built and installed for this to work.
 #
 
-# TODO: port to the modern setup: cpp
 # List of languages matching a tree-sitter-* repo.
 #
 # For example, both typescript and tsx are provided by tree-sitter-typescript.
 # The list below only shows typescript, not tsx.
 #
-SUPPORTED_LANGUAGES = \
+SUPPORTED_TS_LANGUAGES = \
   c \
   c-sharp \
+  cpp \
   go \
   java \
   javascript \
@@ -24,7 +24,7 @@ SUPPORTED_LANGUAGES = \
   typescript
 
 # Includes all language variants e.g. typescript and tsx
-SUPPORTED_SUBLANGUAGES = $(SUPPORTED_LANGUAGES) tsx
+SUPPORTED_LANGUAGES = $(SUPPORTED_TS_LANGUAGES) tsx
 
 # Languages which are set up to run parsing stats. Ideally, this is all
 # the supported languages. See the 'stat' target.
@@ -32,6 +32,7 @@ SUPPORTED_SUBLANGUAGES = $(SUPPORTED_LANGUAGES) tsx
 STAT_LANGUAGES = \
   c \
   c-sharp \
+  cpp \
   go \
   java \
   javascript \
@@ -51,7 +52,7 @@ STAT_LANGUAGES = \
 .PHONY: test
 test:
 	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do ./test-lang $$lang; done
+	for lang in $(SUPPORTED_TS_LANGUAGES); do ./test-lang $$lang; done
 
 .PHONY: build
 build:
@@ -77,7 +78,7 @@ release:
 release-all:
 	$(MAKE) -C semgrep-grammars
 	set -eu; \
-        for lang in $(SUPPORTED_SUBLANGUAGES); do \
+        for lang in $(SUPPORTED_LANGUAGES); do \
 	  ./release $$lang; \
 	done
 
@@ -86,7 +87,7 @@ release-all:
 dry:
 	$(MAKE) -C semgrep-grammars
 	set -eu; \
-        for lang in $(SUPPORTED_SUBLANGUAGES); do \
+        for lang in $(SUPPORTED_LANGUAGES); do \
 	  ./release $$lang --dry-run; \
 	done
 
@@ -110,4 +111,4 @@ stat-priv:
 .PHONY: clean
 clean:
 	set -e; \
-	for lang in $(SUPPORTED_SUBLANGUAGES); do $(MAKE) -C $$lang clean; done
+	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang clean; done
