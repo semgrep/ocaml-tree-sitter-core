@@ -29,7 +29,8 @@ EOF
 #
 
 if [[ -e grammar.js ]]; then
-  # TODO remove this branch once we're done migrating from the old setup
+  # This mechanism is used for ocaml-tree-sitter test grammars, which just
+  # consist of a local 'grammar.json' file.
 
   echo "$name: Generating initial 'grammar.json' from 'grammar.js'."
   npx tree-sitter generate
@@ -38,6 +39,9 @@ if [[ -e grammar.js ]]; then
   if [[ -e orig/scanner.c ]]; then cp -L orig/scanner.c src; fi
   if [[ -e orig/scanner.cc ]]; then cp -L orig/scanner.cc src; fi
 else
+  # This mechanism is used with languages whose base grammar is defined
+  # in a tree-sitter-* submodule.
+
   orig_grammar_json="$import_from"/src/grammar.json
   if [[ ! -e "$orig_grammar_json" ]]; then
     cat >&2 <<EOF
