@@ -4,53 +4,60 @@
 # ocaml-tree-sitter must have been built and installed for this to work.
 #
 
-SUPPORTED_LANGUAGES = \
+# List of languages matching a tree-sitter-* repo.
+#
+# For example, both typescript and tsx are provided by tree-sitter-typescript.
+# The list below only shows typescript, not tsx.
+#
+SUPPORTED_TS_LANGUAGES = \
   c \
-  cpp \
   c-sharp \
+  cpp \
   go \
   java \
   javascript \
+  kotlin \
   lua \
   r \
   ruby \
   rust \
-  tsx \
-  typescript \
-  kotlin
+  typescript
+
+# Includes all language variants e.g. typescript and tsx
+SUPPORTED_LANGUAGES = $(SUPPORTED_TS_LANGUAGES) tsx
 
 # Languages which are set up to run parsing stats. Ideally, this is all
 # the supported languages. See the 'stat' target.
 #
 STAT_LANGUAGES = \
+  c \
   c-sharp \
+  cpp \
   go \
   java \
   javascript \
+  kotlin \
   lua \
   r \
   ruby \
   rust \
   tsx \
-  typescript \
-  kotlin
+  typescript
+
+# Build and test each language. Does not run parsing stats (see 'stat:').
+#
+# This takes a while and is intended for CI. If you're working on a single
+# language, better just run ./test-lang.
+#
+.PHONY: test
+test:
+	set -e; \
+	for lang in $(SUPPORTED_TS_LANGUAGES); do ./test-lang $$lang; done
 
 .PHONY: build
 build:
-	$(MAKE) -C semgrep-grammars
-	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang build; done
-
-.PHONY: install
-install:
-	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang install; done
-
-.PHONY: test
-test:
-	$(MAKE) -C semgrep-grammars test
-	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang test; done
+	@echo "'make build' is no longer supported. Use 'make test'."
+	exit 1
 
 .PHONY: release
 release:
@@ -71,14 +78,18 @@ release:
 release-all:
 	$(MAKE) -C semgrep-grammars
 	set -eu; \
-        for lang in $(SUPPORTED_LANGUAGES); do ./release $$lang; done
+        for lang in $(SUPPORTED_LANGUAGES); do \
+	  ./release $$lang; \
+	done
 
 # Make a pretend release.
 .PHONY: dry
 dry:
 	$(MAKE) -C semgrep-grammars
 	set -eu; \
-        for lang in $(SUPPORTED_LANGUAGES); do ./release $$lang --dry-run; done
+        for lang in $(SUPPORTED_LANGUAGES); do \
+	  ./release $$lang --dry-run; \
+	done
 
 # Run parsing stats for each language.
 # Each needs a list of projects (projects.txt) and file extensions

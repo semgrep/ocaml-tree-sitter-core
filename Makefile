@@ -63,13 +63,12 @@ e2e: build
 # Build and test all the production languages.
 .PHONY: lang
 lang: build
-	$(MAKE) -C lang build
-	$(MAKE) -C lang test
+	$(MAKE) -C lang
 
 # Run parsing stats for the supported languages in lang/.
 .PHONY: stat
 stat:
-	$(MAKE) -C lang build
+	$(MAKE) -C lang
 	$(MAKE) -C lang stat
 
 .PHONY: install
