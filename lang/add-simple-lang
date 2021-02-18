@@ -138,6 +138,7 @@ Success!
 Next steps:
 - Check 'git status'.
 - Test everything with './test-lang $lang'.
+- Add the language to the Makefile to mark it as supported and go through CI.
 - Commit your work.
 - [optional] Extend the grammar to support semgrep patterns
   in 'semgrep-grammars/src/semgrep-$lang/grammar.js'.

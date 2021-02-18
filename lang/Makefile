@@ -5,6 +5,11 @@
 #
 
 # TODO: port to the modern setup: c, cpp
+# List of languages matching a tree-sitter-* repo.
+#
+# For example, both typescript and tsx are provided by tree-sitter-typescript.
+# The list below only shows typescript, not tsx.
+#
 SUPPORTED_LANGUAGES = \
   c-sharp \
   go \
@@ -15,8 +20,10 @@ SUPPORTED_LANGUAGES = \
   r \
   ruby \
   rust \
-  tsx \
   typescript
+
+# Includes all language variants e.g. typescript and tsx
+SUPPORTED_SUBLANGUAGES = $(SUPPORTED_LANGUAGES) tsx
 
 # Languages which are set up to run parsing stats. Ideally, this is all
 # the supported languages. See the 'stat' target.
@@ -35,6 +42,10 @@ STAT_LANGUAGES = \
   typescript
 
 # Build and test each language. Does not run parsing stats (see 'stat:').
+#
+# This takes a while and is intended for CI. If you're working on a single
+# language, better just run ./test-lang.
+#
 .PHONY: test
 test:
 	set -e; \
@@ -64,14 +75,18 @@ release:
 release-all:
 	$(MAKE) -C semgrep-grammars
 	set -eu; \
-        for lang in $(SUPPORTED_LANGUAGES); do ./release $$lang; done
+        for lang in $(SUPPORTED_SUBLANGUAGES); do \
+	  ./release $$lang; \
+	done
 
 # Make a pretend release.
 .PHONY: dry
 dry:
 	$(MAKE) -C semgrep-grammars
 	set -eu; \
-        for lang in $(SUPPORTED_LANGUAGES); do ./release $$lang --dry-run; done
+        for lang in $(SUPPORTED_SUBLANGUAGES); do \
+	  ./release $$lang --dry-run; \
+	done
 
 # Run parsing stats for each language.
 # Each needs a list of projects (projects.txt) and file extensions
@@ -93,4 +108,4 @@ stat-priv:
 .PHONY: clean
 clean:
 	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang clean; done
+	for lang in $(SUPPORTED_SUBLANGUAGES); do $(MAKE) -C $$lang clean; done
