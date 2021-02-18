@@ -24,3 +24,6 @@ _build
 
 # for codemap stuff of pad
 /skip_list.txt
+
+# This is big, and needs be in format version 1 or 2 depending on npm version
+/package-node.json
