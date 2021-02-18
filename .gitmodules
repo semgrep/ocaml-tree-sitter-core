@@ -28,3 +28,6 @@
 [submodule "lang/semgrep-grammars/src/tree-sitter-go"]
 	path = lang/semgrep-grammars/src/tree-sitter-go
 	url = https://github.com/tree-sitter/tree-sitter-go.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-c"]
+	path = lang/semgrep-grammars/src/tree-sitter-c
+	url = https://github.com/tree-sitter/tree-sitter-c.git

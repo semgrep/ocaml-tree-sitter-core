@@ -4,13 +4,14 @@
 # ocaml-tree-sitter must have been built and installed for this to work.
 #
 
-# TODO: port to the modern setup: c, cpp
+# TODO: port to the modern setup: cpp
 # List of languages matching a tree-sitter-* repo.
 #
 # For example, both typescript and tsx are provided by tree-sitter-typescript.
 # The list below only shows typescript, not tsx.
 #
 SUPPORTED_LANGUAGES = \
+  c \
   c-sharp \
   go \
   java \
@@ -29,6 +30,7 @@ SUPPORTED_SUBLANGUAGES = $(SUPPORTED_LANGUAGES) tsx
 # the supported languages. See the 'stat' target.
 #
 STAT_LANGUAGES = \
+  c \
   c-sharp \
   go \
   java \

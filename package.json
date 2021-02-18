@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "tree-sitter": "^0.17.1",
+    "tree-sitter-c": "file:lang/semgrep-grammars/src/tree-sitter-c",
     "tree-sitter-c-sharp": "file:lang/semgrep-grammars/src/tree-sitter-c-sharp",
     "tree-sitter-cli": "^0.18.0",
     "tree-sitter-go": "file:lang/semgrep-grammars/src/tree-sitter-go",
