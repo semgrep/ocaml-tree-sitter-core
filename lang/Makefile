@@ -4,20 +4,19 @@
 # ocaml-tree-sitter must have been built and installed for this to work.
 #
 
+# TODO: port to the modern setup: c, cpp
 SUPPORTED_LANGUAGES = \
-  c \
-  cpp \
   c-sharp \
   go \
   java \
   javascript \
+  kotlin \
   lua \
   r \
   ruby \
   rust \
   tsx \
-  typescript \
-  kotlin
+  typescript
 
 # Languages which are set up to run parsing stats. Ideally, this is all
 # the supported languages. See the 'stat' target.
@@ -27,30 +26,24 @@ STAT_LANGUAGES = \
   go \
   java \
   javascript \
+  kotlin \
   lua \
   r \
   ruby \
   rust \
   tsx \
-  typescript \
-  kotlin
+  typescript
+
+# Build and test each language. Does not run parsing stats (see 'stat:').
+.PHONY: test
+test:
+	set -e; \
+	for lang in $(SUPPORTED_LANGUAGES); do ./test-lang $$lang; done
 
 .PHONY: build
 build:
-	$(MAKE) -C semgrep-grammars
-	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang build; done
-
-.PHONY: install
-install:
-	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang install; done
-
-.PHONY: test
-test:
-	$(MAKE) -C semgrep-grammars test
-	set -e; \
-	for lang in $(SUPPORTED_LANGUAGES); do $(MAKE) -C $$lang test; done
+	@echo "'make build' is no longer supported. Use 'make test'."
+	exit 1
 
 .PHONY: release
 release:

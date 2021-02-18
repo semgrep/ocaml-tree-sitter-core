@@ -25,3 +25,6 @@
 [submodule "lang/tree-sitter-java"]
 	path = lang/semgrep-grammars/src/tree-sitter-java
 	url = https://github.com/tree-sitter/tree-sitter-java.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-go"]
+	path = lang/semgrep-grammars/src/tree-sitter-go
+	url = https://github.com/tree-sitter/tree-sitter-go.git
