@@ -56,9 +56,9 @@ From the ocaml-tree-sitter repo, do the following:
 5. Link the Makefile.common to a Makefile in the directory with:
    `ln -s ../Makefile.common Makefile`
 6. Create a test corpus. You can do this by:
-   * Running `scripts/most-starred-for-language.py` in order to gather projects
+   * Running `most-starred-for-language` in order to gather projects
      on which to run parsing stats. Run with the following command:
-     `python scripts/most-starred-for-language.py <lang> <github_username> <api_key>`
+     `./scripts/most-starred-for-language <lang> <github_username> <api_key>`
    * Using github advanced search to find the most starred or most forked repositories.
 7. Copy the generated `projects.txt` file into the `lang/X` directory.
 8. Add in extra projects and extra input sets as you see necessary.
