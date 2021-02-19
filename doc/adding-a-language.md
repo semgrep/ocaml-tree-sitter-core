@@ -38,7 +38,7 @@ First install `npx` following
 ### Expedited setup
 
 If you're lucky, the language you want to add can be added with the
-the script `add-simple-lang`:
+script `add-simple-lang`:
 
 ```
 $ cd lang
@@ -48,7 +48,7 @@ $ ...  # follow the instructions from --help
 
 This often works with languages that define a single dialect using a
 `grammar.js` file at the root of the project. If this simplified
-approach doesn't work, use the **Manual setup** instructions to understand
+approach fails, use the **Manual setup** instructions below to understand
 what's going on or to set things up manually.
 
 ### Manual setup
@@ -130,8 +130,8 @@ Extending the original grammar with semgrep syntax
 
 This is best done after everything else is set up. Some constructs
 such as semgrep metavariables (`$FOO`) may already be valid constructs
-in the language, in which case there's nothing to do. Others may need to
-be added.
+in the language, in which case there's nothing to do. Some support for
+the semgrep ellipsis `...` usually needs to be added as well.
 
 You'll need to learn [how to create tree-sitter
 grammars](https://tree-sitter.github.io/tree-sitter/creating-parsers).
@@ -152,7 +152,7 @@ For an example of how to extend a language, you can:
   tree-sitter-typescript repo.
 
 Avoiding parsing conflicts is the trickiest part. Asking for help is
-usually a good idea.
+encouraged.
 
 Parsing statistics
 --
