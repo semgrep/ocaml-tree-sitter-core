@@ -45,6 +45,10 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+if [[ -z "$lang" ]]; then
+  error "Missing language name."
+fi
+
 echo "Installing tree-sitter-$lang using npm."
 npm install --force ./semgrep-grammars/src/tree-sitter-"$lang"
 

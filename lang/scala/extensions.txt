@@ -1,0 +1,3 @@
+# Scala source file extensions
+.scala
+.sc
