@@ -13,6 +13,7 @@
     "tree-sitter-r": "file:lang/semgrep-grammars/src/tree-sitter-r",
     "tree-sitter-ruby": "file:lang/semgrep-grammars/src/tree-sitter-ruby",
     "tree-sitter-rust": "file:lang/semgrep-grammars/src/tree-sitter-rust",
+    "tree-sitter-scala": "file:lang/semgrep-grammars/src/tree-sitter-scala",
     "tree-sitter-typescript": "file:lang/semgrep-grammars/src/tree-sitter-typescript"
   }
 }
