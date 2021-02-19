@@ -1,6 +1,8 @@
-# How to add support for a new language
+How to add support for a new language
+==
 
-## Submodules Overview
+Submodules Overview
+--
 
 There are quite a few github repositories involved in porting a language.
 Here is a basic tree diagram that describes how they are linked
@@ -24,21 +26,32 @@ in the [semgrep repository](https://github.com/returntocorp/semgrep):
 * You'll need a new repo semgrep-X to host the generated parser code.
   Ask someone at r2c to create one for you.
 
-## Setup
+Setup
+--
 
 As a model, you can use the existing setup for `ruby` or `javascript`. Our
 most complicated setup is for `typescript` and `tsx`.
 
-First install tree-sitter-cli and npx following
+First install `npx` following
 [this doc](https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/node-setup.md).
 
-## semgrep-grammars
+### Expedited setup
 
-Extend the language with semgrep pattern syntax in the
-[semgrep-grammars](https://github.com/returntocorp/ocaml-tree-sitter/tree/master/lang/semgrep-grammars)
-folder. Follow the [instructions under "Language-porting Instructions"](https://github.com/returntocorp/ocaml-tree-sitter/blob/master/doc/semgrep-grammars.md).
+If you're lucky, the language you want to add can be added with the
+script `add-simple-lang`:
 
-## ocaml-tree-sitter
+```
+$ cd lang
+$ ./add-simple-lang --help
+$ ...  # follow the instructions from --help
+```
+
+This often works with languages that define a single dialect using a
+`grammar.js` file at the root of the project. If this simplified
+approach fails, use the **Manual setup** instructions below to understand
+what's going on or to set things up manually.
+
+### Manual setup
 
 From the ocaml-tree-sitter repo, do the following:
 
@@ -112,7 +125,37 @@ The files listed in `fyi.list` end up in a `fyi` folder in
 tree-sitter-lang. For example,
 [see `ruby/fyi`](https://github.com/returntocorp/semgrep-ruby/tree/main).
 
-### Statistics
+Extending the original grammar with semgrep syntax
+--
+
+This is best done after everything else is set up. Some constructs
+such as semgrep metavariables (`$FOO`) may already be valid constructs
+in the language, in which case there's nothing to do. Some support for
+the semgrep ellipsis `...` usually needs to be added as well.
+
+You'll need to learn [how to create tree-sitter
+grammars](https://tree-sitter.github.io/tree-sitter/creating-parsers).
+
+1. Work from `semgrep-grammars/src/semgrep-X` and use `make` and
+   `make test` to build and test.
+2. Add new test cases to `test/corpus/semgrep.text`.
+3. Edit `grammar.js`.
+4. Refer to the original grammar in
+   `semgrep-grammars/src/tree-sitter-X` to determine which rules to
+   extend.
+
+For an example of how to extend a language, you can:
+* Look at what was done for the semgrep extensions of other languages
+  in their respective `semgrep-*` folders.
+* Look at how tree-sitter-typescript extends the javascript grammar.
+  This is the file `common/define-grammar.js` in the
+  tree-sitter-typescript repo.
+
+Avoiding parsing conflicts is the trickiest part. Asking for help is
+encouraged.
+
+Parsing statistics
+--
 
 From a language's folder such as `lang/csharp`, two targets are
 available to exercise the generated parser:
@@ -129,7 +172,8 @@ programming language and use a constraint to select large projects,
 such as "> 100 forks". Collect the repository URLs and put them into
 `projects.txt`.
 
-### Auto-Generating Parsing Code
+Publishing generated parsers
+--
 
 After you have pushed your ocaml-tree-sitter changes to the main
 branch, do the following:
