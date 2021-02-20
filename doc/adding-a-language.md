@@ -223,6 +223,8 @@ We keep failing test cases in a `fail/` folder, preferably in the form
 of the minimal program suitable for a bug report, with a comment
 describing what was expected and what's going on.
 
+<!-- TODO: move the following sections to semgrep/doc/ -->
+
 ## pfff
 
 Pfff defines a list programming languages, some of which have parsers
@@ -236,7 +238,11 @@ for step-by-step instructions.
 ## semgrep-core
 
 After pfff has been updated, you need to add these changes into semgrep-core.
-Follow the instructions specified in `semgrep-core/docs/port-language.md`.
+Follow the instructions specified in `/doc/port-language.md`.
+<!-- TODO: said instructions are likely to change and go unmaintained.
+     Better focus on explaining what's going on so the reader doesn't get
+     stuck due to an incorrect instruction.
+-->
 
 ## Legal concerns
 
