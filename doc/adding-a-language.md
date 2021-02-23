@@ -1,12 +1,22 @@
 How to add support for a new language
 ==
 
-Submodules Overview
+This is about adding support for a new programming language in
+semgrep using the
+[tree-sitter](https://tree-sitter.github.io/tree-sitter/)
+technology. While new languages should use tree-sitter,
+semgrep also supports some languages independently if there's a good
+legacy OCaml parser for them. Check for your language in
+[pfff](https://github.com/returntocorp/pfff) and if you see it
+in there, [talk to us](https://semgrep.dev/docs/support/).
+Otherwise, let's get started.
+
+Submodules overview
 --
 
-There are quite a few github repositories involved in porting a language.
-Here is a basic tree diagram that describes how they are linked
-in the [semgrep repository](https://github.com/returntocorp/semgrep):
+There are quite a few GitHub repositories involved in porting a language.
+Here is the file hierarchy of the [semgrep
+repository](https://github.com/returntocorp/semgrep):
 
 ``` shell
 .
@@ -20,11 +30,8 @@ in the [semgrep repository](https://github.com/returntocorp/semgrep):
             └── semgrep-ruby
 ```
 
-* One good thing to note is that tree-sitter-lang actually only
-  contains auto-generated code. This code is generated
-  from the ocaml-tree-sitter repo.
-* You'll need a new repo semgrep-X to host the generated parser code.
-  Ask someone at r2c to create one for you.
+You'll need a new repo semgrep-X to host the generated parser code.
+Ask someone at r2c to create one for you.
 
 Setup
 --
