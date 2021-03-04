@@ -39,6 +39,10 @@ module.exports = grammar(standard_grammar, {
             );
         },
 
+        deep_ellipsis: $ => seq(
+            '<...', $._expression, '...>'
+        ),
+
         ellipsis: $ => '...',
     }
 });
