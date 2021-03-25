@@ -2,12 +2,36 @@
    Error message formatting.
 *)
 
-type kind =
+type error_kind =
   | Internal (* a bug *)
   | External (* malformed input or bug, but we don't know *)
 
+(*
+   The goal of this error_class object is to classify errors.
+   It is applicable to ERROR nodes found in the tree-sitter output.
+
+   We could return all the left siblings if we're in a tuple (seq())
+   but it's not useful if we're in a list (repeat()), and there's no
+   way to distinguish them at this stage (this info is recovered
+   later, after the ERROR nodes are removed).
+
+   We hope that this whole object is good enough to identify a class
+   of errors, which will be used to determine which errors are more
+   common or more impactful than others.
+*)
+type error_class = {
+  parent: Tree_sitter_bindings.Tree_sitter_output_t.node_kind;
+  left_sibling: Tree_sitter_bindings.Tree_sitter_output_t.node_kind option;
+  first_child: Tree_sitter_bindings.Tree_sitter_output_t.node_kind option;
+}
+
+(*
+   A printable string representation of the error class, without newlines.
+*)
+val string_of_error_class : error_class -> string
+
 type t = {
-  kind: kind;
+  kind: error_kind;
   msg: string;
 
   (*
@@ -37,6 +61,11 @@ type t = {
      to a terminal or as plain text.
   *)
   snippet: Snippet.t;
+
+  (*
+     Classifies the error. Internal details are subject to change.
+  *)
+  error_class: error_class option;
 }
 
 (* Fatal parsing error. *)
@@ -47,8 +76,9 @@ exception Error of t
    a parsing error.
 *)
 val create :
-  kind ->
+  error_kind ->
   Src_file.t ->
+  ?parent:Tree_sitter_bindings.Tree_sitter_output_t.node ->
   Tree_sitter_bindings.Tree_sitter_output_t.node ->
   string -> t
 

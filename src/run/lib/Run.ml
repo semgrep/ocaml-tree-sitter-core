@@ -175,23 +175,28 @@ let nothing capture =
    Extract the error nodes from the original tree.
    This is meant for reporting errors, especially if the errors can't
    be recovered from.
+
+   Performance: we want this to be lightweight when there's no error.
+   It's ok to spend more time as soon as an error is found.
 *)
 let extract_error_nodes root_node =
-  let rec extract acc node =
+  let rec extract ~parent acc node =
     match node.kind with
-    | Error -> (node :: acc)
+    | Error ->
+        (parent, node) :: acc
     | _ ->
         match node.children with
         | None -> acc
-        | Some children -> List.fold_left extract acc children
+        | Some children ->
+            List.fold_left (extract ~parent:(Some node)) acc children
   in
-  extract [] root_node
+  extract ~parent:None [] root_node
   |> List.rev
 
 let extract_errors src root_node =
   extract_error_nodes root_node
-  |> List.map (fun error_node ->
-    Tree_sitter_error.create Tree_sitter_error.External src error_node
+  |> List.map (fun (parent, error_node) ->
+    Tree_sitter_error.create Tree_sitter_error.External src ?parent error_node
       "Unrecognized construct"
   )
 

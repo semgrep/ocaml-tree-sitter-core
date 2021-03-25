@@ -5,43 +5,94 @@
 open Printf
 open Tree_sitter_bindings.Tree_sitter_output_t
 
-type kind =
+type error_kind =
   | Internal (* a bug *)
   | External (* malformed input or bug, but we don't know *)
 
+(* see mli for motivation *)
+type error_class = {
+  parent: node_kind;
+  left_sibling: node_kind option;
+  first_child: node_kind option;
+}
+
 type t = {
-  kind: kind;
+  kind: error_kind;
   msg: string;
   file: Src_file.info;
   start_pos: position;
   end_pos: position;
   substring: string;
   snippet: Snippet.t;
+  error_class: error_class option;
 }
 
 exception Error of t
 
-let string_of_node_type x =
-  match x.children with
-  | None ->
-      sprintf "%S" x.type_
-  | Some _ ->
-      x.type_
+let string_of_node_kind (x : node_kind) =
+  match x with
+  | Literal s -> sprintf "%S" s
+  | Name s -> s
+  | Error -> "ERROR"
 
-let string_of_node x =
+let string_of_node (x : node) =
+  let node_kind = string_of_node_kind x.kind in
   match x.children with
   | None ->
-      sprintf "node type: %S" x.type_
+      sprintf "node type: %s" node_kind
   | Some children ->
       sprintf "\
 node type: %s
 children: [
 %s]"
-        x.type_
-        (List.map (fun x -> sprintf "  %s\n" (string_of_node_type x)) children
+        node_kind
+        (List.map
+           (fun (x : node) -> sprintf "  %s\n" (string_of_node_kind x.kind))
+           children
          |> String.concat "")
 
-let create kind src node msg =
+let string_of_error_class (x : error_class) =
+  let parent =
+    sprintf "parent: %s" (string_of_node_kind x.parent) in
+  let left_sibling =
+    match x.left_sibling with
+    | None -> ", no left sibling"
+    | Some x ->
+        sprintf ", left sibling: %s" (string_of_node_kind x)
+  in
+  let first_child =
+    match x.first_child with
+    | None -> ", no children"
+    | Some x ->
+        sprintf ", first child: %s" (string_of_node_kind x)
+  in
+  parent ^ left_sibling ^ first_child
+
+let rec find_left_sibling (children : node list) target_node =
+  match children with
+  | left :: node :: _ when node == target_node -> Some left.kind
+  | node :: _ when node == target_node -> None
+  | _ :: xs -> find_left_sibling xs target_node
+  | [] -> assert false (* target_node must exist in 'children' list *)
+
+let error_class_of_node ~(parent : node option) node =
+  match parent with
+  | None -> None
+  | Some { children = None; _ } -> assert false (* parent must have children *)
+  | Some { kind; children = Some children; _ } ->
+      let left_sibling = find_left_sibling children node in
+      let first_child =
+        match node.children with
+        | None | Some [] -> None
+        | Some (x :: _) -> Some x.kind
+      in
+      Some {
+        parent = kind;
+        left_sibling;
+        first_child;
+      }
+
+let create kind src ?parent node msg =
   let msg = sprintf "\
 %s
 %s"
@@ -58,6 +109,7 @@ let create kind src node msg =
     end_pos;
     substring = Src_file.get_region src start_pos end_pos;
     snippet = Snippet.extract src ~start_pos ~end_pos;
+    error_class = error_class_of_node ~parent node;
   }
 
 let fail kind src node msg =
@@ -92,9 +144,16 @@ let to_string ?(color = false) (err : t) =
         src_name
         (start.row + 1) start.column (end_.row + 1) end_.column
   in
+  let error_class =
+    match err.error_class with
+    | None -> ""
+    | Some x ->
+        sprintf "%s\n" (string_of_error_class x)
+  in
   sprintf "\
 %s
-%s%s"
+%s%s%s"
     loc
     (Snippet.format ~color err.snippet)
+    error_class
     err.msg
