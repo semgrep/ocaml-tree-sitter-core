@@ -196,7 +196,8 @@ let extract_error_nodes root_node =
 let extract_errors src root_node =
   extract_error_nodes root_node
   |> List.map (fun (parent, error_node) ->
-    Tree_sitter_error.create Tree_sitter_error.External src ?parent error_node
+    Tree_sitter_error.create
+      Tree_sitter_error_t.External src ?parent error_node
       "Unrecognized construct"
   )
 

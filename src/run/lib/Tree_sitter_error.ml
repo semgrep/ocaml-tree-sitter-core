@@ -5,11 +5,6 @@
 open Printf
 open Tree_sitter_bindings.Tree_sitter_output_t
 
-type error_kind =
-  | Internal (* a bug *)
-  | External (* malformed input or bug, but we don't know *)
-
-(* see mli for motivation *)
 type error_class = {
   parent: node_kind;
   left_sibling: node_kind option;
@@ -17,7 +12,7 @@ type error_class = {
 }
 
 type t = {
-  kind: error_kind;
+  kind: Tree_sitter_error_t.error_kind;
   msg: string;
   file: Src_file.info;
   start_pos: position;
@@ -157,3 +152,25 @@ let to_string ?(color = false) (err : t) =
     (Snippet.format ~color err.snippet)
     error_class
     err.msg
+
+let to_json_error (x : t): Tree_sitter_error_t.json_error = {
+  kind = x.kind;
+  msg = x.msg;
+  file = x.file.name;
+  start_pos = x.start_pos;
+  end_pos = x.end_pos;
+  substring = x.substring;
+  error_class = Option.map string_of_error_class x.error_class;
+}
+
+let log_json_errors out_file errors =
+  let oc = open_out_gen [Open_creat; Open_text; Open_append] 0o666 out_file in
+  Fun.protect
+    ~finally:(fun () -> close_out_noerr oc)
+    (fun () ->
+       List.iter (fun err ->
+         let simplified_err = to_json_error err in
+         let json = Tree_sitter_error_j.string_of_json_error simplified_err in
+         fprintf oc "%s\n" json
+       ) errors
+    )
