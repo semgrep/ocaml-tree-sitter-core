@@ -44,7 +44,9 @@ parse() {
     cd "$proj_workspace"
     json=out.json
     cst=out.cst
-    "$parser" "$input" > /dev/null
+    "$parser" "$input" \
+      --txt-stat stat.txt \
+      --json-error-log "$global_json_err_log" > /dev/null
   ) >> "$proj_err_log" 2>&1
   status=$?
   case "$status" in
@@ -144,10 +146,11 @@ main() {
   tmp=stat.tmp
 
   # Output folder, wiped out before every run.
-  stat=stat
+  stat=$(pwd)/stat
   csv="$stat"/stat.csv
   failed_inputs="$stat"/stat.fail
   global_err_log="$stat"/parse-error.log
+  global_json_err_log="$stat"/parse-error.json
 
   parser=$(pwd)/ocaml-src/_build/install/default/bin/parse-"$lang"
   test -x "$parser" || error "Missing parser '$parser'."

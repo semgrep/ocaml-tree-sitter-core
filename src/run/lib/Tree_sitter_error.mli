@@ -2,10 +2,6 @@
    Error message formatting.
 *)
 
-type error_kind =
-  | Internal (* a bug *)
-  | External (* malformed input or bug, but we don't know *)
-
 (*
    The goal of this error_class object is to classify errors.
    It is applicable to ERROR nodes found in the tree-sitter output.
@@ -31,7 +27,7 @@ type error_class = {
 val string_of_error_class : error_class -> string
 
 type t = {
-  kind: error_kind;
+  kind: Tree_sitter_error_t.error_kind;
   msg: string;
 
   (*
@@ -76,7 +72,7 @@ exception Error of t
    a parsing error.
 *)
 val create :
-  error_kind ->
+  Tree_sitter_error_t.error_kind ->
   Src_file.t ->
   ?parent:Tree_sitter_bindings.Tree_sitter_output_t.node ->
   Tree_sitter_bindings.Tree_sitter_output_t.node ->
@@ -107,3 +103,11 @@ val internal_error :
    'color' is true. 'color' is false by default.
 *)
 val to_string : ?color:bool -> t -> string
+
+(*
+   Append errors to error log in json format, one object per line.
+
+   The specific json format is unspecified and might change. This is for
+   internal use within ocaml-tree-sitter.
+*)
+val log_json_errors : string -> t list -> unit
