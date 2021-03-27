@@ -1,0 +1,44 @@
+#! /usr/bin/env python3
+#
+# Aggregate parse errors into classes so as to give a sense of which errors are
+# more common or serious for a given parser.
+#
+
+import csv
+import json
+import sys
+
+def parse_json_error_log():
+    clusters = {}
+    for line in sys.stdin:
+        err = json.loads(line)
+        if 'error_class' in err:
+            key = err['error_class']
+            if not key in clusters:
+                clus = {
+                    'error_class': key,
+                    'num_errors': 0,
+                    'num_lines': 0,
+                }
+                clusters[key] = clus
+            clus = clusters[key]
+            clus['num_errors'] = clus['num_errors'] + 1
+            err_num_lines = err['end_pos']['row'] - err['start_pos']['row'] + 1
+            clus['num_lines'] = clus['num_lines'] + err_num_lines
+    return clusters
+
+
+def print_csv_clusters(clusters):
+    for key, clus in clusters.items():
+        writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
+        row = [clus['num_errors'], clus['num_lines'], clus['error_class']]
+        writer.writerow(row)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) == 1:
+        clusters = parse_json_error_log()
+        print_csv_clusters(clusters)
+    else:
+        print("reads records from a parse-error.json file on stdin")
+        sys.exit(1)

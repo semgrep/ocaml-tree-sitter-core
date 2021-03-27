@@ -5,6 +5,7 @@
 #
 set -eu -o pipefail
 
+progdir=$(dirname "$0")
 progname=$(basename "$0")
 
 usage() {
@@ -137,6 +138,20 @@ $ext_err_count,$int_err_count,$other_err_count
 EOF
 }
 
+aggregate_errors() {
+  header='num_errors,num_lines,error_class'
+  (
+    echo "$header"
+    "$progdir"/aggregate-parse-errors < "$global_json_err_log" \
+      | sort -rn -t, -k1 -k2
+  ) > "$stat"/aggregated-errors-sorted-by-count.csv
+  (
+    echo "$header"
+    "$progdir"/aggregate-parse-errors < "$global_json_err_log" \
+      | sort -rn -t, -k2 -k1
+  ) > "$stat"/aggregated-errors-sorted-by-line-count.csv
+}
+
 main() {
   # Read lines into array after removing comments and blank lines.
   readarray -t urls < <(grep -v '^ *\(#\| *$\)' "$projects_file")
@@ -176,6 +191,8 @@ EOF
     handle_project 2>&1 || echo "Failed on $url" 2>&1 \
       | tee "$stat"/lang-stat.log
   done
+
+  aggregate_errors
 
   line_coverage=$(awk -f - <<EOF
 BEGIN {
