@@ -29,7 +29,7 @@ def parse_json_error_log():
 
 
 def print_csv_clusters(clusters):
-    for key, clus in clusters.items():
+    for key, clus in sorted(clusters.items(), key = lambda c: c[1]['num_errors']):
         writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
         row = [clus['num_errors'], clus['num_lines'], clus['error_class']]
         writer.writerow(row)
