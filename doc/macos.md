@@ -13,7 +13,7 @@ You must also have bash version 4.0 or higher. To make this your default shell:
 4. Close your shell and reopen. To check your bash version, run
     `bash --version`.
 
-Furthermore, some of the scripts (notably `lang-stat`) use `grep -P`. 
+Furthermore, some of the scripts (notably `lang-stat`) use `grep -P`.
 This flag is not available in MacOS. To solve this problem:
 1. Run `brew install grep`
 2. Make MacOS run the installed version of grep with:
