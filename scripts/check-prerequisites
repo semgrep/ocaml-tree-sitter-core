@@ -24,7 +24,7 @@ which opam || error "Missing command: opam"
 echo "opam version: $(opam --version)"
 
 echo "Check for 'node'."
-which npm || error "Missing command: node"
+which node || error "Missing command: node"
 echo "node version: $(node --version)"
 
 echo "Check for 'npm'."
