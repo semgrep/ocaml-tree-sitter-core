@@ -8,8 +8,12 @@ set -eu
 # 'npx' is used as a wrapper for finding executables installed locally in
 # node_modules/.bin. Example: 'npx tree-sitter --version'.
 which npx || npm install -g npx || sudo npm install -g npx
+echo "npx is: $(which npx)"
+echo "npx version: $(npx --version)"
 
 # Install node modules as listed in package.json.
 # Should be done at the project root.
 # The tree-sitter executable will be in 'node_modules/.bin'.
+echo "Install the original tree-sitter grammars into 'node_modules/'."
 npm install
+echo "Done installing the original tree-sitter grammars with npm."

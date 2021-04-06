@@ -13,13 +13,20 @@ EOF
 }
 
 echo "Check for bash arrays."
+bash --version
 things[0]='' || error "Please upgrade bash. Bash version must be >= 4.0."
 
 echo "Check for 'which'."
-which which > /dev/null || error "Missing command: which"
+which which || error "Missing command: which"
 
 echo "Check for 'opam'."
-which opam > /dev/null || error "Missing command: opam"
+which opam || error "Missing command: opam"
+echo "opam version: $(opam --version)"
+
+echo "Check for 'node'."
+which node || error "Missing command: node"
+echo "node version: $(node --version)"
 
 echo "Check for 'npm'."
-which npm > /dev/null || error "Missing command: npm"
+which npm || error "Missing command: npm"
+echo "npm version: $(npm --version)"
