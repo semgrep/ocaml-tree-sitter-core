@@ -8,6 +8,8 @@ set -eu
 # 'npx' is used as a wrapper for finding executables installed locally in
 # node_modules/.bin. Example: 'npx tree-sitter --version'.
 which npx || npm install -g npx || sudo npm install -g npx
+echo "npx is: $(which npx)"
+echo "npx version: $(npx --version)"
 
 # Install node modules as listed in package.json.
 # Should be done at the project root.
