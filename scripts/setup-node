@@ -25,8 +25,6 @@ else
   exit 1
 fi
 
-npm install npm -g
-
 echo "node is: $(which node)"
 echo "node version: $(node --version)"
 echo "npm is: $(which npm)"
