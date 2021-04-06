@@ -56,11 +56,6 @@ test:
 	set -e; \
 	for lang in $(SUPPORTED_TS_LANGUAGES); do ./test-lang $$lang; done
 
-.PHONY: build
-build:
-	@echo "'make build' is no longer supported. Use 'make test'."
-	exit 1
-
 .PHONY: release
 release:
 	@echo "'make release' is no longer supported so as to avoid"
