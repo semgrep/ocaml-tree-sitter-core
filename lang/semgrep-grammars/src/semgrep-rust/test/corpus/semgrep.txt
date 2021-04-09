@@ -173,6 +173,52 @@ __SEMGREP_EXPRESSION
 (source_file (semgrep_expression (integer_literal)))
 
 =====================================
+Toplevel single statement
+=====================================
+
+__SEMGREP_STATEMENT
+let mut x = 0;
+
+---
+
+(source_file
+  (semgrep_statement
+    (let_declaration
+      (mutable_specifier)
+      (identifier)
+      (integer_literal)
+    )
+  )
+)
+
+=====================================
+Toplevel multiple statements
+=====================================
+
+__SEMGREP_STATEMENT
+let mut x = 0;
+let y = x * 2;
+
+---
+
+(source_file
+  (semgrep_statement
+    (let_declaration
+      (mutable_specifier)
+      (identifier)
+      (integer_literal)
+    )
+    (let_declaration
+      (identifier)
+      (binary_expression
+        (identifier)
+        (integer_literal)
+      )
+    )
+  )
+)
+
+=====================================
 Argument ellipsis
 =====================================
 
