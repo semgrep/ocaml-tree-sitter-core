@@ -16,12 +16,16 @@ module.exports = grammar(standard_grammar, {
     source_file: ($, previous) => {
       return choice(
         previous,
-        $.semgrep_expression
+        $.semgrep_expression,
+        $.semgrep_statement,
       );
     },
 
     // Alternate "entry point". Allows parsing a standalone expression.
     semgrep_expression: $ => seq('__SEMGREP_EXPRESSION', $._expression),
+
+    // Alternate "entry point". Allows parsing a standalone list of statements.
+    semgrep_statement: $ => seq('__SEMGREP_STATEMENT', repeat1($._statement)),
 
     // Metavariables
     identifier: ($, previous) => {
