@@ -18,6 +18,7 @@ SUPPORTED_TS_LANGUAGES = \
   javascript \
   kotlin \
   lua \
+  ocaml \
   r \
   ruby \
   rust \
@@ -39,6 +40,7 @@ STAT_LANGUAGES = \
   javascript \
   kotlin \
   lua \
+  ocaml \
   r \
   ruby \
   rust \
