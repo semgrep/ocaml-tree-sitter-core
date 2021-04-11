@@ -4,7 +4,7 @@
   Extends the standard ocaml grammar with semgrep pattern constructs.
 */
 
-const base_grammar = require('tree-sitter-ocaml/grammar');
+const base_grammar = require('tree-sitter-ocaml/ocaml/grammar');
 
 module.exports = grammar(base_grammar, {
   name: 'ocaml',
