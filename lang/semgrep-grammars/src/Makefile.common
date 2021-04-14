@@ -1,5 +1,5 @@
 #
-# Generic makefile to symlinked or to be included at the root of the
+# Generic makefile to be symlinked or to be included at the root of the
 # semgrep-* folders as follows:
 #
 #   include ../common.mk
@@ -18,7 +18,7 @@ build:
 	  echo "Generate parser in $$(pwd)/$$dir"; \
 	  if ! [ -e "$$dir/src/parser.c" ] \
 	     || [ "$$dir/grammar.js" -nt "$$dir/src/parser.c" ]; then \
-	    (cd "$$dir" && npx tree-sitter generate); \
+	    (cd "$$dir" && npx tree-sitter generate --no-bindings); \
 	  else \
 	    echo "$$dir/src/parser.c is up to date."; \
 	  fi; \
