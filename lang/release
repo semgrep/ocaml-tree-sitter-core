@@ -85,6 +85,16 @@ opt_run() {
   fi
 }
 
+print_version_info() {
+  cat <<EOF
+File: $path
+Git repo name: $(basename "$(git rev-parse --show-toplevel)")
+Last git commit:
+$(git -C "$(dirname "$path")" log -1 | sed -e 's/^/  /')
+---
+EOF
+}
+
 # Copy interesting files, such as the original grammar or the license.
 #
 # e.g.:
@@ -96,8 +106,14 @@ opt_run() {
 copy_fyi_files() {
   if [[ -e "$fyi_list" ]]; then
     paths=$(cat "$fyi_list" | grep -v '^ *#' | grep -v '^ *$')
+
+    mkdir -p "$fyi_dst"
+
+    # Record the git commit of each "FYI" file.
+    version_file="$fyi_dst"/versions
+    rm -f "$version_file"
+
     for path in $paths; do
-      mkdir -p "$fyi_dst"
       local src=$path
       local dst=$fyi_dst/$path
       if [[ ! -e "$src" ]]; then
@@ -105,6 +121,8 @@ copy_fyi_files() {
       fi
       mkdir -p $(dirname "$dst")
       cp "$src" "$dst"
+
+      print_version_info >> "$version_file"
     done
   fi
 }
