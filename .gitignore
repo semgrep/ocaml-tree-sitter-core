@@ -16,9 +16,6 @@ _build
 # Node at root
 /node_modules
 
-# Read-only cloned repo
-/tree-sitter
-
 /config.sh
 /config.mk
 

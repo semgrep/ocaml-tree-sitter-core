@@ -4,10 +4,11 @@
 #
 set -eu -o pipefail
 
-default_version="0.18.0"
+default_version="0.19.4"
 prog_name=$(basename "$0")
 
 error() {
+  echo "Current directory: $(pwd)" >&2
   echo "Error: $@" >&2
   exit 1
 }
@@ -44,36 +45,45 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
-echo "Installing tree-sitter library directly from git."
-if [[ -d tree-sitter ]]; then
-  echo "Removing previous copy of tree-sitter."
-  rm -rf tree-sitter
-fi
-echo "Fetching tree-sitter from git, branch $version."
-git clone --depth 1 --branch "$version" \
-    https://github.com/tree-sitter/tree-sitter.git
-
+mkdir -p tmp
 (
-  cd tree-sitter
-  git clean -dfX
-  make
+  cd tmp
 
-  # When building from source on homebrew sudo is not allowed
-  # but also not needed
-  if [[ -z "${HOMEBREW_SYSTEM+x}" ]]; then
-    sudo make install
-  else
-    # brew is present
-    make install
+  echo "Installing tree-sitter library from official source release $version."
+  src_dir=tree-sitter-"$version"
+  if [[ -d "$src_dir" ]]; then
+    echo "Removing previous copy of tree-sitter."
+    rm -rf tree-sitter
   fi
 
-  # Ensure libtree-sitter is found at linking time.
-  # MacOS doesn't have ldconfig. Maybe it works without it?
-  if which ldconfig > /dev/null; then
-    libdir=$(
-      pkg-config --libs-only-L tree-sitter \
-      | sed -e 's/^-L//'
-    )
-    sudo ldconfig "$libdir"
+  echo "Fetching tarball for tree-sitter-$version."
+  curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
+  tar xf v"$version".tar.gz
+  if [[ ! -d "$src_dir" ]]; then
+    error "Archive didn't unpack into the expected folder '$src_dir'."
   fi
+
+  (
+    cd "$src_dir"
+    make
+
+    # When building from source on homebrew sudo is not allowed
+    # but also not needed
+    if [[ -z "${HOMEBREW_SYSTEM+x}" ]]; then
+      sudo make install
+    else
+      # brew is present
+      make install
+    fi
+
+    # Ensure libtree-sitter is found at linking time.
+    # MacOS doesn't have ldconfig. Maybe it works without it?
+    if which ldconfig > /dev/null; then
+      libdir=$(
+        pkg-config --libs-only-L tree-sitter \
+          | sed -e 's/^-L//'
+            )
+      sudo ldconfig "$libdir"
+    fi
+  )
 )
