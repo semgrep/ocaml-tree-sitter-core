@@ -89,8 +89,9 @@ print_version_info() {
   cat <<EOF
 File: $path
 Git repo name: $(basename "$(git rev-parse --show-toplevel)")
-Last git commit:
-$(git -C "$(dirname "$path")" log -1 | sed -e 's/^/  /')
+Latest commit in repo: $(git -C "$(dirname "$path")" rev-parse HEAD)
+Last change in file:
+$(git -C "$(dirname "$path")" log -1 "$(basename "$path")" | sed -e 's/^/  /')
 ---
 EOF
 }
