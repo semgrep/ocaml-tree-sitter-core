@@ -86,12 +86,13 @@ opt_run() {
 }
 
 print_version_info() {
+  dir=$(dirname "$path")
   cat <<EOF
 File: $path
-Git repo name: $(basename "$(git rev-parse --show-toplevel)")
-Latest commit in repo: $(git -C "$(dirname "$path")" rev-parse HEAD)
+Git repo name: $(basename "$(git -C "$dir" rev-parse --show-toplevel)")
+Latest commit in repo: $(git -C "$dir" rev-parse HEAD)
 Last change in file:
-$(git -C "$(dirname "$path")" log -1 "$(basename "$path")" | sed -e 's/^/  /')
+$(git -C "$dir" log -1 "$(basename "$path")" | sed -e 's/^/  /')
 ---
 EOF
 }
