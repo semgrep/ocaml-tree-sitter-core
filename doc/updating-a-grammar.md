@@ -6,12 +6,21 @@ Let's call our language "X".
 Summary
 --
 
+In ocaml-tree-sitter:
 1. Update submodule tree-sitter-X.
 2. From `lang/`, run `./test-lang X`.
 3. From `lang/`, run `./release X`.
-4. In the semgrep repo, update submodule semgrep-X.
-5. In the semgrep repo, update the OCaml code that maps the CST to the
+
+In semgrep:
+1. In the semgrep repo, update submodule semgrep-X.
+2. In the semgrep repo, update the OCaml code that maps the CST to the
    generic AST.
+
+In the end, **make sure the generated code used by the main branch of
+semgrep can be regenerated** from the main branch of ocaml-tree-sitter:
+1. Merge your semgrep branch.
+2. Merge your ocaml-tree-sitter branch.
+
 
 Components
 --
