@@ -7,6 +7,15 @@
 #
 set -eu
 
+if [[  ! -d .git \
+   || -n "$(git rev-parse --show-superproject-working-tree)" ]]; then
+  cat >&2 <<EOF
+This script was only tested to work from the root of the ocaml-tree-sitter
+repository, and not as a submodule as another repo.
+EOF
+  exit 1
+fi
+
 git submodule update --init --recursive --depth 1
 git clean -dfX
 
