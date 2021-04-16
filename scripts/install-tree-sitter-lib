@@ -53,8 +53,16 @@ mkdir -p tmp
   src_dir=tree-sitter-"$version"
   if [[ -d "$src_dir" ]]; then
     echo "Removing previous copy of tree-sitter."
-    rm -rf tree-sitter
+    rm -rf "$src_dir"
   fi
+
+  unversioned_src_dir=tree-sitter
+  cat <<EOF
+Creating version-independent symlink for homebrew packager:
+  $(pwd)/$unversioned_src_dir
+EOF
+  rm -f "$unversioned_src_dir"
+  ln -s "$unversioned_src_dir" "$src_dir"
 
   echo "Fetching tarball for tree-sitter-$version."
   curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
