@@ -62,6 +62,9 @@ let cmdline_term =
 let doc =
   "derive ocaml code to interpret tree-sitter parsing output"
 
+
+let version = "0.0.0"
+
 let man = [
   `S Manpage.s_description;
   `P "ocaml-tree-sitter takes a tree-sitter grammar and generates OCaml
@@ -78,6 +81,7 @@ let man = [
 let parse_command_line () =
   let info =
     Term.info
+      ~version 
       ~doc
       ~man
       "ocaml-tree-sitter"

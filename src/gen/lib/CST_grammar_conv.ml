@@ -38,7 +38,7 @@ let detect_used ~entrypoint rules =
     | PREC_LEFT (_, x)
     | PREC_RIGHT (_, x)
     | FIELD (_, x) -> scan x
-    | ALIAS _alias -> failwith "Aliases are not supported"
+    | ALIAS _alias -> failwith "Aliases are not supported, run simplify-grammar to get a simplified grammar and try again "
   and visit name =
     mark_visited name;
     match get_rule name with
@@ -119,7 +119,7 @@ let rec strip (x : Tree_sitter_t.rule_body) : Tree_sitter_t.rule_body =
   | PREC_LEFT (_, x)
   | PREC_RIGHT (_, x) -> strip x
   | FIELD (_, x) -> strip x
-  | ALIAS _alias -> failwith "aliases are not supported"
+  | ALIAS _alias -> failwith "Aliases are not supported, run simplify-grammar to get a simplified grammar and try again "
 
 (*
    Simple translation without normalization. Get rid of PREC_*
