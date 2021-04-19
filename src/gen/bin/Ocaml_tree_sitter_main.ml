@@ -81,7 +81,7 @@ let man = [
 let parse_command_line () =
   let info =
     Term.info
-      ~version 
+      ~version
       ~doc
       ~man
       "ocaml-tree-sitter"
