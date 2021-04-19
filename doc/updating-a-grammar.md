@@ -136,11 +136,19 @@ changes to semgrep-X.
 ```
 cd lang
   ./release --dry-run X  # dry-run release
-  ...                    # inspect things
+  ...                    # 'git status' will show changes for language X
   ./release X  # commits and pushes to semgrep-X
 ```
 
-This step is safe. Semgrep at this point is unaffected by those changes.
+This step is safe. Semgrep at this point is unaffected by those
+changes. There is now a new commit at
+`https://github.com/returntocorp/semgrep-X` e.g.
+https://github.com/returntocorp/semgrep-javascript.
+The [`fyi/` folder](https://github.com/returntocorp/semgrep-javascript/tree/main/fyi)
+contains original files from which the code was generated.
+[`fyi/versions`](https://github.com/returntocorp/semgrep-javascript/blob/main/fyi/versions)
+shows the last change for each file, allowing you to check that you
+got the correct version of `grammar.js` or some other source file.
 
 Semgrep integration
 --
