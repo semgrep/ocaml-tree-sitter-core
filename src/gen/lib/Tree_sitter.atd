@@ -13,9 +13,14 @@ type grammar = {
   ~inline: ident list; (* rule names *)
   ~conflicts: ident list list; (* list of lists of rule names *)
 
+  (* This is the newer way (tree-sitter >= 0.19) of specifying precedence
+     levels, using a partial order over rules instead of a global order using
+     global numeric values. *)
+  ~precedences: named_prec_level list list;
+
+  (* List of terminal symbols returned by an external C parser, hence not
+     defined (but used) in the 'rules' section. *)
   ~externals: rule_body list;
-    (* list of terminal symbols returned by an external C parser, hence not
-       defined (but used) in the 'rules' section. *)
 
   ~supertypes: ident list; (* rule names *)
   rules: (ident * rule_body) list <json repr="object">;
@@ -30,10 +35,10 @@ type rule_body = [
   | REPEAT1 of rule_body
   | CHOICE of rule_body list
   | SEQ of rule_body list
-  | PREC of (int * rule_body)
+  | PREC of (prec_value * rule_body)
   | PREC_DYNAMIC of (int * rule_body)
-  | PREC_LEFT of (int nullable * rule_body)
-  | PREC_RIGHT of (int nullable * rule_body)
+  | PREC_LEFT of (prec_value nullable * rule_body)
+  | PREC_RIGHT of (prec_value nullable * rule_body)
   | ALIAS of alias
   | FIELD of (ident * rule_body)
 
@@ -45,6 +50,18 @@ type rule_body = [
          as a node without children, i.e. a token. *)
 
 ] <json adapter.ocaml="Json_rule_adapter"> (* see Json_rule_adapter.ml *)
+  <ocaml repr="classic">
+
+type named_prec_level = [
+  | Prec_symbol of ident
+  | Prec_string of string
+] <json adapter.ocaml="Json_named_prec_level_adapter">
+  <ocaml repr="classic">
+
+type prec_value = [
+  | Num_prec of int
+  | Named_prec of string
+] <json adapter.ocaml="Json_prec_value_adapter">
   <ocaml repr="classic">
 
 type alias = {

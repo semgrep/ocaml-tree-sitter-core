@@ -197,13 +197,14 @@ and flatten_seq normalized_list =
   |> List.flatten
 
 let make_external_rules externals =
-  List.filter_map (function
-    | Tree_sitter_t.SYMBOL name ->
+  List.filter_map (fun rule_body ->
+    match (rule_body : Tree_sitter_t.rule_body) with
+    | SYMBOL name ->
         let body =
           Token { name; is_inlined = false; description = External }
         in
         Some (name, body)
-    | Tree_sitter_t.STRING _ -> None (* no need for a rule *)
+    | STRING _ -> None (* no need for a rule *)
     | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"
   ) externals
 

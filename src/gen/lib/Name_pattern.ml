@@ -11,7 +11,7 @@ let make_translator () =
     Protect_ident.add_translation ~preferred_dst:preferred_name map orig_name
 
 let extract_pattern_rules_from_body add_rule body =
-  let rec extract x =
+  let rec extract (x : rule_body) =
     match x with
     | SYMBOL _
     | STRING _
