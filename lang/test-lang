@@ -51,15 +51,11 @@ fi
 
 echo "Installing tree-sitter-$lang using npm."
 #
-# '--production=false' is for installing the devDependencies, which
-# in the case of tree-sitter-typescript include tree-sitter-javascript.
+# '--include=dev' is for installing dependencies listed as 'devDependencies'
+# in 'package.json'. This installs into
+# './semgrep-grammars/src/tree-sitter-$lang/node_modules' for unclear reasons.
 #
-# '--force' is for forcing the re-download of source packages (not sure if
-# it's required; what we want is the latest version of each dependency,
-# especially those specified as git repo URLs)
-#
-npm install --force --production=false \
-  ./semgrep-grammars/src/tree-sitter-"$lang"
+npm install --include=dev ./semgrep-grammars/src/tree-sitter-"$lang"
 
 echo "Building the extended parser semgrep-$lang."
 (
