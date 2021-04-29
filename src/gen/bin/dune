@@ -1,4 +1,5 @@
 (executable
+  (package tree-sitter)
   (public_name ocaml-tree-sitter)
   (name Ocaml_tree_sitter_main)
   (modules Ocaml_tree_sitter_main)
@@ -9,6 +10,7 @@
 )
 
 (executable
+  (package tree-sitter)
   (public_name simplify-grammar)
   (name Simplify_grammar_main)
   (modules Simplify_grammar_main)
