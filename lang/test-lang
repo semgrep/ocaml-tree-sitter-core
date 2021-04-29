@@ -50,7 +50,12 @@ if [[ -z "$lang" ]]; then
 fi
 
 echo "Installing tree-sitter-$lang using npm."
-npm install --force ./semgrep-grammars/src/tree-sitter-"$lang"
+#
+# '--include=dev' is for installing dependencies listed as 'devDependencies'
+# in 'package.json'. This installs into
+# './semgrep-grammars/src/tree-sitter-$lang/node_modules' for unclear reasons.
+#
+npm install --include=dev ./semgrep-grammars/src/tree-sitter-"$lang"
 
 echo "Building the extended parser semgrep-$lang."
 (
@@ -61,6 +66,8 @@ echo "Building the extended parser semgrep-$lang."
 )
 
 sublangs="$lang"
+# Another special case for typescript. Could be handled in a generic fashion
+# by declaring the list of dialects for each tree-sitter-X project.
 if [[ "$lang" = typescript ]]; then
   sublangs="typescript tsx"
 fi

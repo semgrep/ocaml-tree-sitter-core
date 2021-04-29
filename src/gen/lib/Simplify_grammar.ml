@@ -31,7 +31,7 @@ let make_name_translator () =
     Protect_ident.add_translation map name ~preferred_dst:preferred_name
 
 let simplify_rule_body translate_name =
-  let rec simplify x =
+  let rec simplify (x : rule_body) : rule_body =
     match x with
     | SYMBOL name -> SYMBOL (translate_name name)
     | STRING _
@@ -80,7 +80,7 @@ let apply_inline grammar =
     Hashtbl.find_opt inline_rules name in
 
   (* parents = stack of rule names being inlined, used to detect cycles. *)
-  let rec inline parents x =
+  let rec inline parents (x : rule_body) : rule_body =
     match x with
     | SYMBOL name ->
         (match get_inlined_body name with
@@ -122,6 +122,14 @@ let apply_inline grammar =
     inline = [];
     rules = inline_rules grammar.rules }
 
+let translate_named_prec_level translate_name (x : named_prec_level) =
+  match x with
+  | Prec_symbol name -> Prec_symbol (translate_name name)
+  | Prec_string _ as x -> x
+
+let translate_precedences translate_name ll =
+  List.map (List.map (translate_named_prec_level translate_name)) ll
+
 let simplify_grammar grammar =
   let grammar = Name_pattern.assign_names_to_patterns grammar in
   let grammar = apply_inline grammar in
@@ -140,6 +148,7 @@ let simplify_grammar grammar =
     extras = List.map simplify grammar.extras;
     inline = [];
     conflicts = List.map (List.map translate_name) grammar.conflicts;
+    precedences = translate_precedences translate_name grammar.precedences;
     externals = List.map simplify grammar.externals;
     supertypes = [];
     rules = simplified_rules; (* includes inlined rules on purpose *)
