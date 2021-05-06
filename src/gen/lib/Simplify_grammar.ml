@@ -154,13 +154,15 @@ let simplify_grammar grammar =
     rules = simplified_rules; (* includes inlined rules on purpose *)
   }
 
-let run ic oc =
+let run grammar output_file =
+  let oc = open_out output_file in
   let orig_grammar =
-    Atdgen_runtime.Util.Json.from_channel Tree_sitter_j.read_grammar ic
+    Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar grammar
   in
   let new_grammar = simplify_grammar orig_grammar in
   let compact_json =
     Atdgen_runtime.Util.Json.to_string Tree_sitter_j.write_grammar new_grammar
   in
   let pretty_json = Yojson.Safe.prettify compact_json in
-  fprintf oc "%s\n%!" pretty_json
+  fprintf oc "%s\n%!" pretty_json;
+  close_out oc
