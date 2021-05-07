@@ -65,4 +65,6 @@ echo "$name: Generating definitive 'parser.c'."
 npx tree-sitter generate src/grammar.json --no-bindings
 
 # Make sure we get an error in case of OOM leading to no src/parser.c
-test -f src/parser.c || error "tree-sitter didn't generate src/parser.c"
+test -f src/parser.c || error \
+  "tree-sitter didn't generate src/parser.c." \
+  "This may happen when not enough memory is available."
