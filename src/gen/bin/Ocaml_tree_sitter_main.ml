@@ -1,7 +1,7 @@
 (*
    Application's entrypoint.
 *)
-
+open Printf
 open Cmdliner
 open Tree_sitter_gen
 
@@ -20,7 +20,24 @@ type cmd_conf =
   | Parse of parse_conf
   | Simplify of simplify_conf
 
-
+let safe_run f =
+  try f with
+    | Failure msg ->
+      eprintf "\
+    Error: %s
+    Try --help.
+    %!" msg;
+          exit 1
+    | e ->
+          let trace = Printexc.get_backtrace () in
+          eprintf "\
+    Error: exception %s
+    %s
+    Try --help.
+    %!"
+   (Printexc.to_string e)
+   trace;
+   exit 1
 
 let lang_term =
   let info =
@@ -83,11 +100,9 @@ let simplify_cmd =
         https://github.com/returntocorp/ocaml-tree-sitter/issues.";
      ] in
   let info = Term.info ~doc ~man "simplify" in
-  let cmdline_term = Term.(const simplify $ grammar_term $ output_file_term)  in
-  (cmdline_term, info )
+  let cmdline_term = Term.(const (safe_run simplify) $ grammar_term $ output_file_term) in
+  (cmdline_term, info)
   
-
-
 
 let parse_cmd = 
   let codegen lang grammar out_dir =
@@ -100,7 +115,7 @@ let parse_cmd =
 
   let cmdline_term =
     Term.(
-          const codegen
+          const (safe_run codegen)
           $ lang_term
           $ grammar_term
           $ out_dir_term
@@ -129,7 +144,6 @@ let parse_cmd =
 let subcommands = [simplify_cmd]
 
 
-let () = Term.(exit @@ eval_choice parse_cmd subcommands)
-
-
-
+let () = 
+  Printexc.record_backtrace true;
+  Term.(exit @@ eval_choice parse_cmd subcommands)
