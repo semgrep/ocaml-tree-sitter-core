@@ -160,18 +160,6 @@ if [[ -d "$lang"/ocaml-src ]]; then
   cp -a "$lang"/ocaml-src/bin "$dst"
   cp -a "$lang"/ocaml-src/.gitignore "$dst"
 
-  # legacy
-  if [[ -d "$lang"/orig ]]; then
-    mkdir -p "$dst"/orig
-  fi
-  if [[ -f "$lang"/orig/grammar.js ]]; then
-    cp -a "$lang"/orig/grammar.js "$dst"/orig
-  fi
-  if [[ -f "$lang"/orig/LICENSE ]]; then
-    cp -a "$lang"/orig/LICENSE "$dst"/orig
-  fi
-
-  # new way of copying interesting files
   fyi_list="$lang"/fyi.list
   fyi_dst="$dst/fyi"
   copy_fyi_files
