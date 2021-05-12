@@ -22,22 +22,22 @@ type cmd_conf =
 
 let safe_run f =
   try f with
-    | Failure msg ->
+  | Failure msg ->
       eprintf "\
     Error: %s
     Try --help.
     %!" msg;
-          exit 1
-    | e ->
-          let trace = Printexc.get_backtrace () in
-          eprintf "\
+      exit 1
+  | e ->
+      let trace = Printexc.get_backtrace () in
+      eprintf "\
     Error: exception %s
     %s
     Try --help.
     %!"
-   (Printexc.to_string e)
-   trace;
-   exit 1
+        (Printexc.to_string e)
+        trace;
+      exit 1
 
 let lang_term =
   let info =
@@ -68,7 +68,7 @@ let out_dir_term =
   Arg.value (Arg.opt Arg.(some string) None info)
 
 
-let simplify_cmd = 
+let simplify_cmd =
   let simplify = Simplify_grammar.run in
 
   let grammar_term =
@@ -85,8 +85,8 @@ let simplify_cmd =
         ~docv:"OUTPUT_FILE"
         ~doc:"$(docv) is a file containing the new tree-sitter grammar in json format.
           the main difference is that this file will expand all alias since ocaml-tree-sitter doest not support it."
-  in
-  Arg.required (Arg.pos 1 Arg.(some string) None info) in
+    in
+    Arg.required (Arg.pos 1 Arg.(some string) None info) in
 
   let doc =
     "simplify grammar.json for ocaml-tree-sitter" in
@@ -98,13 +98,13 @@ let simplify_cmd =
     `S Manpage.s_bugs;
     `P "Check out bug reports at
         https://github.com/returntocorp/ocaml-tree-sitter/issues.";
-     ] in
+  ] in
   let info = Term.info ~doc ~man "simplify" in
   let cmdline_term = Term.(const (safe_run simplify) $ grammar_term $ output_file_term) in
   (cmdline_term, info)
-  
 
-let parse_cmd = 
+
+let parse_cmd =
   let codegen lang grammar out_dir =
     let tree_sitter_grammar =
       Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
@@ -115,12 +115,12 @@ let parse_cmd =
 
   let cmdline_term =
     Term.(
-          const (safe_run codegen)
-          $ lang_term
-          $ grammar_term
-          $ out_dir_term
-        ) in
-    
+      const (safe_run codegen)
+      $ lang_term
+      $ grammar_term
+      $ out_dir_term
+    ) in
+
 
   let doc = "derive ocaml code to interpret tree-sitter parsing output" in
   let man = [
@@ -131,10 +131,10 @@ let parse_cmd =
       tree-sitter itself is used separately to generate the actual C parser
       from the json grammar. The generated OCaml code is meant to be used
       to process the output of such a parser.";
-      `S Manpage.s_bugs;
-      `P "Check out bug reports at
+    `S Manpage.s_bugs;
+    `P "Check out bug reports at
       https://github.com/returntocorp/ocaml-tree-sitter/issues.";
-    ] in
+  ] in
   let version = "0.0.0" in
   let info = Term.info ~version ~doc ~man "ocaml-tree-sitter" in
 
@@ -144,6 +144,6 @@ let parse_cmd =
 let subcommands = [simplify_cmd]
 
 
-let () = 
+let () =
   Printexc.record_backtrace true;
   Term.(exit @@ eval_choice parse_cmd subcommands)
