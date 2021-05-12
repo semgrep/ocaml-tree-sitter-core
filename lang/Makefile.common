@@ -45,7 +45,7 @@ src/grammar.json:
 	if [ ! -e src/parser.c ] \
           || [ ! -e "$(TS_PARSER_SRC)" ] \
           || [ "$(TS_PARSER_SRC)" -nt src/parser.c ]; then \
-	  $(SCRIPTS)/gen-c; \
+	  $(SCRIPTS)/ocaml-tree-sitter-gen-c; \
 	else \
 	  echo "src/parser.c for $(LANG) is up to date."; \
 	fi
@@ -53,7 +53,7 @@ src/grammar.json:
 .PHONY: gen-ocaml
 gen-ocaml: ocaml-src/tree-sitter-lang.opam
 ocaml-src/tree-sitter-lang.opam: src/grammar.json
-	$(SCRIPTS)/gen-ocaml --lang $(LANG) $(GEN_OCAML_OPTIONS)
+	$(SCRIPTS)/ocaml-tree-sitter-gen-ocaml --lang $(LANG) $(GEN_OCAML_OPTIONS)
 
 .PHONY: build-ocaml
 build-ocaml:
