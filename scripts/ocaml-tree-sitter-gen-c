@@ -59,7 +59,7 @@ fi
 
 echo "$name: Simplifying 'grammar.json' for ocaml-tree-sitter."
 mv src/grammar.json src/grammar.json.orig
-simplify-grammar < src/grammar.json.orig > src/grammar.json
+ocaml-tree-sitter simplify src/grammar.json.orig src/grammar.json
 
 echo "$name: Generating definitive 'parser.c'."
 npx tree-sitter generate src/grammar.json --no-bindings

@@ -1,24 +1,43 @@
 (*
    Application's entrypoint.
 *)
-
 open Printf
 open Cmdliner
 open Tree_sitter_gen
 
-type config = {
+type gen_conf = {
   lang : string;
   grammar : string;
   out_dir : string option;
 }
 
-let codegen config =
-  let tree_sitter_grammar =
-    Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
-      config.grammar
-  in
-  let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
-  Codegen.ocaml ?out_dir:config.out_dir ~lang:config.lang grammar
+type simplify_conf = {
+  grammar: string;
+  output_path: string;
+}
+
+type cmd_conf =
+  | Gen of gen_conf
+  | Simplify of simplify_conf
+
+let safe_run f =
+  try f with
+  | Failure msg ->
+      eprintf "\
+    Error: %s
+    Try --help.
+    %!" msg;
+      exit 1
+  | e ->
+      let trace = Printexc.get_backtrace () in
+      eprintf "\
+    Error: exception %s
+    %s
+    Try --help.
+    %!"
+        (Printexc.to_string e)
+        trace;
+      exit 1
 
 let lang_term =
   let info =
@@ -31,8 +50,7 @@ let lang_term =
   Arg.required (Arg.pos 0 Arg.(some string) None info)
 
 let grammar_term =
-  let info =
-    Arg.info []
+  let info = Arg.info []
       ~docv:"GRAMMAR_JSON"
       ~doc:"$(docv) is a file containing a tree-sitter grammar in json format.
             Its name is commonly 'grammar.json'. Try to not confuse it with
@@ -49,71 +67,96 @@ let out_dir_term =
   in
   Arg.value (Arg.opt Arg.(some string) None info)
 
-let cmdline_term =
-  let combine lang grammar out_dir =
-    { lang; grammar; out_dir }
-  in
-  Term.(const combine
-        $ lang_term
-        $ grammar_term
-        $ out_dir_term
-       )
 
-let doc =
-  "derive ocaml code to interpret tree-sitter parsing output"
+let simplify_cmd =
+  let simplify = Simplify_grammar.run in
+
+  let grammar_term =
+    let info = Arg.info []
+        ~docv:"GRAMMAR_JSON"
+        ~doc:"$(docv) is a file containing a tree-sitter grammar in json format.
+              Its name is commonly 'grammar.json'. Try to not confuse it with
+              'grammar.js' from which it is typically derived."
+    in
+    Arg.required (Arg.pos 0 Arg.(some file) None info) in
+
+  let output_file_term =
+    let info = Arg.info []
+        ~docv:"OUTPUT_FILE"
+        ~doc:"$(docv) is a file containing the new tree-sitter grammar in json format.
+          the main difference is that this file will expand all alias since ocaml-tree-sitter doest not support it."
+    in
+    Arg.required (Arg.pos 1 Arg.(some string) None info) in
+
+  let doc =
+    "simplify grammar.json for ocaml-tree-sitter" in
+
+  let man = [
+    `S Manpage.s_description;
+    `P "simplify-grammar removes aliases and unhides hidden rules,
+        for easier support by ocaml-tree-sitter.";
+    `S Manpage.s_bugs;
+    `P "Check out bug reports at
+        https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+  ] in
+  let info = Term.info ~doc ~man "simplify" in
+  let cmdline_term = Term.(const (safe_run simplify) $ grammar_term $ output_file_term) in
+  (cmdline_term, info)
 
 
-let version = "0.0.0"
+let gen_cmd =
+  let codegen lang grammar out_dir =
+    let tree_sitter_grammar =
+      Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
+        grammar
+    in
+    let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
+    Codegen.ocaml ?out_dir ~lang grammar in
 
-let man = [
-  `S Manpage.s_description;
-  `P "ocaml-tree-sitter takes a tree-sitter grammar and generates OCaml
+  let cmdline_term =
+    Term.(
+      const (safe_run codegen)
+      $ lang_term
+      $ grammar_term
+      $ out_dir_term
+    ) in
+
+
+  let doc = "derive ocaml code to interpret tree-sitter parsing output" in
+  let man = [
+    `S Manpage.s_description;
+    `P "ocaml-tree-sitter takes a tree-sitter grammar and generates OCaml
       for reading tree-sitter parsing output. The input grammar is in
       json format, commonly under the file name 'grammar.json'.
       tree-sitter itself is used separately to generate the actual C parser
       from the json grammar. The generated OCaml code is meant to be used
       to process the output of such a parser.";
-  `S Manpage.s_bugs;
-  `P "Check out bug reports at
+    `S Manpage.s_bugs;
+    `P "Check out bug reports at
       https://github.com/returntocorp/ocaml-tree-sitter/issues.";
-]
+  ] in
+  let version = "0.0.0" in
+  let info = Term.info ~version ~doc ~man "gen" in
 
-let parse_command_line () =
-  let info =
-    Term.info
-      ~version
-      ~doc
-      ~man
-      "ocaml-tree-sitter"
-  in
-  match Term.eval (cmdline_term, info) with
-  | `Error _ -> exit 1
-  | `Version | `Help -> exit 0
-  | `Ok config -> config
+  (cmdline_term, info)
 
-let safe_run config =
-  try codegen config
-  with
-  | Failure msg ->
-      eprintf "\
-Error: %s
-Try --help.
-%!" msg;
-      exit 1
-  | e ->
-      let trace = Printexc.get_backtrace () in
-      eprintf "\
-Error: exception %s
-%s
-Try --help.
-%!"
-        (Printexc.to_string e)
-        trace;
-      exit 1
 
-let main () =
+let root_cmd =
+  let root_term = Term.(ret (const ((`Help (`Pager, None))))) in
+  let man = [
+    `S Manpage.s_description;
+    `P "Generate OCaml parsers based on tree-sitter grammars";
+    `P "For a general project setup you will run `ocaml-tree-sitter-gen-c` and `ocaml-tree-sitter-gen-ocaml`scripts
+    but there is `gen` and `simplify` subcommands. Checkout their help page";
+    `S Manpage.s_bugs;
+    `P "Check out bug reports at
+      https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+  ] in
+  let doc = "Generate OCaml parsers based on tree-sitter grammars" in
+  let info = Term.info ~man ~doc "ocaml-tree-sitter" in
+  (root_term, info)
+
+let subcommands = [gen_cmd; simplify_cmd]
+let () =
   Printexc.record_backtrace true;
-  let config = parse_command_line () in
-  safe_run config
-
-let () = main ()
+  Term.(exit @@ eval_choice root_cmd subcommands)

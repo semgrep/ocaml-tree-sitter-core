@@ -8,14 +8,3 @@
     tree-sitter.gen
   )
 )
-
-(executable
-  (package tree-sitter)
-  (public_name simplify-grammar)
-  (name Simplify_grammar_main)
-  (modules Simplify_grammar_main)
-  (libraries
-    cmdliner
-    tree-sitter.gen
-  )
-)
