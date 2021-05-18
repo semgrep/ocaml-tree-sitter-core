@@ -143,8 +143,17 @@ let gen_cmd =
 
 let root_cmd =
   let root_term = Term.(ret (const ((`Help (`Pager, None))))) in
-  let doc = "" in
-  let info = Term.info ~doc "ocaml-tree-sitter" in
+  let man = [
+    `S Manpage.s_description;
+    `P "Generate OCaml parsers based on tree-sitter grammars";
+    `P "For a general project setup you will run `ocaml-tree-sitter-gen-c` and `ocaml-tree-sitter-gen-ocaml`scripts
+    but there is `gen` and `simplify` subcommands. Checkout their help page";
+    `S Manpage.s_bugs;
+    `P "Check out bug reports at
+      https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+  ] in
+  let doc = "Generate OCaml parsers based on tree-sitter grammars" in
+  let info = Term.info ~man ~doc "ocaml-tree-sitter" in
   (root_term, info)
 
 let subcommands = [gen_cmd; simplify_cmd]
