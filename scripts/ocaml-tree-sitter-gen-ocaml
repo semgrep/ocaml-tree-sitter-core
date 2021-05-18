@@ -138,6 +138,7 @@ cp -a "$src_dir"/tree_sitter "$dst_dir"/lib/tree_sitter
 # Generate the OCaml code needed to parse the examples/*.out json files.
 #
 "$ocaml_tree_sitter" \
+  gen \
   "$lang_underscores" \
   "$src_dir"/grammar.json \
   -d "$dst_dir" \

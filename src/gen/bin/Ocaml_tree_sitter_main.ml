@@ -5,7 +5,7 @@ open Printf
 open Cmdliner
 open Tree_sitter_gen
 
-type parse_conf = {
+type gen_conf = {
   lang : string;
   grammar : string;
   out_dir : string option;
@@ -17,7 +17,7 @@ type simplify_conf = {
 }
 
 type cmd_conf =
-  | Parse of parse_conf
+  | Gen of gen_conf
   | Simplify of simplify_conf
 
 let safe_run f =
@@ -104,7 +104,7 @@ let simplify_cmd =
   (cmdline_term, info)
 
 
-let parse_cmd =
+let gen_cmd =
   let codegen lang grammar out_dir =
     let tree_sitter_grammar =
       Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
@@ -136,14 +136,18 @@ let parse_cmd =
       https://github.com/returntocorp/ocaml-tree-sitter/issues.";
   ] in
   let version = "0.0.0" in
-  let info = Term.info ~version ~doc ~man "ocaml-tree-sitter" in
+  let info = Term.info ~version ~doc ~man "gen" in
 
   (cmdline_term, info)
 
 
-let subcommands = [simplify_cmd]
+let root_cmd =
+  let root_term = Term.(ret (const ((`Help (`Pager, None))))) in
+  let doc = "" in
+  let info = Term.info ~doc "ocaml-tree-sitter" in
+  (root_term, info)
 
-
+let subcommands = [gen_cmd; simplify_cmd]
 let () =
   Printexc.record_backtrace true;
-  Term.(exit @@ eval_choice parse_cmd subcommands)
+  Term.(exit @@ eval_choice root_cmd subcommands)
