@@ -5,8 +5,7 @@ CST_*.ml
 Parse_*.ml
 
 # Various output files
-/*/examples/*.cst
-/*/examples/*.json
+/*/test.out
 /*/stat.tmp
 /*/stat
 /*/stat.txt
