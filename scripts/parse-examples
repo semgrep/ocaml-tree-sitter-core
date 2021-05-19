@@ -8,6 +8,10 @@ usage() {
   cat <<EOF
 Usage: $(basename "$0") LANG
 Parse sample source files written in language LANG.
+
+Input files that are expected to parse successfully must be located in
+test/ok or in its subfolders. Files that are expected to fail must be
+placed under test/xfail.
 EOF
 }
 
@@ -22,23 +26,65 @@ parser=./parse-"$lang"
 
 # Run the parser from source to ocaml CST
 #
-# Input files are examples/*.src
-# If the test is supposed to fail, the pattern is examples/*.err.src
+# test/ok/      contains source files expected to be parsed successfully
+# test/xfail/   contains source files expected to fail parsing
+# test.out/     parsing results for the files in test/
 #
-if [[ -d examples ]]; then
-  for src in $(ls examples/*.src || :); do
-    prefix=${src%.src}
-    cst=$prefix.cst
-    if [[ $prefix == *.err ]]; then
-      # Expect error status
-      if "$parser" "$src" 2>&1 | tee "$cst"; then
-        echo "Test on input file $src was expected to fail."
-        exit 1
+outdir=test.out
+
+# Following pytest terminology, there are 2*2 possible outcomes for a test:
+#
+#   expected to succeed and succeeds: PASS  (good)
+#                       and fails   : FAIL  (bad, regression)
+#   expected to fail and fails      : XFAIL (ok)
+#                    and succeeds   : XPASS (possibly an improvement)
+#
+# These two lists accumulate the files that didn't yield the expected results:
+#
+fail_list=$outdir/fail.list
+xpass_list=$outdir/xpass.list
+
+rm -f "$fail_list"
+rm -f "$xpass_list"
+mkdir -p "$outdir"
+successes=0
+errors=0
+for expect in ok xfail; do
+  if [[ -d test ]]; then
+    for src in $(find test/"$expect" -type f); do
+      #
+      # test/ok/foo/bar.js -> ok/foo/bar.js
+      #
+      common_path=${src_prefix#examples/}
+
+      cst=$outdir/$common_path.cst
+      if [[ "$expect" = ok ]]; then
+        # Expect success
+        if "$parser" "$src" 2>&1 > "$cst"; then
+          successes=$(( successes + 1 ))
+          echo "PASS: $src"
+        else
+          errors=$(( errors + 1 ))
+          echo "FAIL: $src"
+          echo "$src" >> "$fail_list"
+        fi
+      else
+        # Expect error status
+        if "$parser" "$src" 2>&1 > "$cst"; then
+          errors=$(( errors + 1 ))
+          echo "XPASS: $src"
+          echo "$src" >> "$xpass_list"
+        else
+          successes=$(( successes + 1 ))
+          echo "XFAIL: $src"
+        fi
       fi
-    else
-      # Expect success
-      "$parser" "$src" 2>&1 | tee "$cst"
-    fi
-    echo "OK $src"
-  done
+    done
+  fi
+done
+
+echo "successes: $successes"
+echo "errors: $errors"
+if [[ "$errors" != 0 ]]; then
+  exit 1
 fi
