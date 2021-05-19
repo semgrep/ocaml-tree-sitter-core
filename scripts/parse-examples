@@ -50,14 +50,15 @@ mkdir -p "$outdir"
 successes=0
 errors=0
 for expect in ok xfail; do
-  if [[ -d test ]]; then
+  if [[ -d test/"$expect" ]]; then
     for src in $(find test/"$expect" -type f); do
       #
       # test/ok/foo/bar.js -> ok/foo/bar.js
       #
-      common_path=${src_prefix#examples/}
+      common_path=${src#examples/}
 
       cst=$outdir/$common_path.cst
+      mkdir -p $(dirname "$cst")
       if [[ "$expect" = ok ]]; then
         # Expect success
         if "$parser" "$src" 2>&1 > "$cst"; then
