@@ -47,36 +47,47 @@ xpass_list=$outdir/xpass.list
 rm -f "$fail_list"
 rm -f "$xpass_list"
 mkdir -p "$outdir"
-successes=0
-errors=0
+
+# Counts for each parsing outcome
+fail=0
+pass=0
+xpass=0
+xfail=0
+
 for expect in ok xfail; do
+  expect_dir=test/$expect
   if [[ -d test/"$expect" ]]; then
     for src in $(find test/"$expect" -type f); do
       #
-      # test/ok/foo/bar.js -> ok/foo/bar.js
+      # Make a path that's independent from the expectation 'ok' or 'xfail'.
       #
-      common_path=${src#examples/}
+      #   test/ok/foo/bar.js -> foo/bar.js
+      #
+      # Having such paths makes it easier to move files between 'ok' and
+      # 'xfail'.
+      #
+      common_path=${src#"$expect_dir/"}
 
-      cst=$outdir/$common_path.cst
+      cst=$outdir/$expect/$common_path.cst
       mkdir -p $(dirname "$cst")
       if [[ "$expect" = ok ]]; then
         # Expect success
         if "$parser" "$src" 2>&1 > "$cst"; then
-          successes=$(( successes + 1 ))
+          pass=$(( pass + 1 ))
           echo "PASS: $src"
         else
-          errors=$(( errors + 1 ))
+          fail=$(( fail + 1 ))
           echo "FAIL: $src"
-          echo "$src" >> "$fail_list"
+          echo "$common_path" >> "$fail_list"
         fi
       else
         # Expect error status
         if "$parser" "$src" 2>&1 > "$cst"; then
-          errors=$(( errors + 1 ))
+          xpass=$(( xpass + 1 ))
           echo "XPASS: $src"
-          echo "$src" >> "$xpass_list"
+          echo "$common_path" >> "$xpass_list"
         else
-          successes=$(( successes + 1 ))
+          xfail=$(( xfail + 1 ))
           echo "XFAIL: $src"
         fi
       fi
@@ -84,10 +95,16 @@ for expect in ok xfail; do
   fi
 done
 
-echo "successes: $successes"
-echo "errors: $errors"
+expected=$(( pass + xfail ))
+unexpected=$(( fail + xpass ))
 
-if [[ "$errors" != 0 ]]; then
+cat <<EOF
+
+expected results: $expected (pass: $pass, xfail: $xfail)
+unexpected results: $unexpected (fail: $fail, xpass: $xpass)
+EOF
+
+if [[ "$unexpected" != 0 ]]; then
   cat >&2 <<EOF
 
 *** Some $lang parsing tests didn't meet the expectations.
@@ -100,7 +117,7 @@ The output of the parser for each file was put in '$outdir/'. Alternatively,
 you can run the parser './parse-$lang' on an arbitrary file to see
 what the CST looks like. If a target fails but the parser can't be fixed
 right away, move it to 'test/xfail/'. You may create subfolders such as
-'text/xfail/todo' or 'text/xfail/experimental' to be more descriptive.
+'test/xfail/todo' or 'text/xfail/experimental' to be more descriptive.
 EOF
   exit 1
 fi
