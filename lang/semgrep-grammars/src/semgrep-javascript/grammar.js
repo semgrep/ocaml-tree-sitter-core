@@ -62,7 +62,6 @@ module.exports = grammar(javascript_grammar, {
       );
     },
 
-/*
     // pfff: class_element (repeated in the class body)
     class_body: $ => seq(
       '{',
@@ -77,19 +76,19 @@ module.exports = grammar(javascript_grammar, {
     // pfff: stmt
     _statement: ($, previous) => {
       return choice(
-        $.semgrep_dots,
+        ...previous.members,
+        //$.semgrep_dots,
         $.semgrep_for,
-        ...previous.members
       );
     },
 
     // pfff: iteration_stmt
     semgrep_for: $ => seq(
+      'for',
       '(',
       $.semgrep_dots,
       ')',
       $._statement // pfff: stmt1 (inline version of 'stmt')
     ),
-*/
   }
 });
