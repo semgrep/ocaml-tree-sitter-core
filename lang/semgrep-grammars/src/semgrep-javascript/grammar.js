@@ -54,15 +54,15 @@ module.exports = grammar(javascript_grammar, {
       $.semgrep_ldots, $._expression, $.semgrep_rdots
     ),
 
-/*
     // pfff: formal_parameter
     _formal_parameter: ($, previous) => {
       return choice(
-        $.semgrep_dots,
-        ...previous.members
+        ...previous.members,
+        $.semgrep_dots
       );
     },
 
+/*
     // pfff: class_element (repeated in the class body)
     class_body: $ => seq(
       '{',
