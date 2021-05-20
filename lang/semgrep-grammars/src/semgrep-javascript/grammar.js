@@ -35,14 +35,25 @@ module.exports = grammar(javascript_grammar, {
 */
 
     semgrep_dots: $ => '...',
+    semgrep_ldots: $ => '<...',
+    semgrep_rdots: $ => '...>',
 
-    // pfff: assignment_expr
     _expression: ($, previous) => {
       return choice(
+        ...previous.members,
+
+        // pfff: assignment_expr
         $.semgrep_dots,
-        ...previous.members
+
+        // pfff: primary_expr_no_braces
+        $.semgrep_deep_expression,
       );
     },
+
+    semgrep_deep_expression: $ => seq(
+      $.semgrep_ldots, $._expression, $.semgrep_rdots
+    ),
+
 /*
     // pfff: formal_parameter
     _formal_parameter: ($, previous) => {
