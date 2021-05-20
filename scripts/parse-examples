@@ -86,6 +86,21 @@ done
 
 echo "successes: $successes"
 echo "errors: $errors"
+
 if [[ "$errors" != 0 ]]; then
+  cat >&2 <<EOF
+
+*** Some $lang parsing tests didn't meet the expectations.
+
+The lists of failing targets are here:
+  - '$fail_list': parsing was expected to succeed but failed
+  - '$xpass_list': parsing was expected to fail but succeeded
+
+The output of the parser for each file was put in '$outdir/'. Alternatively,
+you can run the parser './parse-$lang' on an arbitrary file to see
+what the CST looks like. If a target fails but the parser can't be fixed
+right away, move it to 'test/xfail/'. You may create subfolders such as
+'text/xfail/todo' or 'text/xfail/experimental' to be more descriptive.
+EOF
   exit 1
 fi
