@@ -63,9 +63,9 @@ what's going on or to set things up manually.
 From the ocaml-tree-sitter repo, do the following:
 
 1. Create a `lang/X` folder.
-2. Make an examples directory. Inside the directory,
+2. Make a `test/ok` directory. Inside the directory,
    create a simple `hello-world` program for the language you are porting.
-   Name the program `hello-world.<ext>.src`.
+   Name the program `hello-world.<ext>`.
 3. Now make a file called `extensions.txt` and input all the language extensions
    (.rb, .kt, etc) for your language in the file.
 4. Create a file called `fyi.list` with all the information files, such as
@@ -87,16 +87,19 @@ Here's the file hierarchy for Ruby:
 
 ```shell
 lang/ruby               # language name of the form [a-z][a-z0-9]*
-├── examples            # sample input files, must end in '.src.'
-│   ├── comment.rb.src
-│   ├── ex1.rb.src
-│   ├── ex2.rb.src
-│   ├── hello.rb.src
-│   └── poly.rb.src
 ├── extensions.txt      # standard name. Required for stats.
 ├── fyi.list            # list of informational files to copy. Recommended.
 ├── Makefile -> ../Makefile.common
-└── projects.txt        # standard name. Required for stats.
+├── projects.txt        # standard name. Required for stats.
+└── test                # sample input files
+    ├── ok              # contains input files supported by the current grammar
+    │   ├── comment.rb
+    │   ├── ex1.rb
+    │   ├── ex2.rb
+    │   ├── hello.rb
+    │   └── poly.rb
+    └── xfail            # contains input files that are expected to fail
+        └── rating.rb
 ```
 
 To test a language in ocaml-tree-sitter, you must build the
@@ -167,7 +170,7 @@ Parsing statistics
 From a language's folder such as `lang/csharp`, two targets are
 available to exercise the generated parser:
 
-* `make test`: runs on `examples/*.src`
+* `make test`: runs on `test/ok` and `test/xfail`
 * `make stat`: downloads the code specified in `projects.txt` and
   parses the files whose extension matches those in `extensions.txt`,
   reporting parsing success in the form of a CSV file.
@@ -258,7 +261,7 @@ license notices, and make it easy to get back to the original projects:
 
 * Make sure to preserve the `LICENSE` files. This should be listed in
   the `fyi.list` file.
-* For sample input in `examples/`, consider Public Domain ("The
+* For sample input in `test/`, consider Public Domain ("The
   Unlicense") files or write your own, for simplicity.
   [GitHub Search](https://github.com/search/advanced)
   allows you to filter projects by license and by programming language.
