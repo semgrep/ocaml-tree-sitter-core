@@ -37,6 +37,7 @@ module.exports = grammar(javascript_grammar, {
     semgrep_dots: $ => '...',
     semgrep_ldots: $ => '<...',
     semgrep_rdots: $ => '...>',
+    semgrep_metavar: $ => /\$[a-zA-Z_][a-zA-Z_0-9]*/,
 
     _expression: ($, previous) => {
       return choice(
@@ -160,6 +161,20 @@ module.exports = grammar(javascript_grammar, {
         $.semgrep_dots
       )
     )),
+
+    // Original:
+    // _from_clause: $ => seq(
+    //   "from", field('source', $.string)
+    // ),
+    //
+    // pfff: module_specifier
+    _from_clause: $ => seq(
+      "from",
+      choice(
+        field('source', $.string),
+        $.semgrep_metavar // added
+      )
+    ),
   }
 });
 
