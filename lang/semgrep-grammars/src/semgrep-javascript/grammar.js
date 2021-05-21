@@ -90,5 +90,21 @@ module.exports = grammar(javascript_grammar, {
       ')',
       $._statement // pfff: stmt1 (inline version of 'stmt')
     ),
+
+    // pfff: xhp_attribute
+    _jsx_attribute: ($, previous) => {
+      return choice(
+        ...previous.members,
+        $.semgrep_dots,
+      );
+    },
+
+    // pfff: xhp_attribute_value
+    _jsx_attribute_value: ($, previous) => {
+      return choice(
+        ...previous.members,
+        $.semgrep_dots,
+      );
+    },
   }
 });
