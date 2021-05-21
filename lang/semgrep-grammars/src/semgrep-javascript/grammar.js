@@ -143,6 +143,23 @@ module.exports = grammar(javascript_grammar, {
       '}'
     )),
 
+    // Original:
+    //
+    // member_expression: $ => prec(PREC.MEMBER, seq(
+    //   field('object', choice($._expression, $._primary_expression)),
+    //   choice('.', '?.'),
+    //   field('property', alias($.identifier, $.property_identifier))
+    // )),
+    //
+    // pfff: call_expr
+    member_expression: $ => prec(14 /* PREC.MEMBER */, seq(
+      field('object', choice($._expression, $._primary_expression)),
+      choice('.', '?.'),
+      choice(
+        field('property', alias($.identifier, $.property_identifier)),
+        $.semgrep_dots
+      )
+    )),
   }
 });
 
