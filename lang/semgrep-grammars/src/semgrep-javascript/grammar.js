@@ -105,6 +105,7 @@ module.exports = grammar(javascript_grammar, {
       return choice(
         ...previous.members,
         $.semgrep_dots,
+        $.semgrep_metavar, // pfff: "$" XHPATTR  (in lexer_js.mll)
       );
     },
 
