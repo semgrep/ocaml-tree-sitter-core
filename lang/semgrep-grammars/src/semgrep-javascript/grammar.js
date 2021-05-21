@@ -27,24 +27,66 @@ module.exports = grammar(javascript_grammar, {
        We create multiple "entry points" so as to allow different kinds of
        semgrep patterns, prefixed with some new keyword.
     */
-/*
-    program: ($, previous) => choice(
-      ...previous.members,
-      seq('__SEMGREP_EXPRESSION', $._expression),
+
+    // Original:
+    //
+    // program: $ => seq(
+    //   optional($.hash_bang_line),
+    //   repeat($._statement)
+    // ),
+    //
+    program: $ => seq(
+      optional($.hash_bang_line),
+      choice (
+        repeat($._statement),
+        seq('__SEMGREP_PARTIAL', $.semgrep_partial)
+      )
     ),
-*/
 
     semgrep_dots: $ => '...',
     semgrep_ldots: $ => '<...',
     semgrep_rdots: $ => '...>',
     semgrep_metavar: $ => /\$[a-zA-Z_][a-zA-Z_0-9]*/,
 
+    // Constructs valid as whole semgrep patterns only.
+    //
+    // pfff: sgrep_spatch_pattern
+    semgrep_partial: $ => choice(
+      // truncated 'function_declaration'
+      seq(
+        optional('async'),
+        'function',
+        $.identifier,
+        $._call_signature
+      ),
+      // truncated 'class_declaration'
+      seq(
+        repeat($.decorator),
+        'class',
+        $.identifier,
+        optional($.class_heritage),
+      ),
+      seq('if', $.parenthesized_expression),
+      seq('try', $.statement_block),
+      $.catch_clause,
+      $.finally_clause
+    ),
+
+    // pfff: stmt
+    _statement: ($, previous) => {
+      return choice(
+        ...previous.members,
+        // prec(100, $.semgrep_dots), // higher precedence than expression
+        $.semgrep_for
+      );
+    },
+
     _expression: ($, previous) => {
       return choice(
         ...previous.members,
 
         // pfff: assignment_expr
-        $.semgrep_dots,
+        $.semgrep_dots, // conflict
 
         // pfff: primary_expr_no_braces
         $.semgrep_deep_expression,
@@ -73,15 +115,6 @@ module.exports = grammar(javascript_grammar, {
       )),
       '}'
     ),
-
-    // pfff: stmt
-    _statement: ($, previous) => {
-      return choice(
-        ...previous.members,
-        //$.semgrep_dots,
-        $.semgrep_for,
-      );
-    },
 
     // pfff: iteration_stmt
     semgrep_for: $ => seq(
