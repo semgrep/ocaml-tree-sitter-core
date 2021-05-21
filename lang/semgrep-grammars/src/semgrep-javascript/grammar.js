@@ -106,5 +106,52 @@ module.exports = grammar(javascript_grammar, {
         $.semgrep_dots,
       );
     },
+
+    // The original grammar was the following. Unfortunately, it's not really
+    // extensible. TODO: It would be more maintainable if the repeated item had
+    // its own rule in tree-sitter-javascript.
+    //
+    // object: $ => prec(PREC.OBJECT, seq(
+    //   '{',
+    //   commaSep(optional(choice(
+    //     $.pair,
+    //     $.spread_element,
+    //     $.method_definition,
+    //     $.assignment_pattern,
+    //     alias(
+    //       choice($.identifier, $._reserved_identifier),
+    //       $.shorthand_property_identifier
+    //     )
+    //   ))),
+    //   '}'
+    // )),
+    //
+    // pfff: object_literal, property_name_and_value
+    object: $ => prec(-1 /* PREC.OBJECT */, seq(
+      '{',
+      commaSep(optional(choice(
+        $.pair,
+        $.spread_element,
+        $.method_definition,
+        $.assignment_pattern,
+        alias(
+          choice($.identifier, $._reserved_identifier),
+          $.shorthand_property_identifier
+        ),
+        $.semgrep_dots, // added
+      ))),
+      '}'
+    )),
+
   }
 });
+
+// copy-pasted from the original grammar
+function commaSep1(rule) {
+  return seq(rule, repeat(seq(',', rule)));
+}
+
+// copy-pasted from the original grammar
+function commaSep(rule) {
+  return optional(commaSep1(rule));
+}
