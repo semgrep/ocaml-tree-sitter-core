@@ -22,7 +22,6 @@ SUPPORTED_TS_LANGUAGES = \
   r \
   ruby \
   rust \
-  scala \
   typescript
 
 # Includes all language variants e.g. typescript and tsx
@@ -44,7 +43,6 @@ STAT_LANGUAGES = \
   r \
   ruby \
   rust \
-  scala \
   tsx \
   typescript
 
