@@ -8,9 +8,10 @@ function   prettierError(err) {
 
 const { object = {}, property = {} } = name;
 
-const {
-        reserved: isReservedNodeType = false,
-      } = nodeAttrs;
-
+// typescript only
+//
+// const {
+//   reserved: isReservedNodeType = false,
+// } = nodeAttrs;
 
 let [/*match*/, theirName, myName = theirName] = tokens;
