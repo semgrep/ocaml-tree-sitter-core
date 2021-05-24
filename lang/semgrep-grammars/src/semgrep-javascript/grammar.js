@@ -30,6 +30,9 @@ module.exports = grammar(javascript_grammar, {
     [$.spread_element, $.rest_pattern, $.semgrep_dots],
     [$.rest_pattern, $.semgrep_dots],
     [$.spread_element, $.semgrep_dots],
+
+    // conflict occurring when extending '_formal_parameter'
+    [$.primary_expression, $.formal_parameters],
   ]),
 
   rules: {
@@ -92,7 +95,7 @@ module.exports = grammar(javascript_grammar, {
       );
     },
 
-    expression: ($, previous) => {
+    primary_expression: ($, previous) => {
       return choice(
         ...previous.members,
 
