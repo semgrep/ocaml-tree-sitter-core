@@ -27,9 +27,12 @@ module.exports = grammar(javascript_grammar, {
   conflicts: ($, previous) => previous.concat([
 
     // conflicts between semgrep ellipsis and spread elements
-    [$.spread_element, $.rest_parameter, $.semgrep_dots],
-    [$.rest_parameter, $.semgrep_dots],
+    [$.spread_element, $.rest_pattern, $.semgrep_dots],
+    [$.rest_pattern, $.semgrep_dots],
     [$.spread_element, $.semgrep_dots],
+
+    // conflict occurring when extending '_formal_parameter'
+    [$.primary_expression, $.formal_parameters],
   ]),
 
   rules: {
@@ -43,13 +46,13 @@ module.exports = grammar(javascript_grammar, {
     //
     // program: $ => seq(
     //   optional($.hash_bang_line),
-    //   repeat($._statement)
+    //   repeat($.statement)
     // ),
     //
     program: $ => seq(
       optional($.hash_bang_line),
       choice (
-        repeat($._statement),
+        repeat($.statement),
         seq('__SEMGREP_PARTIAL', $.semgrep_partial)
       )
     ),
@@ -84,7 +87,7 @@ module.exports = grammar(javascript_grammar, {
     ),
 
     // pfff: stmt
-    _statement: ($, previous) => {
+    statement: ($, previous) => {
       return choice(
         ...previous.members,
         // prec(100, $.semgrep_dots), // higher precedence than expression
@@ -92,7 +95,7 @@ module.exports = grammar(javascript_grammar, {
       );
     },
 
-    _expression: ($, previous) => {
+    primary_expression: ($, previous) => {
       return choice(
         ...previous.members,
 
@@ -105,7 +108,7 @@ module.exports = grammar(javascript_grammar, {
     },
 
     semgrep_deep_expression: $ => seq(
-      $.semgrep_ldots, $._expression, $.semgrep_rdots
+      $.semgrep_ldots, $.expression, $.semgrep_rdots
     ),
 
     // pfff: formal_parameter
@@ -122,7 +125,7 @@ module.exports = grammar(javascript_grammar, {
       repeat(choice(
         seq(field('member', $.method_definition), optional(';')),
         seq(field('member', $.public_field_definition), $._semicolon),
-        $.semgrep_dots,
+        $.semgrep_dots, // added
       )),
       '}'
     ),
@@ -133,7 +136,7 @@ module.exports = grammar(javascript_grammar, {
       '(',
       $.semgrep_dots,
       ')',
-      $._statement // pfff: stmt1 (inline version of 'stmt')
+      $.statement // pfff: stmt1 (inline version of 'stmt')
     ),
 
     // pfff: xhp_attribute
@@ -157,29 +160,27 @@ module.exports = grammar(javascript_grammar, {
     // extensible. TODO: It would be more maintainable if the repeated item had
     // its own rule in tree-sitter-javascript.
     //
-    // object: $ => prec(PREC.OBJECT, seq(
-    //   '{',
-    //   commaSep(optional(choice(
-    //     $.pair,
-    //     $.spread_element,
-    //     $.method_definition,
-    //     $.assignment_pattern,
-    //     alias(
-    //       choice($.identifier, $._reserved_identifier),
-    //       $.shorthand_property_identifier
-    //     )
-    //   ))),
-    //   '}'
-    // )),
+    //     object: $ => prec('object', seq(
+    //       '{',
+    //       commaSep(optional(choice(
+    //         $.pair,
+    //         $.spread_element,
+    //         $.method_definition,
+    //         alias(
+    //           choice($.identifier, $._reserved_identifier),
+    //           $.shorthand_property_identifier
+    //         )
+    //       ))),
+    //       '}'
+    //     )),
     //
     // pfff: object_literal, property_name_and_value
-    object: $ => prec(-1 /* PREC.OBJECT */, seq(
+    object: $ => prec('object', seq(
       '{',
       commaSep(optional(choice(
         $.pair,
         $.spread_element,
         $.method_definition,
-        $.assignment_pattern,
         alias(
           choice($.identifier, $._reserved_identifier),
           $.shorthand_property_identifier
@@ -191,19 +192,19 @@ module.exports = grammar(javascript_grammar, {
 
     // Original:
     //
-    // member_expression: $ => prec(PREC.MEMBER, seq(
-    //   field('object', choice($._expression, $._primary_expression)),
+    // member_expression: $ => prec('member', seq(
+    //   field('object', choice($.expression, $.primary_expression)),
     //   choice('.', '?.'),
     //   field('property', alias($.identifier, $.property_identifier))
     // )),
     //
     // pfff: call_expr
-    member_expression: $ => prec(14 /* PREC.MEMBER */, seq(
-      field('object', choice($._expression, $._primary_expression)),
+    member_expression: $ => prec('member', seq(
+      field('object', choice($.expression, $.primary_expression)),
       choice('.', '?.'),
       choice(
         field('property', alias($.identifier, $.property_identifier)),
-        $.semgrep_dots
+        $.semgrep_dots // added
       )
     )),
 
