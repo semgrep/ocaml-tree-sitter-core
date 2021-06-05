@@ -14,6 +14,7 @@ SUPPORTED_TS_LANGUAGES = \
   c-sharp \
   cpp \
   go \
+  hack \
   java \
   javascript \
   kotlin \
@@ -35,6 +36,7 @@ STAT_LANGUAGES = \
   c-sharp \
   cpp \
   go \
+  hack \
   java \
   javascript \
   kotlin \

@@ -1,6 +1,11 @@
-# File extensions for the target language, one per line. This is used for
-# collecting parsing stats from the repos specified in 'projects.txt'. e.g.:
+# File extensions for the target language, one per line.
 #
-# .h
-# .c
-#
+.hack
+.hh
+.hck
+
+# Some projects use the .php extension for files starting with '<?hh'.
+# Since we're not checking for this, it's safer to exclude the files
+# with the '.php' extension because they might contain PHP code
+# incompatible with Hack.
+# .php
