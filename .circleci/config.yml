@@ -10,9 +10,12 @@ jobs:
     docker:
       - image: returntocorp/ocaml:ubuntu
 
-    # 'tree-sitter generate' needs 4 GB of memory for c-sharp.
-    # 'medium+' gives us 6 GB.
-    resource_class: medium+
+    # 'tree-sitter generate' needs a lot of memory. CircleCI offers
+    # the following types of hosts:
+    # - medium+: 6 GB.
+    # - large: 8 GB
+    # - xlarge: 16 GB
+    resource_class: large
 
     working_directory: ~/ocaml-tree-sitter
     steps:
