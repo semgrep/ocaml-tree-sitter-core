@@ -82,8 +82,15 @@ let extract_pattern_rules_from_body add_rule body =
         let name = add_rule preferred_name x in
         SYMBOL name
 
-    | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (extract x)
-    | TOKEN x -> TOKEN (extract x)
+    | IMMEDIATE_TOKEN _
+    | TOKEN _ as x ->
+        (* SYMBOLs (rule names like $.pat_123) are illegal within token()
+           (https://github.com/tree-sitter/tree-sitter/issues/1159),
+           so we leave any pattern that may be in there. It doesn't matter
+           since the point of token() is to get a single token.
+        *)
+        x
+
     | REPEAT x -> REPEAT (extract x)
     | REPEAT1 x -> REPEAT1 (extract x)
     | CHOICE xs -> CHOICE (List.map extract xs)
