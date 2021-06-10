@@ -13,7 +13,9 @@ TESTS = \
   token \
   anon-pat \
   prec \
-  ignore-error
+  ignore-error \
+  blank-token \
+  pattern
 
 # Build and run all the tests.
 .PHONY: test

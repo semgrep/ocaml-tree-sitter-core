@@ -49,3 +49,10 @@ let of_ts_tree ts_tree =
     !counter
   in
   of_ts_node get_node_id root
+
+let to_json ?(pretty = false) node =
+  let compact_json = Tree_sitter_output_j.string_of_node node in
+  if pretty then
+    Yojson.Safe.prettify compact_json
+  else
+    compact_json

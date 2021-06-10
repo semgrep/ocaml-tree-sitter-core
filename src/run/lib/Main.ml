@@ -5,6 +5,7 @@
 
 open Printf
 open Cmdliner
+open Tree_sitter_bindings
 
 type input_kind =
   | Source_file
@@ -13,6 +14,7 @@ type input_kind =
 type config = {
   source_file: string;
   input_kind: input_kind;
+  output_json: bool;
   txt_stat: string option;
   json_error_log: string option;
 }
@@ -46,6 +48,16 @@ let input_json_term =
   in
   Arg.value (Arg.pos 1 Arg.(some string) None info)
 
+let output_json_term =
+  let info =
+    Arg.info ["output-json"]
+      ~doc:"Output a complete json representation of the parse tree obtained
+            from the tree-sitter parser. This can be very slow on large
+            data due to pretty-printing. This is intended for debugging
+            small test cases."
+  in
+  Arg.value (Arg.flag info)
+
 let txt_stat_term =
   let info =
     Arg.info ["txt-stat"]
@@ -67,17 +79,18 @@ let json_error_log_term =
   Arg.value (Arg.opt Arg.(some string) None info)
 
 let cmdline_term =
-  let combine source_file input_json txt_stat json_error_log =
+  let combine source_file input_json output_json txt_stat json_error_log =
     let input_kind =
       match input_json with
       | None -> Source_file
       | Some json_file -> Json_file json_file
     in
-    { source_file; input_kind; txt_stat; json_error_log }
+    { source_file; input_kind; output_json; txt_stat; json_error_log }
   in
   Term.(const combine
         $ source_file_term
         $ input_json_term
+        $ output_json_term
         $ txt_stat_term
         $ json_error_log_term
        )
@@ -171,14 +184,23 @@ let parse_and_dump
     ~dump_tree
     conf =
   let input_tree = load_input_tree ~parse_source_file conf in
+  if conf.output_json then (
+    printf "Complete CST obtained from the tree-sitter parser:\n%!";
+    print_endline (Tree_sitter_output.to_json ~pretty:true input_tree.root)
+  );
+  printf "CST obtained from the tree-sitter parser:\n%!";
   Tree_sitter_parsing.print input_tree;
   let res : _ Parsing_result.t = parse_input_tree input_tree in
   let some_success =
     match res.program with
     | Some matched_tree ->
+        printf "---\n";
+        printf "Recovered typed CST:\n%!";
         dump_tree matched_tree;
         true
     | None ->
+        eprintf "Error: \
+                 failed to recover rich CST from original tree-sitter CST\n%!";
         false
   in
   let errors = res.errors in

@@ -131,7 +131,7 @@ let translate_precedences translate_name ll =
   List.map (List.map (translate_named_prec_level translate_name)) ll
 
 let simplify_grammar grammar =
-  let grammar = Name_pattern.assign_names_to_patterns grammar in
+  let grammar = Missing_node.work_around_missing_nodes grammar in
   let grammar = apply_inline grammar in
   let translate_name = make_name_translator () in
   let simplify = simplify_rule_body translate_name in

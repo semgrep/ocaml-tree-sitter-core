@@ -1,0 +1,28 @@
+#! /usr/bin/env bash
+#
+# Check the parsing output.
+#
+set -eu -o pipefail
+
+error() {
+  echo "Error: $*" >&2
+  exit 1
+}
+
+out=test.out/ok/hello.cst
+if grep -q Blank "$out"; then
+  ./parse --output-json test/ok/hello
+  error "Found 'Blank' in parsing output [$out]"
+fi
+
+out=test.out/ok/goodbye.cst
+if grep -q Blank "$out"; then
+  ./parse --output-json test/ok/goodbye
+  error "Found 'Blank' in parsing output [$out]"
+fi
+
+out=test.out/ok/a.cst
+if grep -q Blank "$out"; then
+  ./parse --output-json test/ok/a
+  error "Found 'Blank' in parsing output [$out]"
+fi
