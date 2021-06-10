@@ -12,10 +12,10 @@ jobs:
 
     # 'tree-sitter generate' needs a lot of memory. CircleCI offers
     # the following types of hosts:
-    # - medium+: 6 GB.
+    # - medium+: 6 GB
     # - large: 8 GB
     # - xlarge: 16 GB
-    resource_class: large
+    resource_class: xlarge
 
     working_directory: ~/ocaml-tree-sitter
     steps:
