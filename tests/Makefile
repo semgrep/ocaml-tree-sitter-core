@@ -14,7 +14,6 @@ TESTS = \
   anon-pat \
   prec \
   ignore-error \
-  blank-token \
   pattern \
   inline-token
 
