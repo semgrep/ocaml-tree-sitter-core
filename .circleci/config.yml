@@ -57,9 +57,8 @@ jobs:
     docker:
       - image: returntocorp/ocaml:ubuntu
 
-    # 'tree-sitter generate' needs 4 GB of memory for c-sharp.
-    # 'medium+' gives us 6 GB.
-    resource_class: medium+
+    # See earlier note about memory requirements.
+    resource_class: xlarge
 
     working_directory: ~/ocaml-tree-sitter
     steps:

@@ -37,3 +37,6 @@
 [submodule "lang/semgrep-grammars/src/tree-sitter-ocaml"]
 	path = lang/semgrep-grammars/src/tree-sitter-ocaml
 	url = https://github.com/tree-sitter/tree-sitter-ocaml.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-hack"]
+	path = lang/semgrep-grammars/src/tree-sitter-hack
+	url = https://github.com/antoniodejesusochoasolano/tree-sitter-hack.git
