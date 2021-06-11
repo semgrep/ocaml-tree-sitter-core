@@ -31,10 +31,13 @@ install:
 	cd ocaml-src && dune install --root .
 
 # Run the parsers on the collection of input programs in examples/
+# Optionally, run the command ./check-test-output to inspect the results
+# or run further tests.
 #
 .PHONY: test
 test:
 	$(MAKE) parse-examples
+	if [ -f 'check-test-output' ]; then ./check-test-output; fi
 
 # A source grammar.json in semgrep-grammars is not required by gen-c, that's
 # why the following recipe is complicated.
@@ -59,6 +62,7 @@ ocaml-src/tree-sitter-lang.opam: src/grammar.json
 build-ocaml:
 	$(SCRIPTS)/build-ocaml
 	ln -sf ocaml-src/_build/install/default/bin/parse-$(LANG)
+	ln -sf parse-$(LANG) parse
 
 # Parse source using standalone executable and dump OCaml CST
 .PHONY: parse-examples

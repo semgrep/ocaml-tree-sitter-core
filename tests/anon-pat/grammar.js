@@ -7,6 +7,7 @@ module.exports = grammar({
       /[0-9]+/,
       token(/x+/),
       token.immediate(/y+/),
+      token(prec.dynamic(1, 'stays_inline')),
       'end'
     )
   }

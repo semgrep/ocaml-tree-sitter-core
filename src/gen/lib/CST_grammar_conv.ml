@@ -38,7 +38,9 @@ let detect_used ~entrypoint rules =
     | PREC_LEFT (_, x)
     | PREC_RIGHT (_, x)
     | FIELD (_, x) -> scan x
-    | ALIAS _alias -> failwith "Aliases are not supported, run simplify-grammar to get a simplified grammar and try again "
+    | ALIAS _alias ->
+        failwith "Aliases are not supported, run simplify-grammar \
+                  to get a simplified grammar and try again."
   and visit name =
     mark_visited name;
     match get_rule name with
@@ -79,16 +81,6 @@ let translate_constant opt_rule_name cst =
   }
 
 (*
-   We discard the rules describing how to parse a token since we don't
-   need them.
-*)
-let translate_token opt_rule_name body =
-  match name_of_body opt_rule_name body with
-  | Some name -> Token { name; is_inlined = false; description = Token }
-  | None -> Blank (* tree-sitter parses but doesn't expose the token
-                     in its output if it doesn't have a name. *)
-
-(*
    Unlike string constants, patterns without a name are omitted from
    tree-sitter's output. This is not desirable. Normally, we apply a pass
    on the grammar (see Simplify_grammar.ml) to make sure patterns
@@ -98,6 +90,21 @@ let translate_pattern opt_rule_name pat =
   match opt_rule_name with
   | Some name -> Token { name; is_inlined = false; description = Pattern pat }
   | None -> Blank
+
+(*
+   We discard the rules describing how to parse a token since we don't
+   need them.
+*)
+let translate_token opt_rule_name token_contents =
+  match name_of_body opt_rule_name token_contents with
+  | Some name -> Token { name; is_inlined = false; description = Token }
+  | None ->
+      match Missing_node.token_produces_node token_contents with
+      | Some (Literal cst) ->
+          translate_constant opt_rule_name cst
+      | Some (Name name) ->
+          Token { name; is_inlined = false; description = Token }
+      | None -> Blank
 
 (*
    Remove constructs that are not relevant to us, such as precedence levels.
@@ -119,7 +126,9 @@ let rec strip (x : Tree_sitter_t.rule_body) : Tree_sitter_t.rule_body =
   | PREC_LEFT (_, x)
   | PREC_RIGHT (_, x) -> strip x
   | FIELD (_, x) -> strip x
-  | ALIAS _alias -> failwith "Aliases are not supported, run simplify-grammar to get a simplified grammar and try again "
+  | ALIAS _alias ->
+      failwith "Aliases are not supported, run simplify-grammar to get \
+                a simplified grammar and try again."
 
 (*
    Simple translation without normalization. Get rid of PREC_*

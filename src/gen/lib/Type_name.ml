@@ -40,9 +40,44 @@ let name_of_token (token : token) =
   Punct.to_alphanum token.name
 
 (*
+   Currently, this doesn't encode anything, it just fails if it contains
+   undesirable characters. We would need to encode '_' which is used
+   as a prefix terminator in the chain of prefixes we're constructing.
+*)
+let encode_prec_name name =
+  for i = 0 to String.length name - 1 do
+    match name.[i] with
+    | 'A'..'Z'
+    | 'a'..'z'
+    | '0'..'9' -> ()
+    | c ->
+        failwith
+          (sprintf "Unsupported character %C in named precedence level %S"
+             c name)
+  done;
+  name
+
+let name_of_num_prec n =
+  if n >= 0 then sprintf "p%d" n
+  else sprintf "n%d" (abs n)
+
+let name_of_prec_value (p : Tree_sitter_t.prec_value) =
+  match p with
+  | Num_prec n ->
+      name_of_num_prec n
+  | Named_prec name ->
+      sprintf "x%s" (encode_prec_name name)
+
+let name_of_opt_prec_value p =
+  match p with
+  | None -> "0"
+  | Some p -> "x" ^ name_of_prec_value p
+
+(*
    Similar to name_rule_body below but operates on the original tree-sitter
    grammar type (grammar.json). This is used to generate rule names
-   for tokens and patterns that don't have a name.
+   for patterns that don't have a name during the simplify-grammar pass.
+   See the Missing_node module.
 *)
 let name_ts_rule_body (body : Tree_sitter_t.rule_body) =
   let open Tree_sitter_t in
@@ -59,10 +94,14 @@ let name_ts_rule_body (body : Tree_sitter_t.rule_body) =
     | SEQ xs ->
         List.map name_rule_body xs
         |> String.concat "_"
-    | PREC (_, x)
-    | PREC_DYNAMIC (_, x)
-    | PREC_LEFT (_, x)
-    | PREC_RIGHT (_, x) -> name_rule_body x
+    | PREC (p, x) ->
+        sprintf "prec_%s_" (name_of_prec_value p) ^ name_rule_body x
+    | PREC_DYNAMIC (n, x) ->
+        sprintf "pdyn_%s_" (name_of_num_prec n) ^ name_rule_body x
+    | PREC_LEFT (p, x) ->
+        sprintf "pleft_%s_" (name_of_opt_prec_value p) ^ name_rule_body x
+    | PREC_RIGHT (p, x) ->
+        sprintf "pright_%s_" (name_of_opt_prec_value p) ^ name_rule_body x
     | ALIAS alias -> name_rule_body alias.content
     | FIELD (field_name, _x) -> field_name
     | IMMEDIATE_TOKEN x -> "imm_tok_" ^ name_rule_body x
