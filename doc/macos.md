@@ -4,7 +4,7 @@ Extra setup instructions for MacOS
 You must have Xcode and CLT installed for Mac to run make setup.
 
 If you're having trouble with the nodejs setup, check out
-[this guide](doc/node-setup.md).
+[this guide](node-setup.md).
 
 You must also have bash version 4.0 or higher. To make this your default shell:
 1. Run `brew install bash` or `brew upgrade bash`
