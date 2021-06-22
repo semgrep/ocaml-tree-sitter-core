@@ -51,10 +51,10 @@ def parse_stat_file(in_file):
 
 def upload_stats(stats):
     for stat in stats:
-        url = f"{HOST}/api/metric/semgrep.core.{stat['lang']}.parse.pct"
+        url = f"{HOST}/api/metric/semgrep.tree-sitter.{stat['lang']}.parse.pct"
         r = urllib.request.urlopen(url=url, data=stat["parse_success"].encode("ascii"))
         print(r.read().decode())
-        url = f"{HOST}/api/metric/semgrep.core.{stat['lang']}.parse-coverage-lines.num"
+        url = f"{HOST}/api/metric/semgrep.tree-sitter.{stat['lang']}.parse-coverage-lines.num"
         r = urllib.request.urlopen(url=url, data=stat["line_count"].encode("ascii"))
         print(r.read().decode())
 
