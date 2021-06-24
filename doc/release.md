@@ -20,7 +20,7 @@ tree-sitter-* grammar is:
 * `grammar.js` and its dependencies. `grammar.js` should just define a
   grammar object. It should not write to the filesystem.
 * `src/scanner.c` or `src/scanner.cc` if such file exists, and any
-  dependency they may have. There should be no dependency other
+  dependency they may have. There should be no dependency other than
   the standard C or C++ libraries and tree-sitter libraries.
 
 Step 2: Generate and push to GitHub
