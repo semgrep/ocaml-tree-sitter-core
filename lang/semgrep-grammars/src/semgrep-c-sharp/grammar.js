@@ -40,9 +40,11 @@ module.exports = grammar(standard_grammar, {
     identifier: ($, previous) => {
       return choice(
         previous,
-        token(/\$[A-Z_][A-Z_0-9]*/)
+        _semgrep_metavariable
       );
     },
+
+    _semgrep_metavariable: $ => token(/\$[A-Z_][A-Z_0-9]*/),
 
     // Statement ellipsis: '...' not followed by ';'
     expression_statement: ($, previous) => {
