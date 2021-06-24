@@ -173,3 +173,32 @@ foo(...)
     )
   )
 )
+
+=====================================
+Parameter ellipsis in method definition
+=====================================
+
+class A {
+  public void SomeMethod(..., string p, ...) {
+  }
+}
+
+---
+
+(compilation_unit
+  (class_declaration
+    (identifier)
+    (declaration_list
+      (method_declaration
+        (modifier)
+        (void_keyword)
+        (identifier)
+        (parameter_list
+          (parameter
+            (ellipsis))
+          (parameter
+            (predefined_type)
+            (identifier))
+          (parameter
+            (ellipsis)))
+        (block)))))

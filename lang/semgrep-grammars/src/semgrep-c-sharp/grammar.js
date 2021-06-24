@@ -23,6 +23,11 @@ module.exports = grammar(standard_grammar, {
   */
   name: 'c_sharp',
 
+  conflicts: ($, previous) => [
+    ...previous,
+    [$._expression, $.parameter]
+  ],
+
   rules: {
 
     // Entry point
@@ -40,7 +45,16 @@ module.exports = grammar(standard_grammar, {
     identifier: ($, previous) => {
       return choice(
         previous,
-        token(/\$[A-Z_][A-Z_0-9]*/)
+        $._semgrep_metavariable
+      );
+    },
+
+    _semgrep_metavariable: $ => token(/\$[A-Z_][A-Z_0-9]*/),
+
+    parameter: ($, previous) => {
+      return choice(
+        previous,
+        $.ellipsis
       );
     },
 
