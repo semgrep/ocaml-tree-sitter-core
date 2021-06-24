@@ -62,7 +62,7 @@ id=$(git rev-parse --short HEAD)
 if [[ "$dry_run" = false ]]; then
 
   # clean up for repos missing a proper .gitignore
-  find semgrep-grammars -name node_modules -or -name build | xargs rm -rf
+  find semgrep-grammars -name node_modules -or -name build -type d | xargs rm -rf
 
   if [[ -n "$(git status --porcelain)" ]]; then
     cat 2>&1 <<EOF
