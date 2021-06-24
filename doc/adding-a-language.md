@@ -189,8 +189,9 @@ After you have pushed your ocaml-tree-sitter changes to the main
 branch, do the following:
 1. In `ocaml-tree-sitter/lang/Makefile`, add language under
    'SUPPORTED_LANGUAGES' and 'STAT_LANGUAGES'.
-2. In `ocaml-tree-sitter/lang` directory, run `./release X`. This will
-   automatically add code for parsing to `semgrep-X`.
+2. In `ocaml-tree-sitter/lang` directory, run `./release X --dry-run`.
+   If this looks good, please [ask someone at r2c](release.md) to
+   publish the code using `./release X`.
 
 ### Troubleshooting
 
