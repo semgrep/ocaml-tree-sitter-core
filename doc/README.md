@@ -17,4 +17,5 @@ Internals:
 * [Code generation pipeline](code-generation-pipeline.md)
 * [Interpreting the output of tree-sitter](parsing.md)
 * [How to upgrade the grammar for a language](updating-a-grammar.md)
+* [Releasing generated code for semgrep](release.md)
 * [Parsing stats precision](parsing-stats-precision.md)
