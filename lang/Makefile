@@ -15,6 +15,7 @@ SUPPORTED_TS_LANGUAGES = \
   cpp \
   go \
   hack \
+  hcl \
   java \
   javascript \
   kotlin \
@@ -37,6 +38,7 @@ STAT_LANGUAGES = \
   cpp \
   go \
   hack \
+  hcl \
   java \
   javascript \
   kotlin \

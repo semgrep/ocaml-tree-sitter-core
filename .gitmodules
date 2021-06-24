@@ -40,3 +40,6 @@
 [submodule "lang/semgrep-grammars/src/tree-sitter-hack"]
 	path = lang/semgrep-grammars/src/tree-sitter-hack
 	url = https://github.com/antoniodejesusochoasolano/tree-sitter-hack.git
+[submodule "lang/semgrep-grammars/src/tree-sitter-hcl"]
+	path = lang/semgrep-grammars/src/tree-sitter-hcl
+	url = https://github.com/mitchellh/tree-sitter-hcl.git
