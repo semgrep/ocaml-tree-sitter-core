@@ -1,1 +1,0 @@
-git@github.com:returntocorp/semgrep-app.git

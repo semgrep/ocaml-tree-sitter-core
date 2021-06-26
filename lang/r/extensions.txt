@@ -1,3 +1,0 @@
-# File extensions for the R language
-.r
-.R

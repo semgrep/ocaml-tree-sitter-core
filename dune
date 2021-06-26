@@ -1,2 +1,2 @@
 ; Don't build the generated OCaml code. For now.
-(dirs :standard \ tests lang)
+(dirs :standard \ test lang)

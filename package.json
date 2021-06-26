@@ -1,20 +1,5 @@
 {
   "dependencies": {
-    "tree-sitter-c": "file:lang/semgrep-grammars/src/tree-sitter-c",
-    "tree-sitter-c-sharp": "file:lang/semgrep-grammars/src/tree-sitter-c-sharp",
-    "tree-sitter-cli": "^0.19.4",
-    "tree-sitter-cpp": "file:lang/semgrep-grammars/src/tree-sitter-cpp",
-    "tree-sitter-go": "file:lang/semgrep-grammars/src/tree-sitter-go",
-    "tree-sitter-hacklang": "file:lang/semgrep-grammars/src/tree-sitter-hack",
-    "tree-sitter-hcl": "file:lang/semgrep-grammars/src/tree-sitter-hcl",
-    "tree-sitter-java": "file:lang/semgrep-grammars/src/tree-sitter-java",
-    "tree-sitter-javascript": "file:lang/semgrep-grammars/src/tree-sitter-javascript",
-    "tree-sitter-kotlin": "file:lang/semgrep-grammars/src/tree-sitter-kotlin",
-    "tree-sitter-lua": "file:lang/semgrep-grammars/src/tree-sitter-lua",
-    "tree-sitter-ocaml": "file:lang/semgrep-grammars/src/tree-sitter-ocaml",
-    "tree-sitter-r": "file:lang/semgrep-grammars/src/tree-sitter-r",
-    "tree-sitter-ruby": "file:lang/semgrep-grammars/src/tree-sitter-ruby",
-    "tree-sitter-rust": "file:lang/semgrep-grammars/src/tree-sitter-rust",
-    "tree-sitter-typescript": "file:lang/semgrep-grammars/src/tree-sitter-typescript"
+    "tree-sitter-cli": "^0.19.4"
   }
 }

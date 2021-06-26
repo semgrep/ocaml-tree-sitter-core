@@ -1,9 +1,6 @@
 #
 # Build and install code generators and runtime support for generated parsers.
 #
-# Building and installing support for specific programming languages is done in
-# a second phase, in lang/
-#
 
 # Generate this with ./configure
 include config.mk
@@ -37,8 +34,7 @@ update:
 clean:
 	rm -rf bin
 	dune clean
-	make -C tests clean
-	make -C lang clean
+	make -C test clean
 
 .PHONY: distclean
 distclean:
@@ -58,18 +54,7 @@ unit: build
 # Run end-to-end tests (takes a few minutes).
 .PHONY: e2e
 e2e: build
-	$(MAKE) -C tests
-
-# Build and test all the production languages.
-.PHONY: lang
-lang: build
-	$(MAKE) -C lang
-
-# Run parsing stats for the supported languages in lang/.
-.PHONY: stat
-stat:
-	$(MAKE) -C lang
-	$(MAKE) -C lang stat
+	$(MAKE) -C test
 
 .PHONY: install
 install:

@@ -1,3 +1,0 @@
-// I put the extra semicolon to force an ExprStmt, but
-// this should also match a VarDef now
-eval("...");

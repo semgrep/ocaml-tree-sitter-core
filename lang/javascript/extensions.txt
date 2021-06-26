@@ -1,2 +1,0 @@
-# File extensions for javascript source
-.js
