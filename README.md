@@ -1,11 +1,19 @@
-ocaml-tree-sitter
+ocaml-tree-sitter-core
 ==
 
 [![CircleCI](https://circleci.com/gh/returntocorp/ocaml-tree-sitter.svg?style=svg)](https://circleci.com/gh/returntocorp/ocaml-tree-sitter)
 
+⚠️**We're in the process of splitting ocaml-tree-sitter into multiple
+repositories. [See
+details](https://github.com/returntocorp/ocaml-tree-sitter/issues/204). **
+
 Generate OCaml parsers based on
-[tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars,
+[tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.
+This project was originally intended
 for [semgrep](https://github.com/returntocorp/semgrep).
+This repository contains the code for generating code for tree-sitter
+grammars but does not contain grammars for specific languages other
+than tests.
 
 Installation
 --
@@ -34,22 +42,6 @@ For building or rebuilding everything after big changes, use this script:
 ```
 ./scripts/rebuild-everything  # needs root access to install libtree-sitter
 ```
-
-### Testing a language
-
-Say you want to build and test support for kotlin, you would run this:
-
-```
-$ cd lang
-$ ./test-lang kotlin
-```
-
-For details, see [How to upgrade the grammar for a
-language](doc/updating-a-grammar.md).
-
-### Adding a new language
-
-See [How to add support for a new language](doc/adding-a-language.md).
 
 Documentation
 --
