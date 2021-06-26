@@ -10,13 +10,6 @@ jobs:
     docker:
       - image: returntocorp/ocaml:ubuntu
 
-    # 'tree-sitter generate' needs a lot of memory. CircleCI offers
-    # the following types of hosts:
-    # - medium+: 6 GB
-    # - large: 8 GB
-    # - xlarge: 16 GB
-    resource_class: xlarge
-
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
@@ -50,48 +43,6 @@ jobs:
       - run:
           name: end-to-end tests
           command: opam exec -- make e2e
-      - run:
-          name: test languages
-          command: opam exec -- make lang
-  stat:
-    docker:
-      - image: returntocorp/ocaml:ubuntu
-
-    # See earlier note about memory requirements.
-    resource_class: xlarge
-
-    working_directory: ~/ocaml-tree-sitter
-    steps:
-      - checkout
-      - run:
-          name: set up node
-          command: ./scripts/setup-node
-      - run:
-          name: fetch submodules
-          command: git submodule update --init --recursive --depth 1
-      - run:
-          name: install tree-sitter lib
-          command: ./scripts/install-tree-sitter-lib
-      - run:
-          name: configure
-          command: ./configure
-      - run:
-          name: install dependencies
-          command: opam exec -- make setup
-      - run:
-          name: build
-          command: opam exec -- make
-      - run:
-          name: install
-          command: opam exec -- make install
-      - run:
-          name: run parsing stats
-          command: opam exec -- make stat
-      - run:
-          name: upload parsing stats
-          command: python3 ./scripts/upload-stat.py lang/stat.txt
-      - store_artifacts:
-          path: lang/stat.txt
 
 workflows:
   version: 2
@@ -100,30 +51,3 @@ workflows:
     # Default trigger, on commit.
     jobs:
       - build
-
-  scheduled-stats:
-    triggers:
-      - schedule:
-          # Run at 00:00 every day, UTC.
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
-    jobs:
-      - stat:
-          # Run only on these branches (each pushing different images)
-          filters:
-            branches:
-              only:
-                - master
-
-  # This is for testing or for forcing a stats job. Requires pushing
-  # to a branch named 'stats'.
-  stats-on-commit:
-    jobs:
-      - stat:
-          filters:
-            branches:
-              only:
-                - stats
