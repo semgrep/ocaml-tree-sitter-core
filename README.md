@@ -3,7 +3,7 @@ ocaml-tree-sitter-core
 
 [![CircleCI](https://circleci.com/gh/returntocorp/ocaml-tree-sitter.svg?style=svg)](https://circleci.com/gh/returntocorp/ocaml-tree-sitter)
 
-⚠️**We're in the process of splitting ocaml-tree-sitter into multiple
+⚠️ **We're in the process of splitting ocaml-tree-sitter into multiple
 repositories. [See
 details](https://github.com/returntocorp/ocaml-tree-sitter/issues/204). **
 
