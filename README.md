@@ -4,8 +4,8 @@ ocaml-tree-sitter-core
 [![CircleCI](https://circleci.com/gh/returntocorp/ocaml-tree-sitter.svg?style=svg)](https://circleci.com/gh/returntocorp/ocaml-tree-sitter)
 
 ⚠️ **We're in the process of splitting ocaml-tree-sitter into multiple
-repositories. [See
-details](https://github.com/returntocorp/ocaml-tree-sitter/issues/204). **
+repositories**. [See
+details](https://github.com/returntocorp/ocaml-tree-sitter/issues/204).
 
 Generate OCaml parsers based on
 [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.
