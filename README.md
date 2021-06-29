@@ -14,10 +14,10 @@ than tests.
 The ocaml-tree-sitter repositories are:
 * **ocaml-tree-sitter-core**: this repo; provides the code generator that
   takes a tree-sitter grammar and produces an OCaml library from it.
-* [ocaml-tree-sitter-languages]: community repository that has scripts
+* [ocaml-tree-sitter-languages](https://github.com/returntocorp/ocaml-tree-sitter-languages): community repository that has scripts
   for building and publishing OCaml libraries for parsing a variety of
   programming languages.
-* [ocaml-tree-sitter-semgrep]: same as ocaml-tree-sitter-languages but
+* [ocaml-tree-sitter-semgrep](https://github.com/returntocorp/ocaml-tree-sitter-semgrep): same as ocaml-tree-sitter-languages but
   extends each language with constructs specific to
   [semgrep](https://github.com/returntocorp/semgrep) patterns.
 
