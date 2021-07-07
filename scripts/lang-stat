@@ -75,6 +75,7 @@ handle_project() {
   mkdir -p "$proj_workspace"
   proj_err_log="$proj_workspace"/parse-error.log
   rm -f "$proj_err_log"
+  touch "$proj_err_log"
   (
     cd "$proj_workspace"
     rm -f inputs
