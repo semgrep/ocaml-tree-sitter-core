@@ -2,6 +2,7 @@
 #
 TESTS = \
   seq \
+  weird-names \
   choice \
   choice-seq \
   repeat-choice \
