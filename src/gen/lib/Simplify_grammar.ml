@@ -15,6 +15,14 @@ let rec remove_leading_underscores s =
     |> remove_leading_underscores
 
 (*
+   tree-sitter grammar rule names allows capitals but it's not idiomatic.
+   An ocaml type name may not start a capital. Here, we just downcase
+   everything.
+*)
+let normalize_name s =
+  String.lowercase_ascii s
+
+(*
    Create a function that removes the leading underscores and avoids conflicts
    by appending a suffix as needed.
 
@@ -27,7 +35,7 @@ let rec remove_leading_underscores s =
 let make_name_translator () =
   let map = Protect_ident.create ~reserved_dst:[] () in
   fun name ->
-    let preferred_name = remove_leading_underscores name in
+    let preferred_name = remove_leading_underscores name |> normalize_name in
     Protect_ident.add_translation map name ~preferred_dst:preferred_name
 
 let simplify_rule_body translate_name =
