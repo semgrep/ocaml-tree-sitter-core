@@ -66,12 +66,18 @@ let token_comment (tok : token) =
   | External ->
       sprintf "(* %s *)" (comment tok.name)
 
+(*
+   Note about comment placement: ocamlformat misplaces some trailing comments.
+   This is why we place them before the expression they're referring to,
+   which is not that great but better. Check the status of the bug fix at
+   https://github.com/ocaml-ppx/ocamlformat/issues/1662
+*)
 let rec gen_mapper_body var body : node list =
   match body with
   | Symbol name ->
       [ Line (sprintf "map_%s env %s" (trans name) var) ]
   | Token token ->
-      [ Line (sprintf "token env %s %s" var (token_comment token)) ]
+      [ Line (sprintf "%s token env %s" (token_comment token) var) ]
   | Blank ->
       [ Line (sprintf "blank env %s" var)]
   | Repeat (Symbol name)
@@ -79,7 +85,7 @@ let rec gen_mapper_body var body : node list =
       [ Line (sprintf "List.map (map_%s env) %s" (trans name) var) ]
   | Repeat (Token token)
   | Repeat1 (Token token) ->
-      [ Line (sprintf "List.map (token env) %s %s" (token_comment token) var) ]
+      [ Line (sprintf "List.map (token env %s) %s" (token_comment token) var) ]
   | Repeat body
   | Repeat1 body ->
       let env = destruct body in
