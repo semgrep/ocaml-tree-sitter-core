@@ -33,7 +33,7 @@ mkdir -p "$workspace"
   cd "$workspace"
 
   if [[ ! -e "$repo_name" ]]; then
-    git clone --depth 1 "$url"
+    GIT_LFS_SKIP_SMUDGE=1 git clone --depth 1 "$url"
   fi
 
   (
