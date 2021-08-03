@@ -1,5 +1,8 @@
 on:
-  pull_request: {}
+  # Give access to the semgrep token (and other GitHub secrets!) to
+  # strangers making pull requests.
+  pull_request_target: {}
+
   push:
     branches:
     - main
