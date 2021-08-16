@@ -14,7 +14,8 @@ EOF
 
 echo "Check for bash arrays."
 bash --version
-things[0]='' || error "Please upgrade bash. Bash version must be >= 4.0."
+things=() || error "Please upgrade bash. Bash version must be >= 4.4."
+("${things[@]}") || error "Please upgrade bash. Bash version must be >= 4.4."
 
 echo "Check for 'which'."
 which which || error "Missing command: which"
