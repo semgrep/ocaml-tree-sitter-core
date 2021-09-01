@@ -48,6 +48,8 @@ module Tree = struct
 
   external edit : ts_tree -> int -> int -> int -> int -> int -> int -> ts_tree
     = "octs_tree_edit_bytecode" "octs_tree_edit_native"
+
+  external delete : ts_tree -> unit = "octs_tree_delete"
 end
 
 module Point = struct

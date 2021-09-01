@@ -40,13 +40,7 @@ typedef struct _tree {
 } tree_W;
 
 static void finalize_tree(value v) {
-  tree_W *p;
-  p = (tree_W *)Data_custom_val(v);
-  //TODO: ts_tree_delete(p->tree);
-  // this caused some segfaults, probably during Gc after
-  // analyzing many Ruby files. We go around this bug by
-  // running the Ruby parser in a separate process so segfaults
-  // or here memory leak do not reach the main semgrep-core process.
+  // TODO I assume we can then delete this function? But pushing to github first
 }
 
 static struct custom_operations tree_custom_ops = {
@@ -133,6 +127,15 @@ CAMLprim value octs_parser_parse_string(value vParser, value vSource) {
 
   CAMLreturn(v);
 };
+
+void octs_tree_delete(value vTree) {
+  CAMLparam1(vTree);
+
+  tree_W *t = (tree_W *)Data_custom_val(vTree);
+  ts_tree_delete(t->tree);
+
+  CAMLreturn0;
+}
 
 CAMLprim value octs_tree_root_node(value vTree) {
   CAMLparam1(vTree);

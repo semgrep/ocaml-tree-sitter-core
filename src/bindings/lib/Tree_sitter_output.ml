@@ -48,7 +48,9 @@ let of_ts_tree ts_tree =
     incr counter;
     !counter
   in
-  of_ts_node get_node_id root
+  let res = of_ts_node get_node_id root in
+  Tree.delete ts_tree;
+  res
 
 let to_json ?(pretty = false) node =
   let compact_json = Tree_sitter_output_j.string_of_node node in
