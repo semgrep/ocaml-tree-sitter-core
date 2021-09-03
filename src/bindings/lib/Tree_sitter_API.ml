@@ -48,6 +48,15 @@ module Tree = struct
 
   external edit : ts_tree -> int -> int -> int -> int -> int -> int -> ts_tree
     = "octs_tree_edit_bytecode" "octs_tree_edit_native"
+
+  (* This exposes ts_tree_delete, the C function to free
+     the tree-sitter tree. We call this manually as a hack
+     because the OCaml garbage collector is not aware of
+     the tree. Ideally, we would instead give the garbage
+     collector the information it needed about the tree.
+     Currently this function is used solely in of_ts_tree
+     in Tree_sitter_output *)
+  external delete : ts_tree -> unit = "octs_tree_delete"
 end
 
 module Point = struct
