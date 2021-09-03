@@ -53,10 +53,10 @@ module Tree = struct
      the tree-sitter tree. We call this manually as a hack
      because the OCaml garbage collector is not aware of
      the tree. Ideally, we would instead give the garbage
-     collector the information it needed about the tree. 
+     collector the information it needed about the tree.
      Currently this function is used solely in of_ts_tree
      in Tree_sitter_output *)
-    external delete : ts_tree -> unit = "octs_tree_delete"
+  external delete : ts_tree -> unit = "octs_tree_delete"
 end
 
 module Point = struct

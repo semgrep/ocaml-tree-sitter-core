@@ -49,8 +49,8 @@ let of_ts_tree ts_tree =
     !counter
   in
   let res = of_ts_node get_node_id root in
-  (* This manually frees the tree. Do not use the tree in any 
-     way after this. If this is changed, also update the comment 
+  (* This manually frees the tree. Do not use the tree in any
+     way after this. If this is changed, also update the comment
      in Tree_sitter_API *)
   Tree.delete ts_tree;
   res
