@@ -40,15 +40,6 @@ let load_json_file ~src_file ~json_file =
   let src = Src_file.load_file src_file in
   { src; root }
 
-let string_of_file file =
-  let len = (Unix.stat file).Unix.st_size in
-  let ic = open_in_bin file in
-  Fun.protect
-    ~finally:(fun () -> close_in ic)
-    (fun () ->
-       really_input_string ic len
-    )
-
 let parse_source_string ?src_file ts_parser src_data =
   let src = Src_file.load_string ?src_file src_data in
   let root =
@@ -58,7 +49,7 @@ let parse_source_string ?src_file ts_parser src_data =
   { src; root }
 
 let parse_source_file ts_parser src_file =
-  let src_data = string_of_file src_file in
+  let src_data = Util_file.read_file src_file in
   parse_source_string ~src_file ts_parser src_data
 
 let print src =
