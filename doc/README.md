@@ -7,7 +7,6 @@ Overview:
 
 Setup:
 
-* [How to set up Node.js and npm](node-setup.md)
 * [Related git repositories](related-repos.md)
 
 Internals:

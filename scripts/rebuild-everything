@@ -19,9 +19,9 @@ fi
 git submodule update --init --recursive --depth 1
 git clean -dfX
 
-if ! npm --version > /dev/null; then
+if ! node --version > /dev/null; then
   cat >&2 <<EOF
-npm not found.
+'node' command not found.
 Try the following:
 
   ./scripts/setup-node
