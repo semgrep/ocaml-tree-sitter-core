@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# Check the output
+#
+set -eu -o pipefail
+
+n=$(grep -c simple_expansion test.out/ok/var-dot-var.bash.cst)
+
+if [[ "$n" != 2 ]]; then
+  cat >&2 <<EOF
+*** Error: 'simple_expansion' was found $n time(s) in the output but was
+    expected twice.
+EOF
+  exit 1
+fi

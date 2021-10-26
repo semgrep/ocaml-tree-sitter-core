@@ -3,12 +3,7 @@
 # Generate makefiles needed to work for each test language comfortably.
 #
 
-# shellcheck disable=SC2048
-for lang in $* ; do
-  (
-    cd "$lang"
-    if [[ ! -e Makefile ]]; then
-      ln -s ../../lang/Makefile.common Makefile
-    fi
-  )
+for lang; do
+  mkdir -p "$lang"
+  test -e "$lang"/Makefile || ln -s ../Makefile.common "$lang"/Makefile
 done

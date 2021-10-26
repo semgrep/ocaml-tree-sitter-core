@@ -1,0 +1,239 @@
+const SPECIAL_CHARACTERS = [
+  "'", '"',
+  '<', '>',
+  '{', '}',
+  '\\[', '\\]',
+  '(', ')',
+  '`', '$',
+  '|', '&', ';',
+  '\\',
+  '\\s',
+  '#',
+];
+
+module.exports = grammar({
+  name: 'bash',
+
+  inline: $ => [
+    $._statement,
+    $._terminator,
+    $._literal,
+    $._statements2,
+    $._primary_expression,
+    $._simple_variable_name,
+    $._special_variable_name,
+  ],
+
+  externals: $ => [
+    $.heredoc_start,
+    $._simple_heredoc_body,
+    $._heredoc_body_beginning,
+    $._heredoc_body_middle,
+    $._heredoc_body_end,
+    $.file_descriptor,
+    $._empty_value,
+    $._concat,
+    $.variable_name, // Variable name followed by an operator like '=' or '+='
+    $.regex,
+    '}',
+    ']',
+    '<<',
+    '<<-',
+    '\n',
+  ],
+
+  extras: $ => [
+    $.comment,
+    /\s/,
+    /\\\r?\n/,
+    /\\( |\t|\v|\f)/
+  ],
+
+  rules: {
+    program: $ => optional($.command),
+
+    _statements: $ => prec(1, seq(
+      repeat(seq(
+        $._statement,
+        optional(seq('\n', $.heredoc_body)),
+        $._terminator
+      )),
+      $._statement,
+      optional(seq('\n', $.heredoc_body)),
+      optional($._terminator)
+    )),
+
+    _statements2: $ => repeat1(seq(
+      $._statement,
+      optional(seq('\n', $.heredoc_body)),
+      $._terminator
+    )),
+
+    _terminated_statement: $ => seq(
+      $._statement,
+      $._terminator
+    ),
+
+    // Statements
+
+    _statement: $ => choice(
+      // can't remove, otherwise we get:
+      // thread 'main' panicked at 'no entry found for key', cli/src/generate/render.rs:1024:17
+      $.redirected_statement,
+      // $.variable_assignment,
+      $.command,
+      // $.declaration_command,
+      // $.unset_command,
+      // $.test_command,
+      // $.negated_command,
+      // $.for_statement,
+      // $.c_style_for_statement,
+      // $.while_statement,
+      // $.if_statement,
+      // $.case_statement,
+      // $.pipeline,
+      // $.list,
+      // $.subshell,
+      // $.compound_statement,
+      // $.function_definition
+    ),
+
+    redirected_statement: $ => prec(-1, seq(
+      field('body', $._statement),
+      field('redirect', repeat1(choice(
+        $.file_redirect,
+        $.heredoc_redirect,
+        $.herestring_redirect
+      )))
+    )),
+
+    // Commands
+
+    command: $ => prec.left(seq(
+      field('name', $.command_name),
+      repeat(field('argument', $._literal))
+    )),
+
+    command_name: $ => $._literal,
+
+    file_redirect: $ => prec.left(seq(
+      field('descriptor', optional($.file_descriptor)),
+      choice('<', '>', '>>', '&>', '&>>', '<&', '>&', '>|'),
+      field('destination', $._literal)
+    )),
+
+    heredoc_redirect: $ => seq(
+      choice('<<', '<<-'),
+      $.heredoc_start
+    ),
+
+    heredoc_body: $ => choice(
+      $._simple_heredoc_body,
+      seq(
+        $._heredoc_body_beginning,
+        repeat(choice(
+          //$.expansion,
+          $.simple_expansion,
+          //$.command_substitution,
+          $._heredoc_body_middle
+        )),
+        $._heredoc_body_end
+      )
+    ),
+
+    herestring_redirect: $ => seq(
+      '<<<',
+      $._literal
+    ),
+
+    // Expressions
+
+    _expression: $ => choice(
+      $._literal,
+//      $.unary_expression,
+//      $.ternary_expression,
+//      $.binary_expression,
+//      $.postfix_expression,
+//      $.parenthesized_expression
+    ),
+
+    // Literals
+
+    _literal: $ => choice(
+      $.concatenation,
+      $._primary_expression,
+      alias(prec(-2, repeat1($._special_character)), $.word)
+    ),
+
+    _primary_expression: $ => choice(
+      $.word,
+//      $.string,
+//      $.raw_string,
+//      $.ansii_c_string,
+//      $.expansion,
+      $.simple_expansion,
+//      $.string_expansion,
+//      $.command_substitution,
+      $.process_substitution // if removed: thread 'main' panicked at 'no entry found for key'
+    ),
+
+    concatenation: $ => prec(-1, seq(
+      choice(
+        $._primary_expression,
+        $._special_character,
+      ),
+      repeat1(prec(-1, seq(
+        $._concat,
+        choice(
+          $._primary_expression,
+          $._special_character,
+        )
+      ))),
+      optional(seq($._concat, '$'))
+    )),
+
+    _special_character: $ => token(prec(-1, choice('{', '}', '[', ']'))),
+
+    array: $ => seq(
+      '(',
+      repeat($._literal),
+      ')'
+    ),
+
+    simple_expansion: $ => seq(
+      '$',
+      choice(
+        $._simple_variable_name,
+        $._special_variable_name,
+        alias('!', $.special_variable_name),
+        alias('#', $.special_variable_name)
+      )
+    ),
+
+    process_substitution: $ => seq(
+      choice('<(', '>('),
+      $._statements,  // thread 'main' panicked at 'no entry found for key'
+      ')'
+    ),
+
+    comment: $ => token(prec(-10, /#.*/)),
+
+    _simple_variable_name: $ => alias(/\w+/, $.variable_name),
+
+    _special_variable_name: $ => alias(choice('*', '@', '?', '-', '$', '0', '_'), $.special_variable_name),
+
+    word: $ => token(repeat1(choice(
+      noneOf(...SPECIAL_CHARACTERS),
+      seq('\\', noneOf('\\s'))
+    ))),
+
+    test_operator: $ => token(prec(1, seq('-', /[a-zA-Z]+/))),
+
+    _terminator: $ => choice(';', ';;', '\n', '&')
+  }
+});
+
+function noneOf(...characters) {
+  const negatedString = characters.map(c => c == '\\' ? '\\\\' : c).join('')
+  return new RegExp('[^' + negatedString + ']')
+}
