@@ -4,6 +4,8 @@
 #
 set -eu -o pipefail
 
+prog_name=$(basename "$0")
+
 # The official version of tree-sitter we use for the code generator and
 # for the runtime library. Please try to keep this as the single source
 # of truth.
@@ -46,11 +48,6 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
-
-error() {
-  echo "***" "$@" >&2
-  exit 1
-}
 
 mkdir -p downloads
 (

@@ -38,6 +38,11 @@ jobs:
           name: install
           command: opam exec -- make install
       - run:
+          name: install tree-sitter lib
+          command: |
+            ./scripts/install-tree-sitter-cli \
+              --bindir "$(dirname "$(which ocaml-tree-sitter)")"
+      - run:
           name: unit tests
           command: opam exec -- make unit
       - run:

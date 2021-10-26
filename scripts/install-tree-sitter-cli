@@ -4,6 +4,43 @@
 #
 set -eu -o pipefail
 
+prog_name=$(basename "$0")
+
+error() {
+  echo "Current directory: $(pwd)" >&2
+  echo "Error: $@" >&2
+  exit 1
+}
+
+usage() {
+  cat <<EOF
+Compile the tree-sitter executable and optionally install it.
+Usage: $prog_name [OPTIONS]
+Options:
+  --help
+      Show this message and exit.
+  --bindir PATH
+      Global installation directory. Optional.
+EOF
+}
+
+bindir=''
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)
+      usage
+      exit 0
+      ;;
+    --bindir)
+      bindir="$2"
+      shift
+      ;;
+    *)
+      error "Invalid argument passed to '${prog_name}': '$1'"
+  esac
+  shift
+done
+
 dir_name=$(dirname "$BASH_SOURCE")
 if ! [[ -d downloads/tree-sitter ]]; then
   "$dir_name"/download-tree-sitter
@@ -30,6 +67,16 @@ mkdir -p bin
 ln -sf ../"$real_exe" "$exe"
 
 cat <<EOF
-The tree-sitter binary is:
+The project-local path to tree-sitter binary is:
 $(pwd)/$exe
 EOF
+
+if [[ -n "$bindir" ]]; then
+  mkdir -p "$bindir"
+  install -m 0755 "$exe" "$bindir"
+
+cat <<EOF
+Additionally, tree-sitter binary is available as:
+$bindir/tree-sitter
+EOF
+fi
