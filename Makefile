@@ -10,7 +10,9 @@ PROJECT_ROOT = $(shell pwd)
 .PHONY: build
 build:
 	dune build
-	test -e bin || ln -s _build/install/default/bin .
+	test -d bin || mkdir bin
+	ln -s ../_build/install/default/bin/ocaml-tree-sitter \
+	  bin/ocaml-tree-sitter
 
 # Full development setup.
 #

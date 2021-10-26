@@ -2,29 +2,34 @@
 #
 # Install the tree-sitter CLI needed to generate parsers.
 #
-set -eu
+set -eu -o pipefail
 
-if ! [[ -d tree-sitter ]]; then
-  git clone https://github.com/tree-sitter/tree-sitter.git
+dir_name=$(dirname "$BASH_SOURCE")
+if ! [[ -d downloads/tree-sitter ]]; then
+  "$dir_name"/download-tree-sitter
 fi
 
 (
-  cd tree-sitter
+  cd downloads/tree-sitter
   cargo build
 )
 
-exe=$(pwd)/tree-sitter/target/debug/tree-sitter
+real_exe=downloads/tree-sitter/target/debug/tree-sitter
 
-if ! [[ -x "$exe" ]]; then
+if ! [[ -x "$real_exe" ]]; then
   cat >&2 <<EOF
 Compilation of tree-sitter failed or the binary is not where we were
 expecting it. The expected path is:
-$exe
+$real_exe
 EOF
   exit 1
 fi
 
+exe=bin/tree-sitter
+mkdir -p bin
+ln -sf ../"$real_exe" "$exe"
+
 cat <<EOF
 The tree-sitter binary is:
-$(pwd)/tree-sitter/target/debug/tree-sitter
+$(pwd)/$exe
 EOF
