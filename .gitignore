@@ -13,9 +13,6 @@ _build
 # Local OPAM switch
 /_opam/
 
-# Node at root
-/node_modules
-
 /config.sh
 /config.mk
 
