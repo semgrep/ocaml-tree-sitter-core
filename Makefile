@@ -11,7 +11,7 @@ PROJECT_ROOT = $(shell pwd)
 build:
 	dune build
 	test -d bin || mkdir bin
-	ln -s ../_build/install/default/bin/ocaml-tree-sitter \
+	ln -sf ../_build/install/default/bin/ocaml-tree-sitter \
 	  bin/ocaml-tree-sitter
 
 # Full development setup.
