@@ -1,0 +1,77 @@
+#! /usr/bin/env bash
+#
+# Download the tree-sitter sources into downloads/tree-sitter
+#
+set -eu -o pipefail
+
+prog_name=$(basename "$0")
+
+# The official version of tree-sitter we use for the code generator and
+# for the runtime library. Please try to keep this as the single source
+# of truth.
+default_version="0.19.4"
+
+error() {
+  echo "Current directory: $(pwd)" >&2
+  echo "Error: $@" >&2
+  exit 1
+}
+
+usage() {
+  cat <<EOF
+Download the tree-sitter sources.
+Usage: $prog_name [OPTIONS]
+Options:
+  --help
+      Show this message and exit.
+  --version VERSION
+      Install this specific version of tree-sitter. VERSION must be a git tag
+      or a branch name in the original tree-sitter repository.
+      See valid tags at https://github.com/tree-sitter/tree-sitter/tags
+      Current default: $default_version
+EOF
+}
+
+version="$default_version"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)
+      usage
+      exit 0
+      ;;
+    --version)
+      version="$2"
+      shift
+      ;;
+    *)
+      error "Invalid argument passed to '${prog_name}': '$1'"
+  esac
+  shift
+done
+
+mkdir -p downloads
+(
+  cd downloads
+
+  echo "Downloading tree-sitter $version."
+  src_dir=tree-sitter-"$version"
+  if [[ -d "$src_dir" ]]; then
+    echo "Removing previous copy of tree-sitter."
+    rm -rf "$src_dir"
+  fi
+
+  unversioned_src_dir=tree-sitter
+  cat <<EOF
+Creating version-independent symlink for homebrew packager:
+  $(pwd)/$unversioned_src_dir
+EOF
+  rm -f "$unversioned_src_dir"
+  ln -s "$src_dir" "$unversioned_src_dir"
+
+  echo "Fetching tarball for tree-sitter-$version."
+  curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
+  tar xf v"$version".tar.gz
+  if [[ ! -d "$src_dir" ]]; then
+    error "Archive didn't unpack into the expected folder '$src_dir'."
+  fi
+)

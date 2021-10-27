@@ -4,94 +4,33 @@
 #
 set -eu -o pipefail
 
-default_version="0.19.4"
 prog_name=$(basename "$0")
+dir_name=$(dirname "$BASH_SOURCE")
 
-error() {
-  echo "Current directory: $(pwd)" >&2
-  echo "Error: $@" >&2
-  exit 1
-}
+if ! [[ -d downloads/tree-sitter ]]; then
+  "$dir_name"/download-tree-sitter
+fi
 
-usage() {
-  cat <<EOF
-Install the tree-sitter runtime library from source.
-Usage: $prog_name [OPTIONS]
-Options:
-  --help
-      Show this message and exit.
-  --version VERSION
-      Install this specific version of tree-sitter. VERSION must be a git tag
-      or a branch name in the original tree-sitter repository.
-      See valid tags at https://github.com/tree-sitter/tree-sitter/tags
-      Current default: $default_version
-EOF
-}
-
-version="$default_version"
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --help)
-      usage
-      exit 0
-      ;;
-    --version)
-      version="$2"
-      shift
-      ;;
-    *)
-      error "Invalid argument passed to '${prog_name}': '$1'"
-  esac
-  shift
-done
-
-mkdir -p tmp
 (
-  cd tmp
+  cd downloads/tree-sitter
+  make
 
-  echo "Installing tree-sitter library from official source release $version."
-  src_dir=tree-sitter-"$version"
-  if [[ -d "$src_dir" ]]; then
-    echo "Removing previous copy of tree-sitter."
-    rm -rf "$src_dir"
+  # When building from source on homebrew sudo is not allowed
+  # but also not needed
+  if [[ -z "${HOMEBREW_SYSTEM+x}" ]]; then
+    sudo make install
+  else
+    # brew is present
+    make install
   fi
 
-  unversioned_src_dir=tree-sitter
-  cat <<EOF
-Creating version-independent symlink for homebrew packager:
-  $(pwd)/$unversioned_src_dir
-EOF
-  rm -f "$unversioned_src_dir"
-  ln -s "$unversioned_src_dir" "$src_dir"
-
-  echo "Fetching tarball for tree-sitter-$version."
-  curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
-  tar xf v"$version".tar.gz
-  if [[ ! -d "$src_dir" ]]; then
-    error "Archive didn't unpack into the expected folder '$src_dir'."
+  # Ensure libtree-sitter is found at linking time.
+  # MacOS doesn't have ldconfig. Maybe it works without it?
+  if which ldconfig > /dev/null; then
+    libdir=$(
+      pkg-config --libs-only-L tree-sitter \
+        | sed -e 's/^-L//'
+          )
+    sudo ldconfig "$libdir"
   fi
-
-  (
-    cd "$src_dir"
-    make
-
-    # When building from source on homebrew sudo is not allowed
-    # but also not needed
-    if [[ -z "${HOMEBREW_SYSTEM+x}" ]]; then
-      sudo make install
-    else
-      # brew is present
-      make install
-    fi
-
-    # Ensure libtree-sitter is found at linking time.
-    # MacOS doesn't have ldconfig. Maybe it works without it?
-    if which ldconfig > /dev/null; then
-      libdir=$(
-        pkg-config --libs-only-L tree-sitter \
-          | sed -e 's/^-L//'
-            )
-      sudo ldconfig "$libdir"
-    fi
-  )
 )

@@ -33,7 +33,7 @@ if [[ -e grammar.js ]]; then
   # consist of a local 'grammar.json' file.
 
   echo "$name: Generating initial 'grammar.json' from 'grammar.js'."
-  npx tree-sitter generate --no-bindings
+  tree-sitter generate --no-bindings
   mkdir -p src
   if [[ -e orig/LICENSE ]]; then cp -L orig/LICENSE src; fi
   if [[ -e orig/scanner.c ]]; then cp -L orig/scanner.c src; fi
@@ -62,7 +62,7 @@ mv src/grammar.json src/grammar.json.orig
 ocaml-tree-sitter simplify src/grammar.json.orig src/grammar.json
 
 echo "$name: Generating definitive 'parser.c'."
-npx tree-sitter generate src/grammar.json --no-bindings
+tree-sitter generate src/grammar.json --no-bindings
 
 # Make sure we get an error in case of OOM leading to no src/parser.c
 test -f src/parser.c || error \

@@ -1,12 +1,8 @@
 #! /usr/bin/env bash
 #
-# Install Node.js so that we can install the tree-sitter command-line
-# interface.
+# Install Node.js and Cargo (Rust) so that we can install the tree-sitter
+# command-line interface.
 #
-
-cat > ~/.npmrc <<EOF
-prefix = ~/.node
-EOF
 
 cat >> ~/.bashrc <<"EOF"
 export PATH="$HOME/.node/bin:$PATH"
@@ -16,10 +12,10 @@ EOF
 
 if which apt-get > /dev/null 2>&1; then
   sudo apt-get update
-  sudo apt-get install -y nodejs npm
+  sudo apt-get install -y nodejs cargo
 elif which apk > /dev/null 2>&1; then
   sudo apk update
-  sudo apk add nodejs npm python3
+  sudo apk add nodejs python3 cargo
 else
   echo "$0: Unknown or unsupported package manager." >&2
   exit 1
@@ -27,5 +23,3 @@ fi
 
 echo "node is: $(which node)"
 echo "node version: $(node --version)"
-echo "npm is: $(which npm)"
-echo "npm version: $(npm --version)"

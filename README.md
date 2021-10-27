@@ -26,7 +26,8 @@ Installation
 
 Installing `ocaml-tree-sitter` alone isn't of great use at the
 moment. It is useful as part of the flow for generating OCaml parsers
-from tree-sitter grammars, which is done from the `lang/` folder.
+from tree-sitter grammars, which is done from the `lang/` folder
+in [ocaml-tree-sitter-semgrep](https://github.com/returntocorp/ocaml-tree-sitter-semgrep).
 See the **Contributing** instructions below.
 
 Contributing
@@ -44,9 +45,10 @@ Contributing
    `git commit`.
 4. Check out the [extra instructions for MacOS](doc/macos.md).
 
-For building or rebuilding everything after big changes, use this script:
+For building or rebuilding everything after big changes, use these scripts:
 ```
-./scripts/rebuild-everything  # needs root access to install libtree-sitter
+$ ./scripts/install-tree-sitter-cli --bindir DST
+$ ./scripts/rebuild-everything  # needs root access to install libtree-sitter
 ```
 
 Documentation
