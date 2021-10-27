@@ -6,6 +6,14 @@ set -eu -o pipefail
 
 prog_name=$(basename "$0")
 
+# Determine a good default installation folder.
+# Any location in PATH that doesn't require root privileges would do.
+default_bindir=/usr/local/bin
+eval "$(opam env || true)"
+if [[ -e "$(which ocamlc)" ]]; then
+  default_bindir=$(dirname "$(which ocamlc)")
+fi
+
 error() {
   echo "Current directory: $(pwd)" >&2
   echo "Error: $@" >&2
@@ -20,7 +28,8 @@ Options:
   --help
       Show this message and exit.
   --bindir PATH
-      Global installation directory. Optional.
+      Global installation directory.
+      Automagic default: $default_bindir
 EOF
 }
 
