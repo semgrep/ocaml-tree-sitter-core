@@ -57,10 +57,11 @@ fi
 
 (
   cd downloads/tree-sitter
-  cargo build
+  # '--release' produces a smaller (3x) and faster (25x) executable
+  cargo build --release
 )
 
-real_exe=downloads/tree-sitter/target/debug/tree-sitter
+real_exe=downloads/tree-sitter/target/release/tree-sitter
 
 if ! [[ -x "$real_exe" ]]; then
   cat >&2 <<EOF
