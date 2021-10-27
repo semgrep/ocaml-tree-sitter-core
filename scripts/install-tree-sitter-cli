@@ -33,7 +33,7 @@ Options:
 EOF
 }
 
-bindir=''
+bindir=$default_bindir
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --help)
@@ -76,7 +76,7 @@ mkdir -p bin
 ln -sf ../"$real_exe" "$exe"
 
 cat <<EOF
-The project-local path to tree-sitter binary is:
+The project-local path to the tree-sitter binary is:
 $(pwd)/$exe
 EOF
 
