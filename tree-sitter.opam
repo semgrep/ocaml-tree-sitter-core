@@ -1,10 +1,10 @@
 opam-version: "2.0"
-maintainer: "martin@returntocorp.com"
+maintainer: "martin@r2c.dev"
 authors: ["r2c"]
 homepage: "https://github.com/returntocorp/ocaml-tree-sitter"
 bug-reports: "https://github.com/returntocorp/ocaml-tree-sitter/issues"
 dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
-license: "BSD-3-Clause"
+license: "GPL-3.0-only"
 
 build: [
   ["./configure"]
