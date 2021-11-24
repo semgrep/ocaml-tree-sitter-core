@@ -8,6 +8,47 @@ import csv
 import json
 import sys
 
+STAT_PATH = "stat.tmp/"
+NUM_EXAMPLES = 3
+
+def add_to_code_lines(example_arr, file_name):
+    if len(example_arr) >= NUM_EXAMPLES:
+        return False
+
+    # check if the file name is in the example array
+    for example in example_arr:
+        if file_name in example:
+            return False
+
+    return True
+
+def get_code_lines(err):
+    split_file = err['file'].split('/')
+    if len(split_file) > 0:
+        complete_file_path = STAT_PATH + split_file[0] + '/' + err['file']
+    else:
+        complete_file_path = STAT_PATH + err['file']
+    with open(complete_file_path, 'r') as open_file:
+        content = open_file.readlines()
+        # get the surrounding lines
+        start_line = 0
+        end_line = 0
+        if err['start_pos']['row'] > 0:
+            start_line = err['start_pos']['row']-1
+        if err['end_pos']['row'] < len(content):
+            end_line = err['end_pos']['row']+1
+        return ''.join(content[start_line:end_line])
+
+def get_file_and_location(err):
+    file_and_location = (str(err['file']) +
+                    ': start -- ' +
+                    str(err['start_pos']['row']) + '; ' +
+                    str(err['start_pos']['column']) +
+                    '; end -- ' +
+                    str(err['end_pos']['row']) + '; ' +
+                    str(err['end_pos']['column']))
+    return file_and_location
+
 def parse_json_error_log():
     clusters = {}
     for line in sys.stdin:
@@ -19,19 +60,28 @@ def parse_json_error_log():
                     'error_class': key,
                     'num_errors': 0,
                     'num_lines': 0,
+                    'code_location': [],
+                    'code': [],
                 }
                 clusters[key] = clus
             clus = clusters[key]
             clus['num_errors'] = clus['num_errors'] + 1
             err_num_lines = err['end_pos']['row'] - err['start_pos']['row'] + 1
             clus['num_lines'] = clus['num_lines'] + err_num_lines
+
+            if add_to_code_lines(clus['code_location'], err['file']):
+                clus['code_location'].append(get_file_and_location(err))
+                clus['code'].append(get_code_lines(err))
+
     return clusters
 
-
 def print_csv_clusters(clusters):
-    for key, clus in sorted(clusters.items(), key = lambda c: c[1]['num_errors']):
-        writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
-        row = [clus['num_errors'], clus['num_lines'], clus['error_class']]
+    writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
+    writer.writerow(['num errors', 'num lines', 'error class', 'code_location', 'code'])
+    for _key, clus in sorted(clusters.items(), key = lambda c: -c[1]['num_errors']):
+        code_locs_to_string = ';\n'.join(clus['code_location'])
+        all_code_lines = ';\n'.join(clus['code'])
+        row = [clus['num_errors'], clus['num_lines'], clus['error_class'], code_locs_to_string, all_code_lines]
         writer.writerow(row)
 
 
@@ -41,4 +91,3 @@ if __name__ == "__main__":
         print_csv_clusters(clusters)
     else:
         print("reads records from a parse-error.json file on stdin")
-        sys.exit(1)
