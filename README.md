@@ -33,6 +33,14 @@ See the **Contributing** instructions below.
 Contributing
 --
 
+Before you get started, make sure you're ok with signing the
+[CLA](https://cla-assistant.io/returntocorp/ocaml-tree-sitter-core)
+which will be needed before we accept your pull request. The goal is
+only to allow future relicensing without having to track down any past
+contributor, if such need were to arise. Note that the current license is
+GPLv3 and any contribution made today will remain available under that
+license no matter what.
+
 ### Development setup
 
 1. Install [opam](https://opam.ocaml.org/doc/Install.html).
