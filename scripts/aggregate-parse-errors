@@ -12,6 +12,11 @@ import argparse
 STAT_PATH = "stat.tmp/"
 NUM_EXAMPLES = 3
 
+'''
+Returns whether we should add another code example --
+we should return if there are less than the number of examples we want
+and the file name given actually exists.
+'''
 def add_to_code_lines(example_arr, file_name):
     if len(example_arr) >= NUM_EXAMPLES:
         return False
@@ -24,6 +29,7 @@ def add_to_code_lines(example_arr, file_name):
     return True
 
 def get_code_lines(err):
+    # get the complete file path of the file from err array
     split_file = err['file'].split('/')
     if len(split_file) > 0:
         complete_file_path = STAT_PATH + split_file[0] + '/' + err['file']
@@ -40,6 +46,10 @@ def get_code_lines(err):
             end_line = err['end_pos']['row']+1
         return ''.join(content[start_line:end_line])
 
+'''
+Returns the specific file name and line numbers that the error
+started and ended on.
+'''
 def get_file_and_location(err):
     file_and_location = (str(err['file']) +
                     ': start -- ' +
@@ -88,8 +98,8 @@ def print_csv_clusters(clusters):
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-            clusters = parse_json_error_log()
-            print_csv_clusters(clusters)
+        clusters = parse_json_error_log()
+        print_csv_clusters(clusters)
     else:
         print("reads records from a parse-error.json file on stdin")
         sys.exit(1)
