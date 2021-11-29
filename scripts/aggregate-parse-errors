@@ -7,6 +7,7 @@
 import csv
 import json
 import sys
+import argparse
 
 STAT_PATH = "stat.tmp/"
 NUM_EXAMPLES = 3
@@ -87,7 +88,8 @@ def print_csv_clusters(clusters):
 
 if __name__ == "__main__":
     if len(sys.argv) == 1:
-        clusters = parse_json_error_log()
-        print_csv_clusters(clusters)
+            clusters = parse_json_error_log()
+            print_csv_clusters(clusters)
     else:
         print("reads records from a parse-error.json file on stdin")
+        sys.exit(1)
