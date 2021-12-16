@@ -5,7 +5,7 @@ Introduction to the problem
 --
 
 Ideally, the result of tree-sitter parsing should be a CST that can
-be used directly. It is not the case because the json output we get
+be used directly. It is not the case because the json (or C) tree we get
 only has nodes for named rules, lacking details on which path was
 taken within a rule.
 
