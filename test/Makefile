@@ -16,7 +16,8 @@ TESTS = \
   prec \
   ignore-error \
   pattern \
-  inline-token
+  inline-token \
+  explicit-extra
 
 # Build and run all the tests.
 .PHONY: test
