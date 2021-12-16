@@ -21,7 +21,7 @@ type cmd_conf =
   | Simplify of simplify_conf
 
 let safe_run f =
-  try f with
+  try f () with
   | Failure msg ->
       eprintf "\
     Error: %s
@@ -38,6 +38,28 @@ let safe_run f =
         (Printexc.to_string e)
         trace;
       exit 1
+
+let gen (conf : gen_conf) =
+  let tree_sitter_grammar =
+    Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
+      conf.grammar
+  in
+  let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
+  Codegen.ocaml ?out_dir:conf.out_dir ~lang:conf.lang grammar
+
+let simplify (conf : simplify_conf) =
+  Simplify_grammar.run conf.grammar conf.output_path
+
+let run conf =
+  safe_run (fun () ->
+    match conf with
+    | Gen conf -> gen conf
+    | Simplify conf -> simplify conf
+  )
+
+(**************************************************************************)
+(* Command-line interface *)
+(**************************************************************************)
 
 let lang_term =
   let info =
@@ -69,8 +91,6 @@ let out_dir_term =
 
 
 let simplify_cmd =
-  let simplify = Simplify_grammar.run in
-
   let grammar_term =
     let info = Arg.info []
         ~docv:"GRAMMAR_JSON"
@@ -100,27 +120,27 @@ let simplify_cmd =
         https://github.com/returntocorp/ocaml-tree-sitter/issues.";
   ] in
   let info = Term.info ~doc ~man "simplify" in
-  let cmdline_term = Term.(const (safe_run simplify) $ grammar_term $ output_file_term) in
+  let config grammar output_path =
+    Simplify { grammar; output_path }
+  in
+  let cmdline_term = Term.(
+    const config
+    $ grammar_term
+    $ output_file_term) in
   (cmdline_term, info)
 
-
 let gen_cmd =
-  let codegen lang grammar out_dir =
-    let tree_sitter_grammar =
-      Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
-        grammar
-    in
-    let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
-    Codegen.ocaml ?out_dir ~lang grammar in
+  let config lang grammar out_dir =
+    Gen { lang; grammar; out_dir }
+  in
 
   let cmdline_term =
     Term.(
-      const (safe_run codegen)
+      const config
       $ lang_term
       $ grammar_term
       $ out_dir_term
     ) in
-
 
   let doc = "derive ocaml code to interpret tree-sitter parsing output" in
   let man = [
@@ -140,7 +160,6 @@ let gen_cmd =
 
   (cmdline_term, info)
 
-
 let root_cmd =
   let root_term = Term.(ret (const ((`Help (`Pager, None))))) in
   let man = [
@@ -157,6 +176,16 @@ let root_cmd =
   (root_term, info)
 
 let subcommands = [gen_cmd; simplify_cmd]
-let () =
+
+let parse_command_line () : cmd_conf =
+  match Term.eval_choice root_cmd subcommands with
+  | `Error _ -> exit 1
+  | `Version | `Help -> exit 0
+  | `Ok conf -> conf
+
+let main () =
   Printexc.record_backtrace true;
-  Term.(exit @@ eval_choice root_cmd subcommands)
+  let conf = parse_command_line () in
+  run conf
+
+let () = main ()
