@@ -12,6 +12,12 @@ module.exports = grammar({
   extras: ($) => [/\s+/, $.extra],
 
   rules: {
+    // TODO: add test expecting error on 'ocaml-tree-sitter gen'
+    //
+    // bad:
+    // program: ($) => seq('a', $.extra),
+
+    // good:
     program: ($) => seq('a', $.explicit_extra),
 
     explicit_extra: ($) => 'X',
