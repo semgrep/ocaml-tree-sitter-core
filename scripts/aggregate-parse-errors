@@ -36,7 +36,11 @@ def get_code_lines(err):
     else:
         complete_file_path = STAT_PATH + err['file']
     with open(complete_file_path, 'r') as open_file:
-        content = open_file.readlines()
+        try:
+            content = open_file.readlines()
+        except UnicodeDecodeError:
+            print(f"Broken UTF-8 in file {complete_file_path}", file=sys.stderr)
+            content = []
         # get the surrounding lines
         start_line = 0
         end_line = 0
