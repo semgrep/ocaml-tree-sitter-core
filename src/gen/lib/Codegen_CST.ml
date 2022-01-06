@@ -254,7 +254,7 @@ let dump_tree root =
   sexp_of_%s root
   |> Print_sexp.to_stdout
 "
-    grammar.entrypoint
+    (trans grammar.entrypoint)
 
 let generate grammar =
   let buf = Buffer.create 10_000 in
