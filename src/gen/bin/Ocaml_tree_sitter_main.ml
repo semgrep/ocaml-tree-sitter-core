@@ -16,9 +16,15 @@ type simplify_conf = {
   output_path: string;
 }
 
+type to_js_conf = {
+  grammar: string;
+  output_path: string;
+}
+
 type cmd_conf =
   | Gen of gen_conf
   | Simplify of simplify_conf
+  | To_JS of to_js_conf
 
 let safe_run f =
   try f () with
@@ -50,11 +56,15 @@ let gen (conf : gen_conf) =
 let simplify (conf : simplify_conf) =
   Simplify_grammar.run conf.grammar conf.output_path
 
+let to_js (conf : to_js_conf) =
+  To_JS.run conf.grammar conf.output_path
+
 let run conf =
   safe_run (fun () ->
     match conf with
     | Gen conf -> gen conf
     | Simplify conf -> simplify conf
+    | To_JS conf -> to_js conf
   )
 
 (**************************************************************************)
@@ -129,6 +139,44 @@ let simplify_cmd =
     $ output_file_term) in
   (cmdline_term, info)
 
+let to_js_cmd =
+  let grammar_term =
+    let info = Arg.info []
+        ~docv:"GRAMMAR_JSON"
+        ~doc:"$(docv) is a file containing a tree-sitter grammar in json format.
+              Its name is commonly 'grammar.json'."
+    in
+    Arg.required (Arg.pos 0 Arg.(some file) None info) in
+
+  let output_file_term =
+    let info = Arg.info []
+        ~docv:"OUTPUT_FILE"
+        ~doc:"$(docv) is a file containing the recovered tree-sitter grammar in
+              JavaScript format."
+    in
+    Arg.required (Arg.pos 1 Arg.(some string) None info) in
+
+  let doc =
+    "recover a tree-sitter grammar.js from grammar.json" in
+
+  let man = [
+    `S Manpage.s_description;
+    `P "simplify-grammar removes aliases and unhides hidden rules,
+        for easier support by ocaml-tree-sitter.";
+    `S Manpage.s_bugs;
+    `P "Check out bug reports at
+        https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+  ] in
+  let info = Term.info ~doc ~man "to-js" in
+  let config grammar output_path =
+    To_JS { grammar; output_path }
+  in
+  let cmdline_term = Term.(
+    const config
+    $ grammar_term
+    $ output_file_term) in
+  (cmdline_term, info)
+
 let gen_cmd =
   let config lang grammar out_dir =
     Gen { lang; grammar; out_dir }
@@ -175,7 +223,7 @@ let root_cmd =
   let info = Term.info ~man ~doc "ocaml-tree-sitter" in
   (root_term, info)
 
-let subcommands = [gen_cmd; simplify_cmd]
+let subcommands = [gen_cmd; simplify_cmd; to_js_cmd]
 
 let parse_command_line () : cmd_conf =
   match Term.eval_choice root_cmd subcommands with

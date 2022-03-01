@@ -66,3 +66,4 @@ open Types
 type t = node list
 
 val to_string : t -> string
+val to_file : string -> t -> unit
