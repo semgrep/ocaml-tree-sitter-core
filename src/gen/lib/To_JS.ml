@@ -137,7 +137,8 @@ let pp_precedence_level ?prefix:_ ?(is_last = true) level =
 
 let pp_grammar (x : grammar) : Indent.t =
   [
-    Line "// JavaScript generated from JSON by 'ocaml-tree-sitter to-js'";
+    Line
+      "// JavaScript grammar recovered from JSON by 'ocaml-tree-sitter to-js'";
     Line "module.exports = grammar({";
     Block [
       Line (sprintf "name: %s," (str x.name));

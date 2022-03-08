@@ -61,6 +61,10 @@ echo "$name: Simplifying 'grammar.json' for ocaml-tree-sitter."
 mv src/grammar.json src/grammar.json.orig
 ocaml-tree-sitter simplify src/grammar.json.orig src/grammar.json
 
+echo "$name: Recovering informational JS grammars from JSON."
+ocaml-tree-sitter to-js src/grammar.json.orig grammar-rev.js.orig
+ocaml-tree-sitter to-js src/grammar.json grammar-rev.js
+
 echo "$name: Generating definitive 'parser.c'."
 tree-sitter generate src/grammar.json --no-bindings
 
