@@ -127,7 +127,7 @@ let to_channel oc nodes =
 
 let to_file output_file nodes =
   let data = to_string nodes in
-  let oc = open_out output_file in
+  let oc = open_out_bin output_file in
   Fun.protect
     ~finally:(fun () -> close_out_noerr oc)
     (fun () -> output_string oc data)
