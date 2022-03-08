@@ -17,8 +17,8 @@ type simplify_conf = {
 }
 
 type to_js_conf = {
-  grammar: string;
-  output_path: string;
+  input_path: string option;
+  output_path: string option;
 }
 
 type cmd_conf =
@@ -57,7 +57,7 @@ let simplify (conf : simplify_conf) =
   Simplify_grammar.run conf.grammar conf.output_path
 
 let to_js (conf : to_js_conf) =
-  To_JS.run conf.grammar conf.output_path
+  To_JS.run conf.input_path conf.output_path
 
 let run conf =
   safe_run (fun () ->
@@ -140,21 +140,21 @@ let simplify_cmd =
   (cmdline_term, info)
 
 let to_js_cmd =
-  let grammar_term =
+  let input_path_term =
     let info = Arg.info []
-        ~docv:"GRAMMAR_JSON"
+        ~docv:"INPUT_FILE"
         ~doc:"$(docv) is a file containing a tree-sitter grammar in json format.
               Its name is commonly 'grammar.json'."
     in
-    Arg.required (Arg.pos 0 Arg.(some file) None info) in
+    Arg.value (Arg.pos 0 Arg.(some file) None info) in
 
-  let output_file_term =
+  let output_path_term =
     let info = Arg.info []
         ~docv:"OUTPUT_FILE"
         ~doc:"$(docv) is a file containing the recovered tree-sitter grammar in
               JavaScript format."
     in
-    Arg.required (Arg.pos 1 Arg.(some string) None info) in
+    Arg.value (Arg.pos 1 Arg.(some string) None info) in
 
   let doc =
     "recover a tree-sitter grammar.js from grammar.json" in
@@ -168,13 +168,13 @@ let to_js_cmd =
         https://github.com/returntocorp/ocaml-tree-sitter/issues.";
   ] in
   let info = Term.info ~doc ~man "to-js" in
-  let config grammar output_path =
-    To_JS { grammar; output_path }
+  let config input_path output_path =
+    To_JS { input_path; output_path }
   in
   let cmdline_term = Term.(
     const config
-    $ grammar_term
-    $ output_file_term) in
+    $ input_path_term
+    $ output_path_term) in
   (cmdline_term, info)
 
 let gen_cmd =

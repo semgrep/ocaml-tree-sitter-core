@@ -3,5 +3,5 @@
    debugging.
 *)
 
-(* Usage: run "grammar.json" "grammar.js" *)
-val run : string -> string -> unit
+(* Usage: run (Some "grammar.json") (Some "grammar.js") *)
+val run : string option -> string option -> unit

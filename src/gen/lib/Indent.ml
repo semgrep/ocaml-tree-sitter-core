@@ -120,6 +120,11 @@ let to_string nodes =
   print buf 0 (simplify nodes |> collapse);
   Buffer.contents buf
 
+let to_channel oc nodes =
+  let data = to_string nodes in
+  output_string oc data;
+  flush oc
+
 let to_file output_file nodes =
   let data = to_string nodes in
   let oc = open_out output_file in
