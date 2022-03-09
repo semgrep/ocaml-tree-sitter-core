@@ -43,8 +43,7 @@ test:
 # why the following recipe is complicated.
 TS_PARSER_SRC = ../semgrep-grammars/lang/$(LANG)/src/grammar.json
 .PHONY: gen-c
-gen-c: src/grammar.json
-src/grammar.json:
+gen-c:
 	if [ ! -e src/parser.c ] \
           || [ ! -e "$(TS_PARSER_SRC)" ] \
           || [ "$(TS_PARSER_SRC)" -nt src/parser.c ]; then \
