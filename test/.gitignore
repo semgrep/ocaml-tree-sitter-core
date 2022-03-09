@@ -28,3 +28,5 @@ tree-sitter-parser.js
 /*/ocaml-src
 /*/parse-*
 /*/parse
+/*/grammar-rev.js.orig
+/*/grammar-rev.js
