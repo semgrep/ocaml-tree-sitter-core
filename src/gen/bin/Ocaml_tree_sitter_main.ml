@@ -1,6 +1,10 @@
 (*
    Application's entrypoint.
 *)
+
+(* for cmdliner >= 1.1.0 *)
+[@@@alert "-deprecated"]
+
 open Printf
 open Cmdliner
 open Tree_sitter_gen
