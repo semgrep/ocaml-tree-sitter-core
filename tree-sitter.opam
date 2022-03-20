@@ -17,7 +17,7 @@ depends: [
   "alcotest"
   "ANSITerminal"
   "atdgen"
-  "cmdliner" {= "1.0.4"}
+  "cmdliner"
   "conf-pkg-config"
   "dune" {>= "2.1"}
   "ocaml"
