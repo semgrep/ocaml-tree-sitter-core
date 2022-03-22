@@ -111,8 +111,10 @@ let get_region x start end_ =
   else if first_row < last_row then
     let buf = Buffer.create 100 in
     safe_add_rest_of_line buf x first_row start.column;
+    Buffer.add_string buf "\n";
     for row = first_row + 1 to last_row - 1 do
-      safe_add_whole_line buf x row
+      safe_add_whole_line buf x row;
+      Buffer.add_string buf "\n";
     done;
     safe_add_beginning_of_line buf x last_row end_.column;
     Buffer.contents buf
