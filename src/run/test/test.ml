@@ -3,6 +3,7 @@
 *)
 
 let test_suites : unit Alcotest.test list = [
-  Util_string.test;
   Matcher.test;
+  Src_file.test;
+  Util_string.test;
 ]

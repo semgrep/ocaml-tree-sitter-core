@@ -10,6 +10,14 @@ type info = {
 
 type t = private {
   info: info;
+  (*
+     Lines represent the contents of the input split after the line
+     terminator '\n'.
+     If the input ends with '\n', then the last line will be "" i.e.
+     all the lines are LF-terminated except the last one.
+     The empty file contains one empty line.
+     Concatenating the strings in the array results in the original data.
+  *)
   lines: string array;
 }
 
@@ -35,6 +43,9 @@ val load_string : ?src_name:string -> ?src_file:string -> string -> t
 (*
    Return the substring corresponding to the specified region.
    It may or may not coincide with the boundaries of a token.
+
+   Arguments: start, end_ where end_ is the position of the first character
+   *after* the selection region.
 *)
 val get_region : t -> Loc.pos -> Loc.pos -> string
 
