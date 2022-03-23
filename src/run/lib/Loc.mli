@@ -3,12 +3,12 @@
 *)
 
 type pos = Tree_sitter_bindings.Tree_sitter_output_t.position = {
-  row : int;
-  column : int;
+  row : int; (* 0-based *)
+  column : int; (* 0-based *)
 }
 
 (* TODO: include filename as a field? *)
 type t = {
-  start: pos;
-  end_: pos;
+  start: pos; (* inclusive *)
+  end_: pos; (* exclusive i.e. start = end_ gives the empty string. *)
 }

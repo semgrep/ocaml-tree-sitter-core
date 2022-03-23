@@ -10,6 +10,11 @@ type info = {
 
 type t = private {
   info: info;
+  (*
+     Lines represent the contents of the input split on '\n'.
+     If the input ends with '\n', then the last line is "".
+     The empty file contains one empty line.
+  *)
   lines: string array;
 }
 
@@ -35,6 +40,9 @@ val load_string : ?src_name:string -> ?src_file:string -> string -> t
 (*
    Return the substring corresponding to the specified region.
    It may or may not coincide with the boundaries of a token.
+
+   Arguments: start, end_ where end_ is the position of the first character
+   *after* the selection region.
 *)
 val get_region : t -> Loc.pos -> Loc.pos -> string
 
