@@ -46,7 +46,7 @@ let test_get_region () =
   let _pos2 = { row = 0; column = 2 } in
   let pos3 = { row = 0; column = 3 } in
   let pos4 = { row = 1; column = 0 } in
-  let _pos5 = { row = 1; column = 1 } in
+  let pos5 = { row = 1; column = 1 } in
   let pos6 = { row = 1; column = 2 } in
   let pos7 = { row = 1; column = 3 } in
   let pos8 = { row = 2; column = 0 } in
@@ -68,7 +68,10 @@ let test_get_region () =
   check "45\r\n8" pos4 pos9;
   check "9" pos9 pos10;
   check "9\n" pos9 pos11;
-  check "89\n" pos8 pos12 (* invalid bounds *)
+  check "89\n" pos8 pos12; (* invalid bounds *)
+  check "\n" pos3 pos4;
+  check "\n4" pos3 pos5;
+  check "\n45\r\n" pos3 pos8
 
 let test = "Src_file", [
   "load_file", `Quick, test_load_file;
