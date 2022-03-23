@@ -21,13 +21,28 @@ let info x = x.info
 
 let get_num_lines x = Array.length x.lines
 
+let split_after_newline s =
+  let rec split acc start pos =
+    if pos < String.length s then
+      match s.[pos] with
+      | '\n' ->
+          let new_start = pos + 1 in
+          let acc = String.sub s start (new_start - start) :: acc in
+          split acc new_start new_start
+      | _ ->
+          split acc start (pos + 1)
+    else
+      String.sub s start (pos - start) :: acc |> List.rev
+  in
+  split [] 0 0
+
 let load_string ?(src_name = "<source>") ?src_file src_contents =
   let info =
     match src_file with
     | None -> { name = src_name; path = None }
     | Some path -> { name = path; path = Some path }
   in
-  let lines = String.split_on_char '\n' src_contents in
+  let lines = split_after_newline src_contents in
   {
     info;
     lines = Array.of_list lines;
@@ -104,10 +119,8 @@ let get_region x start end_ =
   else if first_row < last_row then
     let buf = Buffer.create 100 in
     safe_add_rest_of_line buf x first_row start.column;
-    Buffer.add_string buf "\n";
     for row = first_row + 1 to last_row - 1 do
-      safe_add_whole_line buf x row;
-      Buffer.add_string buf "\n";
+      safe_add_whole_line buf x row
     done;
     safe_add_beginning_of_line buf x last_row end_.column;
     Buffer.contents buf

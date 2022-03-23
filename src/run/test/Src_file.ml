@@ -32,10 +32,10 @@ let test_load_file () =
       (expected_lines = lines_from_file)
   in
   check [| "" |] "";
-  check [| ""; "" |] "\n";
-  check [| "a"; "" |] "a\n";
-  check [| "a"; "b\r"; "c" |] "a\nb\r\nc";
-  check [| "a\r"; "" |] "a\r\n"
+  check [| "\n"; "" |] "\n";
+  check [| "a\n"; "" |] "a\n";
+  check [| "a\n"; "b\r\n"; "c" |] "a\nb\r\nc";
+  check [| "a\r\n"; "" |] "a\r\n"
 
 let test_get_region () =
   let open Loc in

@@ -11,9 +11,12 @@ type info = {
 type t = private {
   info: info;
   (*
-     Lines represent the contents of the input split on '\n'.
-     If the input ends with '\n', then the last line is "".
+     Lines represent the contents of the input split after the line
+     terminator '\n'.
+     If the input ends with '\n', then the last line will be "" i.e.
+     all the lines are LF-terminated except the last one.
      The empty file contains one empty line.
+     Concatenating the strings in the array results in the original data.
   *)
   lines: string array;
 }
