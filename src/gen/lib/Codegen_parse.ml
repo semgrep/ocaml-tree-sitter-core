@@ -119,7 +119,8 @@ let preamble grammar =
 
 let rec fmt_regexp (x : rule_body) =
   match x with
-  | Symbol name -> [Line (sprintf "Token (Name %S);" name)]
+  | Symbol name
+  | Alias (name, _) -> [Line (sprintf "Token (Name %S);" name)]
   | Token token -> [Line (sprintf "Token (Literal %S);" token.name)]
   | Blank -> [Line "Nothing;"]
   | Repeat x ->
@@ -259,7 +260,8 @@ let wrap_seq elts =
 
 let rec gen_trans_capture rule_body : exp =
   match rule_body with
-  | Symbol name ->
+  | Symbol name
+  | Alias (name, _) ->
       Fun (fun arg ->
         Code [
           Line (sprintf "trans_%s (Run.matcher_token %s)"

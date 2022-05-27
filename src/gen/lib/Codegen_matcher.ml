@@ -28,7 +28,8 @@ let trans = Codegen_util.translate_ident
 *)
 let rec make_seq_elt (body : rule_body) : seq_elt =
   match body with
-  | Symbol name ->
+  | Symbol name
+  | Alias (name, _) ->
       Opaque [Line (sprintf "parse_node_%s" (trans name))]
 
   | Token { name; _ } ->

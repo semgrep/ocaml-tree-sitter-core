@@ -128,6 +128,7 @@ let name_rule_body body =
     | Seq l ->
         List.map name_rule_body l
         |> String.concat "_"
+    | Alias (ident, _) -> ident
   in
   let full_name = name_rule_body body in
   Abbrev.words full_name
@@ -139,7 +140,8 @@ let name_rule_body body =
 let hash_rule_body body =
   let buf = Buffer.create 100 in
   let rec aux = function
-    | Symbol ident -> Buffer.add_string buf ident
+    | Symbol ident
+    | Alias (ident, _) -> Buffer.add_string buf ident
     | Token token -> Buffer.add_string buf token.name
     | Blank -> Buffer.add_string buf "blank"
     | Repeat body ->

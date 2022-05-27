@@ -102,6 +102,24 @@ type rule_body =
      suitable for use a classic or polymorphic variant, e.g. "Exp_int". *)
 
   | Seq of rule_body list
+  | Alias of ident * rule_body
+  (* Alias (dummy rule name, anonymous rule)
+
+     This is used as a hack to work around pattern nodes (/.../)
+     or token nodes (token(...)) that don't show up in the CST produced
+     by tree-sitter. Wrapping such constructs in a alias() allows the CST
+     node to show up e.g. /[a-z]+/ would become
+     alias(/[a-z]+/, $.pat_1234) with $.pat_1234 being a dummy rule
+     with a unique name.
+
+     An earlier workaround used to consist solely in creating a named
+     rule for the pattern or token, but this would change the parsing
+     semantics in some cases.
+
+     Note that aliases that exist in the source grammar are always
+     discarded because in general they're ambiguous names and it's simpler
+     to ignore them.
+  *)
 [@@deriving show {with_path = false}]
 
 type rule = {
@@ -151,16 +169,6 @@ type grammar = {
 (* alias *)
 type t = grammar
 [@@deriving show {with_path = false}]
-
-let is_leaf = function
-  | Token _
-  | Blank -> true
-  | Symbol _
-  | Repeat _
-  | Repeat1 _
-  | Choice _
-  | Optional _
-  | Seq _ -> false
 
 (* Make an efficient rule-lookup function. *)
 let make_rule_lookup grammar =

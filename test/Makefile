@@ -18,7 +18,8 @@ TESTS = \
   pattern \
   inline-token \
   explicit-extra \
-  reserved
+  reserved \
+  inline
 
 # Build and run all the tests.
 .PHONY: test

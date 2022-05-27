@@ -14,5 +14,21 @@ for lang in $* ; do
     fi
     mkdir -p test/ok
     mkdir -p test/xfail
+
+    name=${lang//-/_}
+
+    if [[ ! -e grammar.js ]]; then
+      cat > grammar.js <<EOF
+/*
+  [DESCRIBE WHAT THIS TEST IS FOR]
+*/
+module.exports = grammar({
+  name: '$lang',
+  rules: {
+    program: $ => 'hello'
+  }
+});
+EOF
+    fi
   )
 done

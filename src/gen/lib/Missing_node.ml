@@ -80,7 +80,21 @@ let extract_pattern_rules_from_body add_rule body =
     | PATTERN _ as x ->
         let preferred_name = Type_name.name_ts_rule_body x in
         let name = add_rule preferred_name x in
-        SYMBOL name
+        (*
+           Hack to make the node appear in the CST due to bug
+           https://github.com/tree-sitter/tree-sitter/issues/1156
+           This allows keeping the rule inline, which is important to preserve
+           parsing behavior in some instances as was observed on the
+           PHP grammar:
+           https://github.com/returntocorp/ocaml-tree-sitter-core/issues/34
+           [simpler example needed]
+        *)
+        ALIAS {
+          value = name;
+          named = true;
+          content = x;
+          must_be_preserved = true;
+        }
 
     | IMMEDIATE_TOKEN _
     | TOKEN _ as x ->

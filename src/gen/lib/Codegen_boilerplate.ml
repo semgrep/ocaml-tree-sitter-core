@@ -38,6 +38,7 @@ let todo (env : env) _ =
 let destruct x =
   match x with
   | Symbol _ -> ["x", x]
+  | Alias _ -> ["x", x]
   | Token _ -> ["tok", x]
   | Blank -> []
   | Repeat _ -> ["xs", x]
@@ -74,7 +75,8 @@ let token_comment (tok : token) =
 *)
 let rec gen_mapper_body var body : node list =
   match body with
-  | Symbol name ->
+  | Symbol name
+  | Alias (name, _) ->
       [ Line (sprintf "map_%s env %s" (trans name) var) ]
   | Token token ->
       [ Line (sprintf "%s token env %s" (token_comment token) var) ]

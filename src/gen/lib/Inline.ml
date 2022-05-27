@@ -19,6 +19,7 @@ let rec iter_ident f body =
   | Choice cases -> List.iter (fun (_name, body) -> iter_ident f body) cases
   | Optional body -> iter_ident f body
   | Seq body_list -> List.iter (iter_ident f) body_list
+  | Alias (ident, _) -> f ident
 
 let usage_tracker () =
   let used = Hashtbl.create 100 in
@@ -101,6 +102,9 @@ let rewrite_body
         Optional (rewrite_body body)
     | Seq body_list ->
         Seq (rewrite_seq body_list)
+    | Alias (ident, x) ->
+        mark_used_after_inlining ident;
+        Alias (ident, rewrite_body x)
 
   and rewrite_choice ~is_root l =
     List.map (fun (name, body) ->

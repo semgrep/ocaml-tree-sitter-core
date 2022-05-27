@@ -39,9 +39,10 @@ let detect_used ~entrypoint rules =
     | PREC_LEFT (_, x)
     | PREC_RIGHT (_, x)
     | FIELD (_, x) -> scan x
-    | ALIAS _alias ->
-        failwith "Aliases are not supported, run simplify-grammar \
-                  to get a simplified grammar and try again."
+    | ALIAS { value = name; content; _ } ->
+        if not (was_visited name) then
+          visit name;
+        scan content
   and visit name =
     mark_visited name;
     match get_rule name with
@@ -127,9 +128,7 @@ let rec strip (x : Tree_sitter_t.rule_body) : Tree_sitter_t.rule_body =
   | PREC_LEFT (_, x)
   | PREC_RIGHT (_, x) -> strip x
   | FIELD (_, x) -> strip x
-  | ALIAS _alias ->
-      failwith "Aliases are not supported, run simplify-grammar to get \
-                a simplified grammar and try again."
+  | ALIAS alias -> ALIAS { alias with content = strip alias.content }
 
 (*
    Simple translation without normalization. Get rid of PREC_*
@@ -165,12 +164,14 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
     | CHOICE [x; BLANK] -> Optional (translate x)
     | CHOICE l -> Choice (translate_choice rule_name l)
     | SEQ l -> Seq (List.map translate l)
+    | ALIAS x ->
+        assert x.must_be_preserved;
+        Alias (x.value, translate x.content)
     | PREC _ -> assert false
     | PREC_DYNAMIC _ -> assert false
     | PREC_LEFT _ -> assert false
     | PREC_RIGHT _ -> assert false
     | FIELD _ -> assert false
-    | ALIAS _ -> assert false
 
   and translate_choice opt_rule_name cases =
     let translated_cases = List.map translate cases |> Util_list.deduplicate in
@@ -190,7 +191,8 @@ let rec normalize x =
   match x with
   | Symbol _
   | Token _
-  | Blank as x -> x
+  | Blank
+  | Alias _ as x -> x
   | Repeat x -> Repeat (normalize x)
   | Repeat1 x -> Repeat1 (normalize x)
   | Choice l ->
@@ -291,11 +293,12 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
   let all_rules =
     make_external_rules x.externals @ grammar_rules
     |> List.map (fun (name, body) ->
+      let is_inlined_rule = not (is_used name) in
       {
         name;
         body;
         is_rec = true; (* set correctly by tsort below *)
-        is_inlined_rule = not (is_used name);
+        is_inlined_rule = is_inlined_rule;
         is_inlined_type = false
       }
     )
