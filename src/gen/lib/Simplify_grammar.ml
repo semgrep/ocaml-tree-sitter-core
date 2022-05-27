@@ -54,8 +54,11 @@ let simplify_rule_body translate_name =
     | PREC_LEFT (prec, x) -> PREC_LEFT (prec, simplify x)
     | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, simplify x)
     | ALIAS alias ->
-        (* remove the alias *)
-        simplify alias.content
+        let content = simplify alias.content in
+        if alias.must_be_preserved then
+          ALIAS { alias with content }
+        else
+          content
     | FIELD (field_name, x) -> FIELD (field_name, simplify x)
     | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (simplify x)
     | TOKEN x -> TOKEN (simplify x)
@@ -115,8 +118,12 @@ let apply_inline grammar =
     | PREC_LEFT (prec, x) -> PREC_LEFT (prec, inline parents x)
     | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, inline parents x)
     | ALIAS alias ->
-        (* remove the alias *)
-        inline parents alias.content
+        (* remove aliases other than those introduced automatically *)
+        let content = inline parents alias.content in
+        if alias.must_be_preserved then
+          ALIAS { alias with content }
+        else
+          content
     | FIELD (field_name, x) -> FIELD (field_name, inline parents x)
     | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (inline parents x)
     | TOKEN x -> TOKEN (inline parents x)

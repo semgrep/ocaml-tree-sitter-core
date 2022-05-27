@@ -67,7 +67,8 @@ let is_rectype get_rule (x : rule) =
   *)
   let rec visit rule_body =
     match rule_body with
-    | Symbol name ->
+    | Symbol name
+    | Alias (name, _) ->
         if name = start_name then
           true
         else if was_visited name then

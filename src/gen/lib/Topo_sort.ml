@@ -17,6 +17,7 @@ let rec collect_names acc x =
   | Symbol name -> name :: acc
   | Token _
   | Blank -> acc
+  | Alias (name, _) -> name :: acc
 
 let extract_rule_deps (rule : rule) =
   let deps = collect_names [] rule.body in

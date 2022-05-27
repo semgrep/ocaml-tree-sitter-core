@@ -65,9 +65,15 @@ type prec_value = [
   <ocaml repr="classic">
 
 type alias = {
+  (* identifier (named=true) replacing the rule name (content=SYMBOL),
+     or string literal (named=false) returned in the parsing output. *)
   value: string;
-    (* identifier (named=true) replacing the rule name (content=SYMBOL),
-       or string literal (named=false) returned in the parsing output. *)
   named: bool;
   content: rule_body;
+
+  (* Internal to ocaml-tree-sitter.
+     This indicates an alias that was introduced during the grammar
+     transformation and must be preserved. Aliases from the source grammar
+     should not be preserved. *)
+  ~must_be_preserved: bool;
 }

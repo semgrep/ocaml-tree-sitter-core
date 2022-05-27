@@ -1,7 +1,7 @@
 (*
-   Representation of an CST, as derived from a grammar definition.
+   Representation of a CST, as derived from a grammar definition.
    This representation is meant to be straightforward to translate to
-   Reason/OCaml type definitions.
+   OCaml type definitions.
 
    A raw grammar definition as expressed in a grammar.json file is readable
    and writable using the Tree_sitter_t and Tree_sitter_j modules derived

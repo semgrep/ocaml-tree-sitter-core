@@ -43,6 +43,7 @@ let compute_size resolve node =
         1 + List.fold_left (fun sum (_, x) -> sum + 1 + size (resolve x)) 0 xs
     | Seq xs ->
         1 + List.fold_left (fun sum x -> sum + size (resolve x)) 0 xs
+    | Alias _ -> 0
   in
   size (resolve node)
 
@@ -69,7 +70,8 @@ let sort_candidates ~min_uses ~min_size orig_rules =
     match node with
     | Symbol _
     | Token _
-    | Blank -> ()
+    | Blank
+    | Alias _ -> ()
     | Repeat x
     | Repeat1 x
     | Optional x -> add x
@@ -100,7 +102,8 @@ let replace_nodes node_names root_node =
         match node with
         | Symbol _
         | Token _
-        | Blank -> node
+        | Blank
+        | Alias _ -> node
         | Repeat x -> Repeat (replace x)
         | Repeat1 x -> Repeat1 (replace x)
         | Optional x -> Optional (replace x)
