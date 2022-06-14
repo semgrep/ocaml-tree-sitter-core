@@ -95,6 +95,7 @@ EOF
         exit 1
       fi
     fi
+    touch inputs
     for ext in "${extensions[@]}"; do
       if [[ -n "$ext" ]]; then
         esc=$(echo "$ext" | escape_ext)
@@ -114,6 +115,7 @@ EOF
   ext_err_count=0
   other_err_count=0
 
+  touch "$global_json_err_log"
   for input in "${inputs[@]}"; do
     echo -n "$input"
     file_line_count=$(cat "$proj_workspace/$input" | wc -l)
@@ -157,6 +159,9 @@ main() {
   # Read lines into array after removing comments and blank lines.
   readarray -t urls < <(grep -v '^ *\(#\| *$\)' "$projects_file")
   readarray -t extensions < <(grep -v '^ *\(#\| *$\)' "$extensions_file")
+  if [[ "${#extensions[@]}" = 0 ]]; then
+    error "Found no file extensions in '$extensions_file'."
+  fi
 
   # Workspace, which includes cached git repos.
   tmp=stat.tmp
