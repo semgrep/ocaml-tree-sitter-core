@@ -89,7 +89,6 @@ let extract_rules add_translation rules =
     let name =
       add_translation ~orig_name:preferred_name ~preferred_name
     in
-    printf "add rule: preferred_name=%s, name=%s\n" preferred_name name;
     Hashtbl.replace new_rules name rule_body;
     name
   in
