@@ -22,7 +22,7 @@ let to_buf buf nodes =
     List.iter (print_node indent) nodes
   and print_node indent node =
     match node.children with
-    | None ->
+    | None | Some [] ->
         bprintf buf "%s%s\n" indent (string_of_node_kind node.kind);
     | Some children ->
         bprintf buf "%s%s:\n" indent (string_of_node_kind node.kind);

@@ -101,7 +101,7 @@ let translate_token opt_rule_name token_contents =
   match name_of_body opt_rule_name token_contents with
   | Some name -> Token { name; is_inlined = false; description = Token }
   | None ->
-      match Missing_node.token_produces_node token_contents with
+      match Missing_node.get_token_node_name token_contents with
       | Some (Literal cst) ->
           translate_constant opt_rule_name cst
       | Some (Name name) ->

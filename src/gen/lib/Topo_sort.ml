@@ -32,7 +32,7 @@ let extract_rule_deps (rule : rule) =
    The input is presorted so as to make the output insensitive to
    the input order.
 *)
-let tsort get_deps elts =
+let tsort ~show_id ~get_deps elts =
   let deps_data =
     List.map (fun elt ->
       let id, deps = get_deps elt in
@@ -50,7 +50,9 @@ let tsort get_deps elts =
     List.map (fun id ->
       let _id, _deps, self_dep, elt =
         try Hashtbl.find tbl id
-        with Not_found -> invalid_arg "tsort: found some unknown dependencies"
+        with Not_found ->
+          invalid_arg (sprintf "tsort: found an unknown dependency: %s"
+                         (show_id id))
       in
       (self_dep, elt)
     ) group
@@ -64,4 +66,4 @@ let tsort get_deps elts =
    - substituting the sorted names with the rules
 *)
 let sort rules =
-  tsort extract_rule_deps rules
+  tsort ~show_id:(fun s -> s) ~get_deps:extract_rule_deps rules
