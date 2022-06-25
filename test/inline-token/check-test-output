@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 #
-# Check the parsing output.
+# Check that the parsing output contains no Blank nodes.
 #
 set -eu -o pipefail
 
@@ -16,32 +16,10 @@ error() {
   exit 1
 }
 
-# token() constructs fall into 3 categories:
-# - extracted into their own named rule
-# - left in place and resulting in a node in the CST
-# - left in place and resulting in a missing node in the CST -> Blank
-#
-# Consult src/grammar.json to see the actual grammar after the simplify-grammar
-# pass.
-#
-expect_node="hello f g h i l s t u v field1"
-expect_missing_node="j w"
-expect_new_rule="goodbye a k mm n x y z field2"
-
-for x in $expect_node; do
-  echo "$x: Check parsing output. Expect simple node for the token."
-  out=test.out/ok/$x.cst
-  grep -q '"'"$x"'"' "$out" || error "$out" "Unexpected output in $out"
-done
-
-for x in $expect_missing_node; do
-  echo "$x: Check parsing output. Expect missing node for the token."
-  out=test.out/ok/$x.cst
-  grep -q "Blank" "$out" || error "$out" "Unexpected output in $out"
-done
-
-for x in $expect_new_rule; do
-  echo "$x: Check parsing output. Expect named rule for the token."
-  out=test.out/ok/$x.cst
-  grep -q "tok_" "$out" || error "$out" "Unexpected output in $out"
+for out in test.out/ok/* ; do
+  x=$(basename "$out")
+  echo "$x: Check that the output doesn't contain any Blank node."
+  if grep -q "Blank" "$out"; then
+    error "$out" "Unexpected Blank in $out"
+  fi
 done

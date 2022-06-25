@@ -104,6 +104,8 @@ type rule_body =
   | Seq of rule_body list
   | Alias of ident * rule_body
   (* Alias (dummy rule name, anonymous rule)
+     Note that argument order in JS is reversed. It's alias(value, name)
+     rather than (name, value).
 
      This is used as a hack to work around pattern nodes (/.../)
      or token nodes (token(...)) that don't show up in the CST produced

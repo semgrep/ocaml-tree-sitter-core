@@ -54,9 +54,15 @@ let simplify_rule_body translate_name =
     | PREC_LEFT (prec, x) -> PREC_LEFT (prec, simplify x)
     | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, simplify x)
     | ALIAS alias ->
+        let name =
+          if alias.named then
+            translate_name alias.value
+          else
+            alias.value
+        in
         let content = simplify alias.content in
         if alias.must_be_preserved then
-          ALIAS { alias with content }
+          ALIAS { alias with value = name; content }
         else
           content
     | FIELD (field_name, x) -> FIELD (field_name, simplify x)
