@@ -188,6 +188,8 @@ let format_token ~def_name (tok : token) =
 let rec format_body ?def_name body : E.t =
   match body with
   | Symbol ident
+  | Alias (ident, Token _) ->
+      Fmt.atom (trans ident ^ " (*tok*)")
   | Alias (ident, _) ->
       Fmt.atom (trans ident)
   | Token tok ->
