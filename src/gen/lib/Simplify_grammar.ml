@@ -151,7 +151,121 @@ let translate_named_prec_level translate_name (x : named_prec_level) =
 let translate_precedences translate_name ll =
   List.map (List.map (translate_named_prec_level translate_name)) ll
 
+(* Handle extras that appear in ordinary rules.
+ *
+ * This addresses the issue outlined in
+ * https://github.com/returntocorp/ocaml-tree-sitter-core/issues/36.
+ *
+ * If an extra appears in an ordinary rule, it is, in the general case,
+ * impossible for ocaml-tree-sitter to tell from the CST whether an extra should
+ * be discarded or whether it should be incorporated into the typed CST.
+ *
+ * This addresses that ambiguity by aliasing all extras that appear in other
+ * rules so that they appear with a different name. This way, we can distinguish
+ * between ordinary extras and those that are part of the tree: ordinary extras
+ * will have the original name, and important extras will have the new, aliased
+ * name.
+*)
+let alias_extras grammar =
+  let is_extra =
+    let table =
+      grammar.extras
+      |> List.to_seq
+      |> Seq.filter_map (function
+        | SYMBOL name -> Some name
+        | _ -> None)
+      |> Seq.map (fun name -> (name, ()))
+      |> Hashtbl.of_seq
+    in
+    fun x -> Hashtbl.mem table x
+  in
+  let fresh =
+    let used_rule_names =
+      grammar.rules
+      |> List.map (fun (name, _) -> name)
+    in
+    match Fresh.init_scope used_rule_names with
+    | Ok scope -> scope
+    | Error rules ->
+        let rules = String.concat ", " rules in
+        failwith ("Unexpected duplicate rules: " ^ rules)
+  in
+  let new_aliases = ref [] in
+  let aliased_rules = ref [] in
+  let rec insert_aliases (x : rule_body) : rule_body =
+    match x with
+    | SYMBOL name -> (
+        if is_extra name then
+          let new_name = Fresh.create_name fresh (name ^ "_explicit") in
+          new_aliases := new_name :: !new_aliases;
+          aliased_rules := name :: !aliased_rules;
+          ALIAS {
+            value=new_name;
+            named=true;
+            content=SYMBOL name;
+            must_be_preserved=true;
+          }
+        else x)
+    (* Cases below only traverse the structure. We could cut down on boilerplate
+     * by using deriving visitors on this data structure. *)
+    | STRING _
+    | PATTERN _
+    | BLANK -> x
+    | REPEAT x -> REPEAT (insert_aliases x)
+    | REPEAT1 x -> REPEAT1 (insert_aliases x)
+    | CHOICE xs -> CHOICE (List.map insert_aliases xs)
+    | SEQ xs -> SEQ (List.map insert_aliases xs)
+    | PREC (prec, x) -> PREC (prec, insert_aliases x)
+    | PREC_DYNAMIC (prec, x) -> PREC_DYNAMIC (prec, insert_aliases x)
+    | PREC_LEFT (prec, x) -> PREC_LEFT (prec, insert_aliases x)
+    | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, insert_aliases x)
+    | ALIAS alias ->
+        let content = insert_aliases alias.content in
+        ALIAS { alias with content }
+    | FIELD (field_name, x) -> FIELD (field_name, insert_aliases x)
+    | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (insert_aliases x)
+    | TOKEN x -> TOKEN (insert_aliases x)
+  in
+  let rules = List.map (fun (id, body) -> (id, insert_aliases body)) grammar.rules in
+  (* Later in the pipeline, ocaml-tree-sitter-core checks that each name used in
+   * an alias is associated with an actual rule. I (nmote) suspect that this
+   * isn't necessary, but for now we'll insert a blank rule for each new alias
+   * to satisfy this check.
+   * *)
+  let new_alias_rules = List.map (fun name -> name, BLANK) !new_aliases in
+  let rules = rules @ new_alias_rules in
+  let rules =
+    (* Hack to work around https://github.com/tree-sitter/tree-sitter/issues/1834.
+     *
+     * Insert an unused rule that simply aliases each extra to itself, just after
+     * the entry point. This keeps tree-sitter from renaming all instances of the
+     * extra based on the alias that appears later.
+     *
+     * This hack won't work if the extra in question appears in the very first
+     * rule, since we can't insert the dummy rules before the grammar entry
+     * point. Hopefully that never happens in practice, but if it does we could
+     * likely address it using some additional transformations. *)
+    let dummy_rules =
+      List.mapi
+        (fun i extra_name ->
+           let dummy_name = Fresh.create_name fresh ("dummy_alias" ^ (string_of_int i)) in
+           let alias = ALIAS {
+             value=extra_name;
+             named=true;
+             content=SYMBOL extra_name;
+             must_be_preserved=true;
+           } in
+           (dummy_name, alias)
+        ) !aliased_rules
+    in
+    match rules with
+    | [] -> (* Should never happen *) dummy_rules
+    | hd::tl -> (hd :: dummy_rules) @ tl
+  in
+  { grammar with rules }
+
 let simplify_grammar grammar =
+  let grammar = alias_extras grammar in
   let grammar = Missing_node.work_around_missing_nodes grammar in
   let grammar = apply_inline grammar in
   let translate_name = make_name_translator () in

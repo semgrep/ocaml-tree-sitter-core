@@ -2,7 +2,6 @@
    Conversion and simplification from type specified in Tree_sitter.atd.
 *)
 
-open Printf
 open CST_grammar
 
 (*
@@ -252,35 +251,6 @@ let filter_extras bodies =
     | _ -> None
   ) bodies
 
-(*
-   Don't allow references to extra tokens (e.g. ordinary whitespace)
-   in rules.
-*)
-let forbid_explicit_extras ~is_used extras =
-  match List.filter is_used extras with
-  | [] -> ()
-  | explicit_extras ->
-      let names =
-        explicit_extras
-        |> List.map (fun extra -> sprintf "  %s" extra)
-        |> String.concat "\n"
-      in
-      let msg =
-        sprintf "\
-The following tokens are declared as extras and thus can occur
-anywhere in a program, but they are also referenced explicitly in some
-rules:
-
-%s
-
-This prevents the ocaml-tree-sitter runtime from recovering a typed tree
-from the tree-sitter untyped tree. To avoid this problem, create a separate
-rule to define the token that's referenced in a rule and don't declare it
-as an extra."
-          names
-      in
-      failwith msg
-
 let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
   let entrypoint =
     (* assuming the grammar's entrypoint is the first rule in grammar.json *)
@@ -305,7 +275,6 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
   in
   let sorted_rules = tsort_rules all_rules in
   let extras = filter_extras x.extras in
-  forbid_explicit_extras ~is_used extras;
   {
     name = x.name;
     entrypoint;
