@@ -22,8 +22,14 @@ Consider installing it with './scripts/install-tree-sitter-lib'."
 
 if [[ -z "${TREESITTER_INCDIR+x}" ]]; then
   TREESITTER_INCDIR=$(
+    # Strip the `-I` at the beginning, plus a single trailing space (if present)
+    # to get the path. pkgconf, which ships on RedHat and RedHat derived systems
+    # as a replacement for pkg-config, includes a trailing space in the flag,
+    # whereas pkg-config does not. This trailing space can lead to issues
+    # downstream.
     pkg-config --cflags-only-I tree-sitter \
-    | sed -e 's/^-I//'
+    | sed -e 's/^-I//' \
+    | sed -e 's/ $//'
   )
 fi
 export TREESITTER_INCDIR
@@ -31,7 +37,8 @@ export TREESITTER_INCDIR
 if [[ -z "${TREESITTER_LIBDIR+x}" ]]; then
   TREESITTER_LIBDIR=$(
     pkg-config --libs-only-L tree-sitter \
-    | sed -e 's/^-L//'
+    | sed -e 's/^-L//' \
+    | sed -e 's/ $//'
   )
 fi
 export TREESITTER_LIBDIR
