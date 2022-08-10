@@ -18,14 +18,6 @@ module.exports = grammar({
   ],
   rules: {
     program: $ => $.foos,
-    dummy_alias0_: $ => alias(
-      $.period,
-      $.period
-    ),
-    dummy_alias1: $ => alias(
-      $.comma,
-      $.comma
-    ),
     foos: $ => seq(
       $.foo,
       repeat(
@@ -52,6 +44,8 @@ module.exports = grammar({
     comma_explicit: $ => "unused",
     dummy_alias0: $ => "unused",
     period_explicit: $ => "" /* blank */,
-    comma_explicit_: $ => "" /* blank */
+    comma_explicit_: $ => "" /* blank */,
+    dummy_alias0_: $ => $.period,
+    dummy_alias1: $ => $.comma
   }
 });
