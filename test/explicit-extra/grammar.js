@@ -3,8 +3,8 @@ module.exports = grammar({
 
   /*
     A token declared as an 'extra' can occur anywhere.
-    It can also occur explicitly in a rule but this confuses ocaml-tree-sitter
-    when it tries to recover the typed CST.
+    It can also occur explicitly in a rule but this used to confuse
+    ocaml-tree-sitter when it tried to recover the typed CST.
 
     This example demonstrates the workaround consisting in giving a different
     name to an extra used explicitly.
@@ -12,9 +12,7 @@ module.exports = grammar({
   extras: ($) => [/\s+/, $.extra],
 
   rules: {
-    // TODO: add test expecting error on 'ocaml-tree-sitter gen'
-    //
-    // bad:
+    // used to be bad:
     // program: ($) => seq('a', $.extra),
 
     // good:

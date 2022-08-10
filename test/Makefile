@@ -1,6 +1,7 @@
 # List of tests that run by default and are expected to pass.
 #
 TESTS = \
+  implicit-extra \
   emoji \
   seq \
   weird-names \
