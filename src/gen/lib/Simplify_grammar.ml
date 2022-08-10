@@ -237,30 +237,20 @@ let alias_extras grammar =
   let rules =
     (* Hack to work around https://github.com/tree-sitter/tree-sitter/issues/1834.
      *
-     * Insert an unused rule that simply aliases each extra to itself, just after
-     * the entry point. This keeps tree-sitter from renaming all instances of the
-     * extra based on the alias that appears later.
-     *
-     * This hack won't work if the extra in question appears in the very first
-     * rule, since we can't insert the dummy rules before the grammar entry
-     * point. Hopefully that never happens in practice, but if it does we could
-     * likely address it using some additional transformations. *)
+     * Insert an unused rule that simply references each extra. This keeps
+     * tree-sitter from renaming all instances of the extra based on the alias,
+     * since it only creates a default alias if a rule appears only in aliases
+     * (see https://github.com/tree-sitter/tree-sitter/pull/1836)
+    *)
     let dummy_rules =
       List.mapi
         (fun i extra_name ->
            let dummy_name = Fresh.create_name fresh ("dummy_alias" ^ (string_of_int i)) in
-           let alias = ALIAS {
-             value=extra_name;
-             named=true;
-             content=SYMBOL extra_name;
-             must_be_preserved=true;
-           } in
-           (dummy_name, alias)
+           let rule = SYMBOL extra_name in
+           (dummy_name, rule)
         ) !aliased_rules
     in
-    match rules with
-    | [] -> (* Should never happen *) dummy_rules
-    | hd::tl -> (hd :: dummy_rules) @ tl
+    rules @ dummy_rules
   in
   { grammar with rules }
 
