@@ -16,9 +16,6 @@ build:
 
 # Full development setup.
 #
-# Note that the tree-sitter runtime library must be installed in advance,
-# prior to calling ./configure.
-#
 .PHONY: setup
 setup:
 	./scripts/check-prerequisites
