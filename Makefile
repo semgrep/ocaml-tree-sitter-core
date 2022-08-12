@@ -23,6 +23,7 @@ build:
 setup:
 	./scripts/check-prerequisites
 	./scripts/install-tree-sitter-cli
+	./scripts/install-tree-sitter-lib
 	opam install --deps-only -y .
 	opam install ocp-indent
 
