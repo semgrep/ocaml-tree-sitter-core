@@ -8,6 +8,15 @@ DUNE_BIN = $(PROJECT_ROOT)/bin
 NODE_BIN = $(PROJECT_ROOT)/node_modules/.bin
 SCRIPTS = $(PROJECT_ROOT)/scripts
 
+# Default to using the tree-sitter executable and library installed locally.
+TREESITTER_PREFIX ?= $(PROJECT_ROOT)/tree-sitter
+TREESITTER_BINDIR ?= $(TREESITTER_PREFIX)/bin
+TREESITTER_LIBDIR ?= $(TREESITTER_PREFIX)/lib
+
+export TREESITTER_LIBDIR
+PATH := $(TREESITTER_BINDIR):$(PATH)
+export PATH
+
 ifndef GEN_OCAML_OPTIONS
   GEN_OCAML_OPTIONS =
 endif

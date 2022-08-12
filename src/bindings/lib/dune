@@ -1,7 +1,7 @@
 ; Build OCaml bindings to the tree-sitter's C API.
 ;
 ; tree-sitter can be installed by cloning its git repo, then
-; 'make && sudo make install'
+; 'make && make install'
 ;
 (library
   (public_name tree-sitter.bindings)
@@ -10,10 +10,10 @@
   (foreign_stubs
     (language c)
     (names bindings)
-    (flags -I %{env:INCLUDEDIR=/usr/local/include}
+    (flags -I %{env:TREESITTER_INCDIR=/usr/local/include}
     )
   )
-  (c_library_flags (-L%{env:LIBDIR=/usr/local/lib}
+  (c_library_flags (-L%{env:TREESITTER_LIBDIR=/usr/local/lib}
                     -ltree-sitter))
 )
 

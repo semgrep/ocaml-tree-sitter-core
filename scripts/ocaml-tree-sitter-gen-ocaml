@@ -59,6 +59,9 @@ Options:
       Default: $default_lang
   --trace
       Print debugging info during parsing.
+  --tree-sitter-libdir LIBDIR
+      Where the tree-sitter runtime library was installed.
+      Default:
 EOF
 }
 
@@ -216,12 +219,23 @@ cat > "$dst_dir"/lib/dune <<EOF
            -I .)
   )
 
-  ; TREESITTER_LIBDIR can be set to its correct value using pkg-config:
-  ;   pkg-config --libs-only-L tree-sitter | sed -e 's/^-L//'
+  ; TREESITTER_LIBDIR is meant to be some nonstandard location containing the
+  ; desired version of the tree-sitter library.
+  ; The -rpath option tells the linker to hardcode this search location
+  ; in the binary.
   ;
-  (c_library_flags (-L%{env:TREESITTER_LIBDIR=/usr/local/lib}
-                    -lstdc++
-                    -ltree-sitter)
+  ; This works as long as libtree-sitter stays where it is, which is
+  ; fine for test executables. Production executables should instead
+  ; link statically against libree-sitter to avoid problems in locating
+  ; the library at runtime.
+  ;
+  (c_library_flags
+    (
+      -L%{env:TREESITTER_LIBDIR=/usr/local/lib}
+      -lstdc++
+      -ltree-sitter
+      -Wl,-rpath,%{env:TREESITTER_LIBDIR=/usr/local/lib}
+    )
   )
   (foreign_stubs
     (language cxx)
