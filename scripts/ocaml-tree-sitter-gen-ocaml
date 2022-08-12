@@ -216,6 +216,7 @@ cat > "$dst_dir"/lib/dune <<EOF
     (names ${c_files})
     (flags -std=c99
            -fPIC
+           -I %{env:TREESITTER_INCDIR=/usr/local/include}
            -I .)
   )
 
