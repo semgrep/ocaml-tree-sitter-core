@@ -10,9 +10,6 @@ SCRIPTS = $(PROJECT_ROOT)/scripts
 
 include $(PROJECT_ROOT)/tree-sitter-config.mk
 
-PATH := $(TREESITTER_BINDIR):$(PATH)
-export PATH
-
 ifndef GEN_OCAML_OPTIONS
   GEN_OCAML_OPTIONS =
 endif
