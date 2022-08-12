@@ -36,7 +36,7 @@ update:
 .PHONY: clean
 clean:
 	rm -rf bin
-	rm -f config.sh  # retired generated config file
+	rm -f config.sh config.mk  # old generated config files
 	dune clean
 	make -C test clean
 
