@@ -17,5 +17,7 @@ _build
 # for codemap stuff of pad
 /skip_list.txt
 
+/tree-sitter-config.mk
+
 # The installation root of tree-sitter
 /tree-sitter

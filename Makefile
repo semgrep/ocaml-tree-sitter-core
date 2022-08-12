@@ -2,16 +2,10 @@
 # Build and install code generators and runtime support for generated parsers.
 #
 
-PROJECT_ROOT = $(shell pwd)
+PROJECT_ROOT := $(shell pwd)
 
-TREESITTER_PREFIX ?= $(PROJECT_ROOT)/tree-sitter
-TREESITTER_BINDIR ?= $(TREESITTER_PREFIX)/bin
-TREESITTER_INCDIR ?= $(TREESITTER_PREFIX)/include
-TREESITTER_LIBDIR ?= $(TREESITTER_PREFIX)/lib
-export TREESITTER_PREFIX
-export TREESITTER_BINDIR
-export TREESITTER_INCDIR
-export TREESITTER_LIBDIR
+# Generate this with ./configure
+include $(PROJECT_ROOT)/tree-sitter-config.mk
 
 .PHONY: build
 build:
@@ -41,7 +35,7 @@ update:
 .PHONY: clean
 clean:
 	rm -rf bin
-	rm -f config.sh config.sh  # retired generated config files
+	rm -f config.sh  # retired generated config file
 	dune clean
 	make -C test clean
 
