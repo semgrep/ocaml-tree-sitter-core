@@ -49,9 +49,7 @@ done
 libdir="$prefix"/lib
 
 dir_name=$(dirname "$BASH_SOURCE")
-if ! [[ -d downloads/tree-sitter ]]; then
-  "$dir_name"/download-tree-sitter
-fi
+"$dir_name"/download-tree-sitter --lazy
 
 (
   cd downloads/tree-sitter
