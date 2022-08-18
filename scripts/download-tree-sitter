@@ -22,6 +22,9 @@ usage() {
 Download the tree-sitter sources.
 Usage: $prog_name [OPTIONS]
 Options:
+  --lazy
+      Don't re-download the tree-sitter archive if its folder already
+      exists locally for the specified version.
   --help
       Show this message and exit.
   --version VERSION
@@ -32,9 +35,13 @@ Options:
 EOF
 }
 
+lazy=false
 version="$default_version"
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --lazy)
+      lazy=true
+      ;;
     --help)
       usage
       exit 0
@@ -53,9 +60,9 @@ mkdir -p downloads
 (
   cd downloads
 
-  echo "Downloading tree-sitter $version."
+  echo "Downloading tree-sitter $version (lazy = $lazy)."
   src_dir=tree-sitter-"$version"
-  if [[ -d "$src_dir" ]]; then
+  if [[ "$lazy" = false && -d "$src_dir" ]]; then
     echo "Removing previous copy of tree-sitter."
     rm -rf "$src_dir"
   fi
@@ -68,10 +75,17 @@ EOF
   rm -f "$unversioned_src_dir"
   ln -s "$src_dir" "$unversioned_src_dir"
 
-  echo "Fetching tarball for tree-sitter-$version."
-  curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
-  tar xf v"$version".tar.gz
-  if [[ ! -d "$src_dir" ]]; then
-    error "Archive didn't unpack into the expected folder '$src_dir'."
+  if [[ -d "$src_dir" ]]; then
+    cat <<EOF
+Re-using tree-sitter sources found locally:
+  $(pwd)/$src_dir
+EOF
+  else
+    echo "Fetching tarball for tree-sitter-$version."
+    curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
+    tar xf v"$version".tar.gz
+    if [[ ! -d "$src_dir" ]]; then
+      error "Archive didn't unpack into the expected folder '$src_dir'."
+    fi
   fi
 )

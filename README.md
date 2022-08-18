@@ -55,7 +55,9 @@ license no matter what.
 
 For building or rebuilding everything after big changes, use these scripts:
 ```
-$ ./scripts/install-tree-sitter-cli --bindir DST
+$ make distclean
+$ ./configure
+$ make setup
 $ ./scripts/rebuild-everything  # needs root access to install libtree-sitter
 ```
 

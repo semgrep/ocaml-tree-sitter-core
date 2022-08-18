@@ -6,13 +6,8 @@ set -eu -o pipefail
 
 prog_name=$(basename "$0")
 
-# Determine a good default installation folder.
-# Any location in PATH that doesn't require root privileges would do.
-default_bindir=/usr/local/bin
-eval "$(opam env || true)"
-if [[ -e "$(which ocamlc)" ]]; then
-  default_bindir=$(dirname "$(which ocamlc)")
-fi
+# Installation root for the tree-sitter executable and runtime library
+default_prefix=$(pwd)/tree-sitter
 
 error() {
   echo "Current directory: $(pwd)" >&2
@@ -22,26 +17,27 @@ error() {
 
 usage() {
   cat <<EOF
-Compile the tree-sitter executable and optionally install it.
+Compile the tree-sitter executable and install it.
 Usage: $prog_name [OPTIONS]
 Options:
   --help
       Show this message and exit.
-  --bindir PATH
-      Global installation directory.
-      Automagic default: $default_bindir
+  --prefix PATH
+      Global installation directory for tree-sitter executables and libraries.
+      Default: $default_prefix
 EOF
 }
 
-bindir=$default_bindir
+prefix="$default_prefix"
+
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --help)
       usage
       exit 0
       ;;
-    --bindir)
-      bindir="$2"
+    --prefix)
+      prefix="$2"
       shift
       ;;
     *)
@@ -50,10 +46,10 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+bindir="$prefix"/bin
+
 dir_name=$(dirname "$BASH_SOURCE")
-if ! [[ -d downloads/tree-sitter ]]; then
-  "$dir_name"/download-tree-sitter
-fi
+"$dir_name"/download-tree-sitter --lazy
 
 (
   cd downloads/tree-sitter
@@ -72,21 +68,11 @@ EOF
   exit 1
 fi
 
-exe=bin/tree-sitter
-mkdir -p bin
-ln -sf ../"$real_exe" "$exe"
+mkdir -p "$bindir"
+exe="$bindir/tree-sitter"
+cp "$real_exe" "$exe"
 
 cat <<EOF
-The project-local path to the tree-sitter binary is:
-$(pwd)/$exe
+The path to the tree-sitter command-line executable is:
+  $exe
 EOF
-
-if [[ -n "$bindir" ]]; then
-  mkdir -p "$bindir"
-  install -m 0755 "$exe" "$bindir"
-
-cat <<EOF
-Additionally, tree-sitter binary is available as:
-$bindir/tree-sitter
-EOF
-fi

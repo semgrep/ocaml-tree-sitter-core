@@ -8,6 +8,8 @@ DUNE_BIN = $(PROJECT_ROOT)/bin
 NODE_BIN = $(PROJECT_ROOT)/node_modules/.bin
 SCRIPTS = $(PROJECT_ROOT)/scripts
 
+include $(PROJECT_ROOT)/tree-sitter-config.mk
+
 ifndef GEN_OCAML_OPTIONS
   GEN_OCAML_OPTIONS =
 endif

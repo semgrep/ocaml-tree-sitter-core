@@ -14,8 +14,10 @@ _build
 # Local OPAM switch
 /_opam/
 
-/config.sh
-/config.mk
-
 # for codemap stuff of pad
 /skip_list.txt
+
+/tree-sitter-config.mk
+
+# The installation root of tree-sitter
+/tree-sitter

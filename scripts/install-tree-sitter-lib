@@ -5,32 +5,59 @@
 set -eu -o pipefail
 
 prog_name=$(basename "$0")
-dir_name=$(dirname "$BASH_SOURCE")
 
-if ! [[ -d downloads/tree-sitter ]]; then
-  "$dir_name"/download-tree-sitter
-fi
+# Installation root for the tree-sitter executable and runtime library
+default_prefix=$(pwd)/tree-sitter
+
+error() {
+  echo "Current directory: $(pwd)" >&2
+  echo "Error: $@" >&2
+  exit 1
+}
+
+usage() {
+  cat <<EOF
+Compile the tree-sitter library and install it.
+Usage: $prog_name [OPTIONS]
+Options:
+  --help
+      Show this message and exit.
+  --prefix PATH
+      Global installation directory for tree-sitter executables and libraries.
+      Default: $default_prefix
+EOF
+}
+
+prefix="$default_prefix"
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --help)
+      usage
+      exit 0
+      ;;
+    --prefix)
+      prefix="$2"
+      shift
+      ;;
+    *)
+      error "Invalid argument passed to '${prog_name}': '$1'"
+  esac
+  shift
+done
+
+libdir="$prefix"/lib
+
+dir_name=$(dirname "$BASH_SOURCE")
+"$dir_name"/download-tree-sitter --lazy
 
 (
   cd downloads/tree-sitter
-  make
-
-  # When building from source on homebrew sudo is not allowed
-  # but also not needed
-  if [[ -z "${HOMEBREW_SYSTEM+x}" ]]; then
-    sudo make install
-  else
-    # brew is present
-    make install
-  fi
-
-  # Ensure libtree-sitter is found at linking time.
-  # MacOS doesn't have ldconfig. Maybe it works without it?
-  if which ldconfig > /dev/null; then
-    libdir=$(
-      pkg-config --libs-only-L tree-sitter \
-        | sed -e 's/^-L//'
-          )
-    sudo ldconfig "$libdir"
-  fi
+  make PREFIX="$prefix"
+  make PREFIX="$prefix" install
 )
+
+cat <<EOF
+tree-sitter libraries were installed in:
+  $prefix/lib/
+EOF

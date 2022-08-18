@@ -2,10 +2,10 @@
 # Build and install code generators and runtime support for generated parsers.
 #
 
-# Generate this with ./configure
-include config.mk
+PROJECT_ROOT := $(shell pwd)
 
-PROJECT_ROOT = $(shell pwd)
+# Generate this with ./configure
+include $(PROJECT_ROOT)/tree-sitter-config.mk
 
 .PHONY: build
 build:
@@ -16,13 +16,11 @@ build:
 
 # Full development setup.
 #
-# Note that the tree-sitter runtime library must be installed in advance,
-# prior to calling ./configure.
-#
 .PHONY: setup
 setup:
 	./scripts/check-prerequisites
 	./scripts/install-tree-sitter-cli
+	./scripts/install-tree-sitter-lib
 	opam install --deps-only -y .
 	opam install ocp-indent
 
@@ -35,6 +33,7 @@ update:
 .PHONY: clean
 clean:
 	rm -rf bin
+	rm -f config.sh config.mk  # old generated config files
 	dune clean
 	make -C test clean
 
