@@ -240,8 +240,8 @@ let format_extra_def extras =
         in
         Some cases
   in
-  [("extra", false, rhs);
-   ("extras", false, Some (Fmt.atom "extra list"))]
+  [[("extra", false, rhs)];
+   [("extras", false, Some (Fmt.atom "extra list"))]]
 
 let ppx =
   Fmt.top_sequence [
@@ -270,7 +270,7 @@ let format_types grammar =
       Fmt.recursive_typedefs def_group;
       ppx
     ]
-  ) (semi_formatted_defs @ [format_extra_def grammar.extras])
+  ) (semi_formatted_defs @ format_extra_def grammar.extras)
   |> Fmt.top_sequence
 
 let generate_dumpers grammar =

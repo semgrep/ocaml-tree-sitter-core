@@ -7,8 +7,7 @@ module.exports = grammar({
   extras: ($) => [
     $.comma,
     $.period,
-    "\n",  // check that literals are tolerated
-    /a*/,  // check that patterns are tolerated
+    "\n",
   ],
 
   rules: {
@@ -30,8 +29,5 @@ module.exports = grammar({
     // Check that name collision avoidance works
     comma_explicit: ($) => 'unused',
     dummy_alias0: ($) => 'unused',
-
-    // This should get another type name than 'extra'
-    extra: ($) => 'unused',
   }
 });
