@@ -5,5 +5,7 @@
 val run :
   lang:string ->
   parse_source_file:(string -> Tree_sitter_parsing.t) ->
-  parse_input_tree:(Tree_sitter_parsing.t -> 'a Parsing_result.t) ->
-  dump_tree:('a -> unit) -> unit
+  parse_input_tree:
+    (Tree_sitter_parsing.t -> ('prog, 'extra) Parsing_result.t) ->
+  dump_tree:('prog -> unit) ->
+  dump_extras:('extra list -> unit) -> unit

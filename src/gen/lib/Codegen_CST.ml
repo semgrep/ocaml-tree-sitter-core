@@ -110,7 +110,7 @@ module Fmt = struct
   let top_sequence l =
     E.List (("", "", "", Style.vert_seq), l)
 
-  let typedef pos (name, inlined, rhs) =
+  let typedef pos (name, inlined, opt_rhs) =
     let is_first = (pos = 0) in
     let type_ =
       if is_first then
@@ -122,7 +122,11 @@ module Fmt = struct
       if inlined then " (* inlined *)"
       else ""
     in
-    let code = def (sprintf "%s %s%s =" type_ name comment) rhs in
+    let code =
+      match opt_rhs with
+      | Some rhs -> def (sprintf "%s %s%s =" type_ name comment) rhs
+      | None -> atom (sprintf "%s %s%s" type_ name comment)
+    in
     if is_first then code
     else
       top_sequence [
@@ -219,7 +223,25 @@ and format_seq l =
 let format_rule (rule : rule) =
   (trans rule.name,
    rule.is_inlined_type,
-   format_body ~def_name:rule.name rule.body)
+   Some (format_body ~def_name:rule.name rule.body))
+
+let format_extra_def extras =
+  let rhs =
+    match extras with
+    | [] -> None
+    | extras ->
+        let cases =
+          extras
+          |> List.map (fun rule_name ->
+            let constructor = Codegen_util.translate_ident_uppercase rule_name in
+            (constructor, Some (format_body (Symbol rule_name)))
+          )
+          |> Fmt.classic_variant
+        in
+        Some cases
+  in
+  [("extra", false, rhs);
+   ("extras", false, Some (Fmt.atom "extra list"))]
 
 let ppx =
   Fmt.top_sequence [
@@ -248,14 +270,18 @@ let format_types grammar =
       Fmt.recursive_typedefs def_group;
       ppx
     ]
-  ) semi_formatted_defs
+  ) (semi_formatted_defs @ [format_extra_def grammar.extras])
   |> Fmt.top_sequence
 
-let generate_dumper grammar =
+let generate_dumpers grammar =
   sprintf "\
 
 let dump_tree root =
   sexp_of_%s root
+  |> Print_sexp.to_stdout
+
+let dump_extras extras =
+  sexp_of_extras extras
   |> Print_sexp.to_stdout
 "
     (trans grammar.entrypoint)
@@ -264,5 +290,5 @@ let generate grammar =
   let buf = Buffer.create 10_000 in
   Buffer.add_string buf (preamble grammar);
   E.Pretty.to_buffer buf (format_types grammar);
-  Buffer.add_string buf (generate_dumper grammar);
+  Buffer.add_string buf (generate_dumpers grammar);
   Buffer.contents buf

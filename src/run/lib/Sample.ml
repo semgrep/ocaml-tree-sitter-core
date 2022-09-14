@@ -25,6 +25,9 @@ module CST = struct
   ]
   type statement = (expression * (Loc.t * string (* ";" *)))
   type program = statement list (* zero or more *)
+  type comment = (Loc.t * string)
+  type extra =
+    | Comment of comment
 end
 
 module Parse = struct
@@ -81,6 +84,10 @@ module Parse = struct
         |];
       )
     );
+    (
+      "comment",
+      None
+    );
   ]
 
   (* generated *)
@@ -130,11 +137,17 @@ module Parse = struct
         )
     | _ -> assert false
 
-  (* generated *)
+  (* generated - entrypoint *)
   let trans_program ((kind, body) : mt) =
     match body with
     | Children v ->
         Run.repeat (fun v -> trans_statement (Run.matcher_token v)) v
+    | _ -> assert false
+
+  (* generated - extra *)
+  let trans_comment ((kind, body) : mt) : CST.variable =
+    match body with
+    | Leaf v -> v
     | _ -> assert false
 
   let parse_input_tree input_tree =

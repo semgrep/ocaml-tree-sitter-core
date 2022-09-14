@@ -49,11 +49,13 @@ let () =
     ~parse_source_file:%s.parse_source_file
     ~parse_input_tree:%s.parse_input_tree
     ~dump_tree:%s.dump_tree
+    ~dump_extras:%s.dump_extras
 "
     lib_module_name
     lang
     parse_module_name
     parse_module_name
+    cst_module_name
     cst_module_name
 
 let ocaml ?out_dir ~lang grammar =

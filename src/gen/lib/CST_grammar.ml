@@ -151,6 +151,12 @@ type rule = {
      some purposes.
   *)
 
+  is_extra: bool;
+  (* whether this rule occurs in the list extras. This field is redundant
+     and provided for convenience.
+     An extra is a kind of node that can be found anywhere in the input,
+     independently from the grammar, such as comments. *)
+
   body: rule_body;
 }
 [@@deriving show {with_path = false}]
@@ -163,8 +169,9 @@ type grammar = {
   (* rules, grouped and sorted in dependency order. *)
 
   extras: string list;
-  (* node names that don't belong to any rule and can occur anywhere,
-     such as comments. *)
+  (* rules names for constructs that can occur anywhere independently from
+     the grammar, such as comments. Other extras such as string literals
+     and patterns were removed because we don't need them. *)
 }
 [@@deriving show {with_path = false}]
 
