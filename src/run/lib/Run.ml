@@ -216,66 +216,81 @@ let extract_errors src root_node =
             | Error -> "???" (* should not happen *)))
   )
 
+(* Remove extras from the tree, leaving only nodes matching the entrypoint
+   rule. *)
+let rec remove_extras_from_opt_nodes ~keep_node opt_nodes =
+  match opt_nodes with
+  | None -> None
+  | Some nodes ->
+      Some (List.filter_map (remove_extras_from_node ~keep_node) nodes)
+
+and remove_extras_from_node ~keep_node node =
+  if keep_node node then
+    Some {
+      node with
+      children = remove_extras_from_opt_nodes ~keep_node node.children
+    }
+  else
+    None
+
+(*
+   Produce fast functions for identifying whether a node is an extra
+   and whether a node should be removed to allow matching with the structure
+   of the grammar. This involves removing error nodes and other extra nodes
+   tree-sitter may decide to insert.
+*)
+let make_filters ~extras =
+  let extra_tbl = Hashtbl.create 100 in
+  List.iter (fun s -> Hashtbl.replace extra_tbl s ()) extras;
+  let is_extra node = Hashtbl.mem extra_tbl node.type_ in
+  let keep_node node =
+    not (node.kind = Error)
+    && not (is_extra node)
+  in
+  is_extra, keep_node
+
+(*
+   Remove error nodes and extra nodes, which are nodes that can appear
+   anywhere in the tree.
+*)
+let remove_extras ~keep_node root_node =
+  { root_node with
+    children = remove_extras_from_opt_nodes ~keep_node root_node.children }
+
 (* Translate extras and accumulate them into a list. *)
-let scan_node_for_extras ~translate_extra node =
-  let rec scan_nodes_for_extras ~translate_extra acc opt_nodes =
+let scan_node_for_extras ~is_extra ~keep_node ~translate_extra node =
+  let rec scan_nodes_for_extras acc opt_nodes =
     match opt_nodes with
     | None -> acc
     | Some nodes ->
         List.fold_left (scan_node_for_extras ~translate_extra) acc nodes
 
   and scan_node_for_extras ~translate_extra acc node =
-    match translate_extra node with
-    | None -> scan_nodes_for_extras ~translate_extra acc node.children
-    | Some x -> x :: acc
+    let acc =
+      if is_extra node then
+        (* We must remove the other extras from the child subtrees.
+           This is inefficient if we have large, nested extras due to the
+           subtree being rewritten each time we encounter an extra node.
+           In practice, it should be ok. *)
+        match remove_extras ~keep_node node
+              |> translate_extra with
+        | None -> acc
+        | Some x -> x :: acc
+      else
+        acc
+    in
+    (* An extra can contain other extras, so we must recurse into the children
+       regardless of whether the current node is an extra. *)
+    scan_nodes_for_extras acc node.children
   in
   scan_node_for_extras ~translate_extra [] node |> List.rev
 
-(* Remove extras from the tree, leaving only nodes matching the entrypoint
-   rule. *)
-let rec remove_extras_from_opt_nodes keep opt_nodes =
-  match opt_nodes with
-  | None -> None
-  | Some nodes -> Some (List.filter_map (remove_extras_from_node keep) nodes)
-
-and remove_extras_from_node keep node =
-  if keep node then
-    Some {
-      node with children = remove_extras_from_opt_nodes keep node.children
-    }
-  else
-    None
-
-let make_keep ~blacklist =
-  let tbl = Hashtbl.create 100 in
-  List.iter (fun s -> Hashtbl.replace tbl s ()) blacklist;
-  let keep node =
-    not (node.kind = Error)
-    && not (Hashtbl.mem tbl node.type_)
-  in
-  keep
-
-(*
-   Remove error nodes, missing nodes, and extra nodes.
-
-   Error nodes indicate unexpected input and can be removed from the tree
-   while respecting the grammar (because the error bubbles up until
-   it's an optional position such as in a repeat()).
-
-   Missing nodes are suggested nodes that don't exist in the input.
-   Missing nodes are left in place so as to keep the tree well-formed
-   but they're reported as errors.
-
-   Extra nodes are nodes that can appear anywhere in the tree such as comments.
-*)
-let remove_extras ~extras =
-  let keep = make_keep ~blacklist:extras in
-  fun root_node ->
-    { root_node with
-      children = remove_extras_from_opt_nodes keep root_node.children }
-
 let translate ~extras ~translate_root ~translate_extra orig_root_node =
-  let pure_root_node = remove_extras ~extras orig_root_node in
+  let is_extra, keep_node = make_filters ~extras in
+  let pure_root_node = remove_extras ~keep_node orig_root_node in
   let root = translate_root pure_root_node in
-  let extras = scan_node_for_extras ~translate_extra orig_root_node in
+  let extras =
+    scan_node_for_extras
+      ~is_extra ~keep_node ~translate_extra orig_root_node
+  in
   (root, extras)

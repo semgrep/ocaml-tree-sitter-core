@@ -240,8 +240,8 @@ let format_extra_def extras =
         in
         Some cases
   in
-  [("extra", false, rhs);
-   ("extras", false, Some (Fmt.atom "extra list"))]
+  [[("extra", false, rhs)];
+   [("extras", false, Some (Fmt.atom "extra list"))]]
 
 (*
    1. Identify names that are used at most once, becoming candidates
@@ -264,7 +264,7 @@ let format_types grammar =
       Fmt.recursive_typedefs x;
       Fmt.atom ""
     ]
-  ) (semi_formatted_defs @ [format_extra_def grammar.extras])
+  ) (semi_formatted_defs @ format_extra_def grammar.extras)
   |> Fmt.top_sequence
 
 let generate grammar =

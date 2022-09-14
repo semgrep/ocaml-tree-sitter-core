@@ -42,6 +42,6 @@ type node = {
 }
 
 type position = {
-  row: int;
-  column: int;
+  row: int; (* 0-based *)
+  column: int; (* 0-based *)
 }
