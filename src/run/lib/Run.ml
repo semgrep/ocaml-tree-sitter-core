@@ -216,12 +216,33 @@ let extract_errors src root_node =
             | Error -> "???" (* should not happen *)))
   )
 
-let rec filter_nodes keep nodes =
-  List.filter_map (filter_node keep) nodes
+(* Translate extras and accumulate them into a list. *)
+let scan_node_for_extras ~translate_extra node =
+  let rec scan_nodes_for_extras ~translate_extra acc opt_nodes =
+    match opt_nodes with
+    | None -> acc
+    | Some nodes ->
+        List.fold_left (scan_node_for_extras ~translate_extra) acc nodes
 
-and filter_node keep node =
+  and scan_node_for_extras ~translate_extra acc node =
+    match translate_extra node with
+    | None -> scan_nodes_for_extras ~translate_extra acc node.children
+    | Some x -> x :: acc
+  in
+  scan_node_for_extras ~translate_extra [] node |> List.rev
+
+(* Remove extras from the tree, leaving only nodes matching the entrypoint
+   rule. *)
+let rec remove_extras_from_opt_nodes keep opt_nodes =
+  match opt_nodes with
+  | None -> None
+  | Some nodes -> Some (List.filter_map (remove_extras_from_node keep) nodes)
+
+and remove_extras_from_node keep node =
   if keep node then
-    Some { node with children = Option.map (filter_nodes keep) node.children }
+    Some {
+      node with children = remove_extras_from_opt_nodes keep node.children
+    }
   else
     None
 
@@ -251,4 +272,10 @@ let remove_extras ~extras =
   let keep = make_keep ~blacklist:extras in
   fun root_node ->
     { root_node with
-      children = Option.map (filter_nodes keep) root_node.children }
+      children = remove_extras_from_opt_nodes keep root_node.children }
+
+let translate ~extras ~translate_root ~translate_extra orig_root_node =
+  let pure_root_node = remove_extras ~extras orig_root_node in
+  let root = translate_root pure_root_node in
+  let extras = scan_node_for_extras ~translate_extra orig_root_node in
+  (root, extras)

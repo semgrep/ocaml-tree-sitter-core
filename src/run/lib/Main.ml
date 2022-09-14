@@ -182,6 +182,7 @@ let parse_and_dump
     ~parse_source_file
     ~parse_input_tree
     ~dump_tree
+    ~dump_extras
     conf =
   let input_tree = load_input_tree ~parse_source_file conf in
   if conf.output_json then (
@@ -197,6 +198,8 @@ let parse_and_dump
         printf "---\n";
         printf "Recovered typed CST:\n%!";
         dump_tree matched_tree;
+        printf "Extras:\n%!";
+        dump_extras res.extras;
         true
     | None ->
         eprintf "Error: \
@@ -238,7 +241,7 @@ success: %.2f%%
   in
   exit_code
 
-let run ~lang ~parse_source_file ~parse_input_tree ~dump_tree =
+let run ~lang ~parse_source_file ~parse_input_tree ~dump_tree ~dump_extras =
   let conf = parse_command_line ~lang in
   safe_run (fun () ->
     let suggested_exit_code =
@@ -246,6 +249,7 @@ let run ~lang ~parse_source_file ~parse_input_tree ~dump_tree =
         ~parse_source_file
         ~parse_input_tree
         ~dump_tree
+        ~dump_extras
         conf
     in
     exit suggested_exit_code

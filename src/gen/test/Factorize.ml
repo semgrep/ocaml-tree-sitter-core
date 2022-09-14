@@ -13,6 +13,7 @@ let make_rule name body : rule =
     is_rec = true;
     is_inlined_rule = false;
     is_inlined_type = false;
+    is_extra = false; (* doesn't matter for our tests *)
   }
 
 let make_grammar flat_rules =

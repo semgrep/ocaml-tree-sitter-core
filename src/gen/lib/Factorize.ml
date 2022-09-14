@@ -173,17 +173,18 @@ let factorize_rules
   let get_orig_rule = CST_grammar.make_rule_lookup grammar in
   let rules =
     List.map (fun (name, orig_node) ->
-      let is_inlined_rule, is_inlined_type =
+      let is_inlined_rule, is_inlined_type, is_extra =
         match get_orig_rule name with
-        | None -> false, false
-        | Some x -> x.is_inlined_rule, x.is_inlined_type
+        | None -> false, false, false
+        | Some x -> x.is_inlined_rule, x.is_inlined_type, x.is_extra
       in
       let body = replace_nodes node_names orig_node in
       { name;
         body;
         is_rec = true; (* will be set correctly by tsort below *)
         is_inlined_rule;
-        is_inlined_type }
+        is_inlined_type;
+        is_extra }
     ) all_rules
     |> CST_grammar_conv.tsort_rules
   in
