@@ -14,8 +14,7 @@ module.exports = grammar({
   extras: $ => [
     $.comma,
     $.period,
-    "\n",
-    /a*/
+    "\n"
   ],
   rules: {
     program: $ => $.foos,
@@ -44,7 +43,6 @@ module.exports = grammar({
     period: $ => ".",
     comma_explicit: $ => "unused",
     dummy_alias0: $ => "unused",
-    extra: $ => "unused",
     period_explicit: $ => "" /* blank */,
     comma_explicit_: $ => "" /* blank */,
     dummy_alias0_: $ => $.period,
