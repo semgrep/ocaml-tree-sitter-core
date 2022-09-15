@@ -5,8 +5,9 @@ module.exports = grammar({
       $.number
     ),
     number: $ => /[0-9]+/,
+    letter: $ => /[a-zA-Z]/,
     comment: $ => /#.*/,
-    complex_extra: $ => seq('(', repeat($.number), ')'),
+    complex_extra: $ => seq('(', repeat(choice($.number, $.letter)), ')'),
   },
   extras: $ => [
     $.comment,       // appears in the CST
