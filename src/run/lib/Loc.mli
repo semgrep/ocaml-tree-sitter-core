@@ -6,9 +6,11 @@ type pos = Tree_sitter_bindings.Tree_sitter_output_t.position = {
   row : int; (* 0-based *)
   column : int; (* 0-based *)
 }
+[@@deriving sexp_of]
 
 (* TODO: include filename as a field? *)
 type t = {
   start: pos; (* inclusive *)
   end_: pos; (* exclusive i.e. start = end_ gives the empty string. *)
 }
+[@@deriving sexp_of]
