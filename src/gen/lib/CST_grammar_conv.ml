@@ -5,10 +5,11 @@
 open CST_grammar
 
 (*
-   Traverse the grammar starting from the entrypoint, return the set of
-   visited rule names.
+   Traverse the grammar starting from all the entrypoints, which
+   are the main entrypoint (first rule in the tree-sitter grammar)
+   and the extras. Return the set of visited rule names.
 *)
-let detect_used ~entrypoint rules =
+let detect_used ~entrypoints rules =
   let rule_tbl = Hashtbl.create 100 in
   List.iter (fun (name, x) -> Hashtbl.add rule_tbl name x) rules;
   let get_rule name =
@@ -48,7 +49,7 @@ let detect_used ~entrypoint rules =
     | None -> ()
     | Some x -> scan x
   in
-  visit entrypoint;
+  List.iter visit entrypoints;
   was_visited
 
 let name_of_body opt_rule_name body =
@@ -262,7 +263,7 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
     | _ -> "program"
   in
   let extras = filter_extras x.extras in
-  let is_used = detect_used ~entrypoint x.rules in
+  let is_used = detect_used ~entrypoints:(entrypoint :: extras) x.rules in
   let grammar_rules = translate_rules x.rules in
   let all_rules =
     make_external_rules x.externals @ grammar_rules
@@ -274,7 +275,6 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
         is_rec = true; (* set correctly by tsort below *)
         is_inlined_rule = is_inlined_rule;
         is_inlined_type = false;
-        is_extra = List.mem name extras;
       }
     )
   in
