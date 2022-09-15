@@ -490,8 +490,7 @@ let generate ~cst_module_name grammar =
   let grammar =
     let rules =
       List.map (
-        List.filter (fun rule ->
-          rule.is_extra || not rule.is_inlined_rule)
+        List.filter (fun rule -> not rule.is_inlined_rule)
       ) grammar.rules
     in
     { grammar with rules }

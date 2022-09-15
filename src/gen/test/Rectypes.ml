@@ -28,7 +28,6 @@ let create_rule name body : rule =
     is_rec = true; (* doesn't matter for our tests *)
     is_inlined_rule = false; (* doesn't matter *)
     is_inlined_type = false; (* doesn't matter *)
-    is_extra = false; (* doesn't matter for our tests *)
   }
 
 let test_no_cycle () =

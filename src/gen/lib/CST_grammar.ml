@@ -151,12 +151,6 @@ type rule = {
      some purposes.
   *)
 
-  is_extra: bool;
-  (* whether this rule occurs in the list extras. This field is redundant
-     and provided for convenience.
-     An extra is a kind of node that can be found anywhere in the input,
-     independently from the grammar, such as comments. *)
-
   body: rule_body;
 }
 [@@deriving show {with_path = false}]
