@@ -71,10 +71,20 @@ module Fmt = struct
   let type_app param type_name =
     label param (atom type_name)
 
-  let product l =
+  (* About the need for parentheses:
+     - For polymorphic variants, the presence of parentheses changes nothing,
+       a standalone tuple is always created.
+     - For classic variants though, the presence parentheses forces the
+       creation of a tuple which is detachable from the variant constructor.
+       Without parentheses though, we save the allocation of a block. *)
+  let product ~paren l =
     match l with
     | [x] -> x
-    | l -> E.List (("(", "*", ")", Style.left_sep_paren_list), l)
+    | l ->
+        if paren then
+          E.List (("(", "*", ")", Style.left_sep_paren_list), l)
+        else
+          E.List (("", "*", "", Style.left_sep_paren_list), l)
 
   let classic_variant l =
     let cases =
@@ -210,7 +220,7 @@ let rec format_body ?def_name body : E.t =
   | Optional body ->
       Fmt.type_app (format_body body) "option"
   | Seq body_list ->
-      Fmt.product (format_seq body_list)
+      Fmt.product ~paren:true (format_seq body_list)
 
 and format_choice l =
   List.map (fun (name, body) ->
@@ -233,8 +243,12 @@ let format_extra_def extras =
         let cases =
           extras
           |> List.map (fun rule_name ->
-            let constructor = Codegen_util.translate_ident_uppercase rule_name in
-            (constructor, Some (format_body (Symbol rule_name)))
+            let constructor =
+              Codegen_util.translate_ident_uppercase rule_name in
+            (constructor, Some (Fmt.product ~paren:false [
+               format_body (Symbol "Loc.t");
+               format_body (Symbol rule_name);
+             ]))
           )
           |> Fmt.classic_variant
         in
