@@ -23,7 +23,7 @@ for lang in $* ; do
   [DESCRIBE WHAT THIS TEST IS FOR]
 */
 module.exports = grammar({
-  name: '$lang',
+  name: '$name',
   rules: {
     program: $ => 'hello'
   }
