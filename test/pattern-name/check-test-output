@@ -11,6 +11,18 @@ contains() {
     echo "OK found '$str' in '$file'"
   else
     echo "FAIL couldn't find '$str' in '$file'"
+    return 1
+  fi
+}
+
+doesnt_contain() {
+  str=$1
+  file=$2
+  if grep -F -q "$str" "$file"; then
+    echo "FAIL found '$str' in '$file'"
+    return 1
+  else
+    echo "OK couldn't find '$str' in '$file'"
   fi
 }
 
@@ -32,3 +44,6 @@ contains 'type pat___' ocaml-src/lib/CST.ml
 # "01abfc7".
 contains 'type pat_01abfc7' ocaml-src/lib/CST.ml
 contains 'type pat_01abfc7_' ocaml-src/lib/CST.ml
+
+# Identical patterns should get the same name
+doesnt_contain 'type pat_lowe_ ' ocaml-src/lib/CST.ml

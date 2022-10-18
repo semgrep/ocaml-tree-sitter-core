@@ -18,6 +18,10 @@ module.exports = grammar({
       /-/, // expect different name than for /_/
       /#/,
       /01abfc7/, // intentional collision with the hash for /#/
+      seq(
+        'thing',
+        /lowercase/, // duplicate, should share a name with the other copy
+      ),
     )
   }
 });

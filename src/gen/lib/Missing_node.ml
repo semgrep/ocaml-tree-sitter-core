@@ -80,11 +80,18 @@ let extract_alias_rules_from_body add_rule body =
 
 let extract_rules make_unique rules =
   let new_rules = Hashtbl.create 100 in
+  let new_rule_bodies = Hashtbl.create 100 in
   let add_rule preferred_name rule_body =
-    let name = make_unique preferred_name in
-    printf "add_rule pref:%s -> %s\n" preferred_name name;
-    Hashtbl.replace new_rules name rule_body;
-    name
+    (* Avoid introducing two rules x and x_ for the same rule body if said
+       body occurs multiple times in the grammar. Instead, share the same
+       name and rule. *)
+    match Hashtbl.find_opt new_rule_bodies rule_body with
+    | Some name -> name
+    | None ->
+        let name = make_unique preferred_name in
+        Hashtbl.replace new_rules name rule_body;
+        Hashtbl.add new_rule_bodies rule_body name;
+        name
   in
   let rewritten_rules =
     List.map (fun (name, body) ->
