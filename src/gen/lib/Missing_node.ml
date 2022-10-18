@@ -17,11 +17,6 @@ type token_node_name =
   | Literal of string
   | Name of string
 
-let make_translator () =
-  let map = Protect_ident.create () in
-  fun ~orig_name ~preferred_name ->
-    Protect_ident.add_translation ~preferred_dst:preferred_name map orig_name
-
 let get_token_node_name (token_contents : rule_body) : token_node_name option =
   let rec get (x : rule_body) =
     match x with
@@ -83,12 +78,11 @@ let extract_alias_rules_from_body add_rule body =
       x
   | x -> extract x
 
-let extract_rules add_translation rules =
+let extract_rules make_unique rules =
   let new_rules = Hashtbl.create 100 in
   let add_rule preferred_name rule_body =
-    let name =
-      add_translation ~orig_name:preferred_name ~preferred_name
-    in
+    let name = make_unique preferred_name in
+    printf "add_rule pref:%s -> %s\n" preferred_name name;
     Hashtbl.replace new_rules name rule_body;
     name
   in
@@ -109,17 +103,20 @@ let extract_rules add_translation rules =
 *)
 let work_around_missing_nodes grammar =
   let rules = grammar.rules in
-  let add_translation = make_translator () in
+  let make_unique =
+    let scope = Fresh.create_scope () in
+    fun preferred_name -> Fresh.create_name scope preferred_name
+  in
   (* Register the rule names. They should be unique already. *)
   List.iter (fun (name, _body) ->
-    let translated =
-      add_translation ~orig_name:name ~preferred_name:name
-    in
-    if translated <> name then
+    let unique_name = make_unique name in
+    if unique_name <> name then
       failwith (
         sprintf "Grammar defines multiple rules with the same name: %s"
           name
       )
   ) rules;
-  let new_rules = extract_rules add_translation rules in
+  (* Then create new rules. Their preferred names are automatically
+     derived and may collide. *)
+  let new_rules = extract_rules make_unique rules in
   { grammar with rules = new_rules }

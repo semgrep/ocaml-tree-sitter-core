@@ -206,8 +206,9 @@ let alias_extras grammar =
             must_be_preserved=true;
           }
         else x)
-    (* Cases below only traverse the structure. We could cut down on boilerplate
-     * by using deriving visitors on this data structure. *)
+    (* Cases below only traverse the structure. We could cut down on
+       boilerplate by using deriving visitors on this data
+       structure. *)
     | STRING _
     | PATTERN _
     | BLANK -> x
@@ -226,26 +227,27 @@ let alias_extras grammar =
     | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (insert_aliases x)
     | TOKEN x -> TOKEN (insert_aliases x)
   in
-  let rules = List.map (fun (id, body) -> (id, insert_aliases body)) grammar.rules in
-  (* Later in the pipeline, ocaml-tree-sitter-core checks that each name used in
-   * an alias is associated with an actual rule. I (nmote) suspect that this
-   * isn't necessary, but for now we'll insert a blank rule for each new alias
-   * to satisfy this check.
-   * *)
+  let rules =
+    List.map (fun (id, body) -> (id, insert_aliases body)) grammar.rules in
+  (* Later in the pipeline, ocaml-tree-sitter-core checks that each
+     name used in an alias is associated with an actual rule. I
+     (nmote) suspect that this isn't necessary, but for now we'll
+     insert a blank rule for each new alias to satisfy this check.
+  *)
   let new_alias_rules = List.map (fun name -> name, BLANK) !new_aliases in
   let rules = rules @ new_alias_rules in
   let rules =
     (* Hack to work around https://github.com/tree-sitter/tree-sitter/issues/1834.
-     *
-     * Insert an unused rule that simply references each extra. This keeps
-     * tree-sitter from renaming all instances of the extra based on the alias,
-     * since it only creates a default alias if a rule appears only in aliases
-     * (see https://github.com/tree-sitter/tree-sitter/pull/1836)
+       Insert an unused rule that simply references each extra. This keeps
+       tree-sitter from renaming all instances of the extra based on the alias,
+       since it only creates a default alias if a rule appears only in aliases
+       (see https://github.com/tree-sitter/tree-sitter/pull/1836)
     *)
     let dummy_rules =
       List.mapi
         (fun i extra_name ->
-           let dummy_name = Fresh.create_name fresh ("dummy_alias" ^ (string_of_int i)) in
+           let dummy_name =
+             Fresh.create_name fresh ("dummy_alias" ^ (string_of_int i)) in
            let rule = SYMBOL extra_name in
            (dummy_name, rule)
         ) !aliased_rules

@@ -73,6 +73,11 @@ let name_of_opt_prec_value p =
   | None -> "0"
   | Some p -> "x" ^ name_of_prec_value p
 
+let name_pattern pat =
+  match Pattern_name.infer pat with
+  | Some name -> name
+  | None -> hash_string_hex pat
+
 (*
    Similar to name_rule_body below but operates on the original tree-sitter
    grammar type (grammar.json). This is used to generate rule names
@@ -86,7 +91,7 @@ let name_ts_rule_body (body : Tree_sitter_t.rule_body) =
     | SYMBOL ident -> ident
     | STRING s -> Punct.to_alphanum s
     | BLANK -> "blank"
-    | PATTERN pat -> "pat_" ^ hash_string_hex pat
+    | PATTERN pat -> "pat_" ^ name_pattern pat
     | REPEAT x -> "rep_" ^ name_rule_body x
     | REPEAT1 x -> "rep1_" ^ name_rule_body x
     | CHOICE (x :: _) -> "choice_" ^ name_rule_body x
