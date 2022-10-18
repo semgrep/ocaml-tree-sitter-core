@@ -39,7 +39,7 @@ rule sequence = parse
      let elt = Char (normalize_char c) in
      elt :: sequence lexbuf
    }
-| '[' (['a'-'z' 'A'-'Z' '_' '-']+ as set) ']' {
+| '[' (['a'-'z' 'A'-'Z' '0'-'9' '_' '-']+ as set) ']' {
      let elt = lowercase_singleton_of_cset set in
      elt :: sequence lexbuf
    }

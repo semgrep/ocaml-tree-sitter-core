@@ -31,6 +31,7 @@ contains 'type pat_uppe' ocaml-src/lib/CST.ml
 contains 'type pat_mixed' ocaml-src/lib/CST.ml
 contains 'type pat_unde_sepa' ocaml-src/lib/CST.ml
 contains 'type pat_dash_sepa' ocaml-src/lib/CST.ml
+contains 'type pat_last_90_days' ocaml-src/lib/CST.ml
 
 # Collision resolution between /X/ and /x/ that both get normalized to 'x'.
 contains 'type pat_x' ocaml-src/lib/CST.ml

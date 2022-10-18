@@ -12,6 +12,7 @@ module.exports = grammar({
       /underscore_separator/,
       /dash-separator/,
       /42/,
+      /[lL][aA][sS][tT][__][99][00][__][dD][aA][yY][sS]/,
       /X/,
       /x/, // expect different name than for /X/
       /_/,
