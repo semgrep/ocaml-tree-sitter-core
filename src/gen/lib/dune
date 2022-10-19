@@ -5,6 +5,7 @@
  (libraries
    unix
    atdgen-runtime
+   re
    str
    tsort
  )
@@ -19,3 +20,5 @@
  (targets Tree_sitter_t.ml Tree_sitter_t.mli)
  (deps    Tree_sitter.atd)
  (action  (run atdgen -t %{deps})))
+
+(ocamllex Pattern_name)

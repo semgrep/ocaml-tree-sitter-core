@@ -23,7 +23,7 @@ val create : ?reserved_dst:string list -> unit -> t
 
 (* Translate a string 'src' to a string 'dst', ensuring that
    'dst' is as close as possible to 'preferred_dst' and that
-   nothing else already translates to that 'dst.
+   nothing else already translates to that 'dst'.
    'preferred_dst' defaults to 'src'.
 
    This translation is remembered, with the consequence that calling this
