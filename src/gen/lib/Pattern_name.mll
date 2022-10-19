@@ -20,14 +20,14 @@
   | '-' -> '_'
   | c -> Char.lowercase_ascii c
 
-  let lowercase_singleton_of_cset s =
-    let lowercase_chars =
+  let normalized_singleton_of_cset s =
+    let normalized_chars =
       String.to_seq s
       |> List.of_seq
       |> List.map normalize_char
       |> deduplicate
     in
-    match lowercase_chars with
+    match normalized_chars with
     | [] -> Other
     | [c] -> Char c
     | _ :: _ -> Other
@@ -40,7 +40,7 @@ rule sequence = parse
      elt :: sequence lexbuf
    }
 | '[' (['a'-'z' 'A'-'Z' '0'-'9' '_' '-']+ as set) ']' {
-     let elt = lowercase_singleton_of_cset set in
+     let elt = normalized_singleton_of_cset set in
      elt :: sequence lexbuf
    }
 | _ { Other :: sequence lexbuf }
@@ -58,8 +58,6 @@ rule sequence = parse
       with Exit -> None
     in
     match chars with
-    | Some chars ->
-        let chars = List.map (function '-' -> '_' | c -> c) chars in
-        Some (string_of_list chars)
+    | Some chars -> Some (string_of_list chars)
     | None -> None
 }
