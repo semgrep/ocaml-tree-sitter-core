@@ -145,13 +145,7 @@ aggregate_errors() {
   header='num_errors,num_lines,error_class'
   (
     echo "$header"
-    "$progdir"/aggregate-parse-errors < "$global_json_err_log" \
-      | sort -rn -t, -k1 -k2
-  ) > "$stat"/aggregated-errors-sorted-by-count.csv
-  (
-    echo "$header"
-    "$progdir"/aggregate-parse-errors < "$global_json_err_log" \
-      | sort -rn -t, -k2 -k1
+    "$progdir"/aggregate-parse-errors < "$global_json_err_log"
   ) > "$stat"/aggregated-errors-sorted-by-line-count.csv
 }
 
