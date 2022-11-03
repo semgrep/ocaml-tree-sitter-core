@@ -143,7 +143,7 @@ EOF
 
 aggregate_errors() {
   header='num_errors,num_lines,error_class'
-  "progdir"/aggregate-parse-errors < "$global_json_err_log" \
+  "$progdir"/aggregate-parse-errors < "$global_json_err_log" \
     > "$stat"/aggregated-errors.csv
 }
 
