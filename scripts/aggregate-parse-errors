@@ -92,11 +92,23 @@ def parse_json_error_log():
 
 def print_csv_clusters(clusters):
     writer = csv.writer(sys.stdout, quoting=csv.QUOTE_MINIMAL)
-    writer.writerow(['num errors', 'num lines', 'error class', 'code_location', 'code'])
-    for _key, clus in sorted(clusters.items(), key = lambda c: -c[1]['num_errors']):
+    writer.writerow([
+        'number of errors',
+        'number of affected lines',
+        'error class',
+        'code location',
+        'code sample',
+    ])
+    for _key, clus in sorted(clusters.items(), key = lambda c: -c[1]['num_lines']):
         code_locs_to_string = ';\n'.join(clus['code_location'])
         all_code_lines = ';\n'.join(clus['code'])
-        row = [clus['num_errors'], clus['num_lines'], clus['error_class'], code_locs_to_string, all_code_lines]
+        row = [
+            clus['num_errors'],
+            clus['num_lines'],
+            clus['error_class'],
+            code_locs_to_string,
+            all_code_lines
+        ]
         writer.writerow(row)
 
 
