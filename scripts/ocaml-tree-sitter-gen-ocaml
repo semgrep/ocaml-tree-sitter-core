@@ -33,6 +33,7 @@ ocaml_tree_sitter=$(which ocaml-tree-sitter)
 default_dst_dir="ocaml-src"
 default_src_dir="src"
 default_lang="lang"
+default_package="tree-sitter-lang"
 
 usage() {
   cat <<EOF
@@ -45,18 +46,23 @@ tree-sitter as 'src/grammar.json'.
 Options:
   --dst DST_DIR
       Specify the output directory. Default: $default_dst_dir
+  --help
+      Show this help message and exit.
+  --lang LANG
+      Name of the programming language. It will be part of the name
+      of the library SUPERNAME.LANG and of the OCaml module.
+      Case conversion and conversions between dashes and underscores will
+      take place as needed.
+      Default: $default_lang
   --src SRC_DIR
       Location of the 'src' folder with some of its contents generated
       by tree-sitter. It must contain 'grammar.json', 'parser.c',
       and optionally other C files ('scanner.c' or 'scanner.cc') needed
       to build the C parser. Default: $src_dir
-  --help
-      Show this help message and exit.
-  --lang NAME
-      Name of the programming language. It will be part of the name
-      of the library and of the OCaml module. Case conversion and conversions
-      between dashes and underscores will take place as needed.
-      Default: $default_lang
+  --package PKG
+      The Dune package name to which the library will belong.
+      The library name will be PKG.LANG where LANG is the language name.
+      Default: $default_package.
   --trace
       Print debugging info during parsing.
   --tree-sitter-libdir LIBDIR
@@ -75,6 +81,7 @@ EOF
 test -x "$ocaml_tree_sitter" || error "missing executable $ocaml_tree_sitter"
 
 lang="$default_lang"
+package="$default_package"
 src_dir="$default_src_dir"
 dst_dir="$default_dst_dir"
 trace_option=()
@@ -91,6 +98,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --lang)
       lang="$2"
+      shift
+      ;;
+    --package)
+      package="$2"
       shift
       ;;
     --src)
@@ -203,7 +214,7 @@ EOF
 
 cat > "$dst_dir"/lib/dune <<EOF
 (library
-  (public_name tree-sitter-lang.${lang_dashes})
+  (public_name $package.${lang_dashes})
   (name tree_sitter_${lang_underscores})
   (preprocess (pps ppx_sexp_conv))
   (libraries atdgen-runtime tree-sitter.run)
@@ -249,10 +260,10 @@ EOF
 
 cat > "$dst_dir"/bin/dune <<EOF
 (executable
-  (package tree-sitter-lang)
+  (package $package)
   (public_name parse-${lang_dashes})
   (name Main)
-  (libraries tree-sitter-lang.${lang_dashes})
+  (libraries $package.${lang_dashes})
 )
 EOF
 
