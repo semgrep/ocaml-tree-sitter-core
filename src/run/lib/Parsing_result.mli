@@ -8,12 +8,24 @@ type stat = {
   error_count: int;
 }
 
-type 'a t = {
-  program: 'a option;
+(*
+   There's one type for the program which is the grammar's entrypoint,
+   and one type for all the extras which are independent entrypoints.
+   For example:
+
+     type program = ...
+     type extra =
+     | Comment of ...
+     | Heredoc of ...
+*)
+type ('program, 'extra) t = {
+  program: 'program option;
+  extras: 'extra list;
   errors: Tree_sitter_error.t list;
   stat: stat;
 }
 
-val create : Src_file.t -> 'a option -> Tree_sitter_error.t list -> 'a t
+val create :
+  Src_file.t -> 'a option -> 'b list -> Tree_sitter_error.t list -> ('a, 'b) t
 
 val export_stat : out_file:string -> stat -> unit

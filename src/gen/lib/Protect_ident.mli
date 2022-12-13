@@ -41,5 +41,8 @@ val ocaml_keywords : string list
 (* Lowercase identifiers that are built-in type names in OCaml. *)
 val ocaml_builtin_types : string list
 
-(* Union of ocaml_keywords and ocaml_builtin_types *)
+(* Type names reserved for use by the code generator. *)
+val reserved_type_names : string list
+
+(* Union of ocaml_keywords, ocaml_builtin_types, reserved_type_names *)
 val ocaml_reserved : string list

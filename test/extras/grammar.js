@@ -5,10 +5,14 @@ module.exports = grammar({
       $.number
     ),
     number: $ => /[0-9]+/,
-    comment: $ => /#.*/
+    letter: $ => /[a-zA-Z]/,
+    comment: $ => /#.*/,
+    complex_extra: $ => seq('(', repeat(choice($.number, $.letter)), ')'),
   },
   extras: $ => [
-    $.comment,
-    /\s|\\\n/
+    $.comment,       // appears in the CST
+    $.complex_extra, // same
+    "IGNOREME",  // doesn't appear in the CST because it doesn't have a name
+    /\s|\\\n/    // same
   ]
 })

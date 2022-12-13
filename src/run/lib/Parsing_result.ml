@@ -10,8 +10,9 @@ type stat = {
   error_count: int;
 }
 
-type 'a t = {
+type ('a, 'b) t = {
   program: 'a option;
+  extras: 'b list;
   errors: Tree_sitter_error.t list;
   stat: stat;
 }
@@ -40,10 +41,11 @@ let create_stat src errors =
     error_count;
   }
 
-let create src program errors =
+let create src program extras errors =
   let stat = create_stat src errors in
   {
     program;
+    extras;
     errors;
     stat;
   }
