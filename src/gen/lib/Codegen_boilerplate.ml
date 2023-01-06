@@ -199,7 +199,19 @@ let gen ~cst_module_name grammar =
   |> Codegen_util.interleave [Line ""]
   |> List.flatten
 
+let generate_dumper grammar =
+  sprintf "\
+
+let dump_tree root =
+  map_%s () root
+  |> Tree_sitter_run.Raw_tree.to_string
+  |> print_string
+"
+    (trans grammar.entrypoint)
+
 let generate ~cst_module_name grammar =
   let inline_grammar = Nice_typedefs.rearrange_rules grammar in
   let tree = gen ~cst_module_name inline_grammar in
-  make_header grammar ^ Indent.to_string tree
+  make_header grammar
+  ^ Indent.to_string tree
+  ^ generate_dumper grammar

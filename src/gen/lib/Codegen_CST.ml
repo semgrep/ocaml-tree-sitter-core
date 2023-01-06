@@ -221,12 +221,6 @@ let format_rule (rule : rule) =
    rule.is_inlined_type,
    format_body ~def_name:rule.name rule.body)
 
-let ppx =
-  Fmt.top_sequence [
-    Fmt.atom "[@@deriving sexp_of]";
-    Fmt.atom ""
-  ]
-
 (*
    1. Identify names that are used at most once, becoming candidates
       for inlining.
@@ -243,26 +237,16 @@ let format_types grammar =
       List.map format_rule rule_group
     ) grammar.rules
   in
-  List.map (fun def_group ->
+  List.map (fun x ->
     Fmt.top_sequence [
-      Fmt.recursive_typedefs def_group;
-      ppx
+      Fmt.recursive_typedefs x;
+      Fmt.atom ""
     ]
   ) semi_formatted_defs
   |> Fmt.top_sequence
-
-let generate_dumper grammar =
-  sprintf "\
-
-let dump_tree root =
-  sexp_of_%s root
-  |> Print_sexp.to_stdout
-"
-    (trans grammar.entrypoint)
 
 let generate grammar =
   let buf = Buffer.create 10_000 in
   Buffer.add_string buf (preamble grammar);
   E.Pretty.to_buffer buf (format_types grammar);
-  Buffer.add_string buf (generate_dumper grammar);
   Buffer.contents buf

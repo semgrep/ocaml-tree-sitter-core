@@ -38,3 +38,11 @@ type 'a t =
   | Case of string * 'a t (* tagged value = variant [choice] *)
   | Option of 'a t option (* optional value [optional] *)
   | Any of 'a (* allows integration in a richer tree type *)
+
+val format :
+  ?format_any: ('a -> Tree_sitter_gen.Indent.t) ->
+  'a t -> Tree_sitter_gen.Indent.t
+
+val to_string :
+  ?format_any: ('a -> Tree_sitter_gen.Indent.t) ->
+  'a t -> string
