@@ -18,22 +18,39 @@ let format ?(format_any = fun _ -> [Line "??"]) x =
   let rec format x : Tree_sitter_gen.Indent.t =
     match x with
     | Token (_loc, str) -> [ Line (sprintf "%S" str) ]
+    | List [] -> [ Line "[]" ]
+    | List [Token (_loc, str)] -> [ Line (sprintf "[%S]" str) ]
     | List xs -> [
         Line "[";
         Block (List.map format_inline xs);
         Line "]"
       ]
+    | Tuple [] -> [ Line "()" ]
     | Tuple xs -> [
         Line "(";
         Block (List.map format_inline xs);
         Line ")"
       ]
+    | Case (name, (Token (_loc, str))) -> [ Line (sprintf "%s %S" name str) ]
     | Case (name, x) -> [
         Line (sprintf "%s (" name);
         Block (format x);
         Line ")";
       ]
     | Option None -> [ Line "None" ]
+    | Option (Some (Token (_loc, str))) -> [ Line (sprintf "Some %S" str) ]
+    | Option (Some (List [])) -> [ Line "Some []" ]
+    | Option (Some (List xs)) -> [
+        Line "Some [";
+        Block (List.map format_inline xs);
+        Line "]";
+      ]
+    | Option (Some (Tuple [])) -> [ Line "Some ()" ]
+    | Option (Some (Tuple xs)) -> [
+        Line "Some (";
+        Block (List.map format_inline xs);
+        Line ")";
+      ]
     | Option (Some x) -> [
         Line "Some (";
         Block (format x);

@@ -30,6 +30,9 @@
    This may make it harder to modify the generated boilerplate.
    For example, we could decide to support semgrep ellipses within all the
    lists but not in tuples.
+
+   For debugging purposes, a more precise tree is better since it allows
+   us to pretty-print more accurately.
 *)
 type 'a t =
   | Token of Token.t (* keyword, identifier, punctuation, int literal, ... *)

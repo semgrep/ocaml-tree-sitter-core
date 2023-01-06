@@ -18,14 +18,27 @@ program:
 |   foo
 ---
 Recovered typed CST:
-| foo
-|   |   Comma_expl_
-|   | foo
-|   |   Semi
-|   |   ";"
-|   | foo
-|   |   Period_expl
-|   | foo
+(
+  "foo"
+  [
+    (
+      Comma_expl_ (
+        ()
+      )
+      "foo"
+    )
+    (
+      Semi ";"
+      "foo"
+    )
+    (
+      Period_expl (
+        ()
+      )
+      "foo"
+    )
+  ]
+)
 total lines: 2
 error lines: 0
 error count: 0
