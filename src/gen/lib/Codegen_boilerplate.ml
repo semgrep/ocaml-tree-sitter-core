@@ -15,6 +15,8 @@ let make_header grammar = sprintf
    to another type of tree.
 *)
 
+module R = Tree_sitter_run.Raw_tree
+
 (* Disable warnings against unused variables *)
 [@@@warning "-26-27"]
 
@@ -23,14 +25,11 @@ let make_header grammar = sprintf
 
 type env = unit
 
-let token (env : env) (_tok : Tree_sitter_run.Token.t) =
-  failwith "not implemented"
+let token (env : env) (tok : Tree_sitter_run.Token.t) =
+  R.Token tok
 
 let blank (env : env) () =
-  failwith "not implemented"
-
-let todo (env : env) _ =
-   failwith "not implemented"
+  R.Tuple []
 
 |}
     grammar.name
@@ -54,7 +53,12 @@ let mkpat env =
   | [var] -> var
   | l -> sprintf "(%s)" (String.concat ", " l)
 
-let mkexp env = mkpat env
+let mkexp env =
+  match List.map fst env with
+  | [] -> "R.Tuple []"
+  | [var] -> var
+  | l -> sprintf "R.Tuple [%s]" (String.concat "; " l)
+
 let comment = Codegen_util.comment
 
 let token_comment (tok : token) =
@@ -84,26 +88,31 @@ let rec gen_mapper_body var body : node list =
       [ Line (sprintf "blank env %s" var)]
   | Repeat (Symbol name)
   | Repeat1 (Symbol name) ->
-      [ Line (sprintf "List.map (map_%s env) %s" (trans name) var) ]
+      [ Line (sprintf "R.List (List.map (map_%s env) %s)"
+                (trans name) var) ]
   | Repeat (Token token)
   | Repeat1 (Token token) ->
-      [ Line (sprintf "List.map (token env %s) %s" (token_comment token) var) ]
+      [ Line (sprintf "R.List (List.map (token env %s) %s)"
+                (token_comment token) var) ]
   | Repeat body
   | Repeat1 body ->
       let env = destruct body in
       [
-        Line (sprintf "List.map (fun %s ->" (mkpat env));
+        Line (sprintf "R.List (List.map (fun %s ->" (mkpat env));
         Block (gen_mapper_body_multi env);
-        Line (sprintf ") %s" var)
+        Line (sprintf ") %s)" var)
       ]
   | Choice l ->
       let cases =
         List.map (fun (name, body) ->
           let env = destruct body in
           Group [
-            Line (sprintf "| `%s %s ->" name (mkpat env));
+            Line (sprintf "| `%s %s -> R.Case (%S," name (mkpat env) name);
             Space;
-            Block [Block (gen_mapper_body_multi env)]
+            Block [
+              Block (gen_mapper_body_multi env);
+              Line ")"
+            ]
           ]
         ) l
       in
@@ -117,11 +126,14 @@ let rec gen_mapper_body var body : node list =
       [
         Line (sprintf "(match %s with" var);
         Group [
-          Line (sprintf "| Some %s ->" (mkpat env));
+          Line (sprintf "| Some %s -> R.Option (Some (" (mkpat env));
           Space;
-          Block [Block (gen_mapper_body_multi env)];
+          Block [
+            Block (gen_mapper_body_multi env);
+            Line "))";
+          ];
         ];
-        Line (sprintf "| None -> todo env ())")
+        Line (sprintf "| None -> R.Option None)")
       ]
   | Seq _ as body ->
       let env = destruct body in
@@ -132,7 +144,7 @@ let rec gen_mapper_body var body : node list =
 
 and gen_mapper_body_multi env =
   match env with
-  | [] -> [ Line "todo env ()" ]
+  | [] -> [ Line "R.Tuple []" ]
   | [var, body] -> gen_mapper_body var body
   | env ->
       let bindings =
@@ -148,7 +160,7 @@ and gen_mapper_body_multi env =
       in
       [
         Inline bindings;
-        Line (sprintf "todo env %s" (mkexp env))
+        Line (mkexp env)
       ]
 
 let gen_rule_mapper_binding ~cst_module_name (rule : rule) =
@@ -187,7 +199,19 @@ let gen ~cst_module_name grammar =
   |> Codegen_util.interleave [Line ""]
   |> List.flatten
 
+let generate_dumper grammar =
+  sprintf "\
+
+let dump_tree root =
+  map_%s () root
+  |> Tree_sitter_run.Raw_tree.to_string
+  |> print_string
+"
+    (trans grammar.entrypoint)
+
 let generate ~cst_module_name grammar =
   let inline_grammar = Nice_typedefs.rearrange_rules grammar in
   let tree = gen ~cst_module_name inline_grammar in
-  make_header grammar ^ Indent.to_string tree
+  make_header grammar
+  ^ Indent.to_string tree
+  ^ generate_dumper grammar
