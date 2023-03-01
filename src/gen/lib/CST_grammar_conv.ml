@@ -215,6 +215,7 @@ let make_external_rules externals =
           Token { name; is_inlined = false; description = External }
         in
         Some (name, body)
+    | PATTERN _ 
     | STRING _ -> None (* no need for a rule *)
     | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"
   ) externals
