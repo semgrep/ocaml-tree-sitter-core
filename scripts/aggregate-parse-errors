@@ -66,27 +66,37 @@ def get_file_and_location(err):
 
 def parse_json_error_log():
     clusters = {}
-    for line in sys.stdin:
-        err = json.loads(line)
-        if 'error_class' in err:
-            key = err['error_class']
-            if not key in clusters:
-                clus = {
-                    'error_class': key,
-                    'num_errors': 0,
-                    'num_lines': 0,
-                    'code_location': [],
-                    'code': [],
-                }
-                clusters[key] = clus
-            clus = clusters[key]
-            clus['num_errors'] = clus['num_errors'] + 1
-            err_num_lines = err['end_pos']['row'] - err['start_pos']['row'] + 1
-            clus['num_lines'] = clus['num_lines'] + err_num_lines
+    # We open as a binary, as the output that we get out may contain characters that
+    # a standard UTF-8 encoding cannot interpret.
+    # With the Haskell grammar, we were getting a "0xc0" byte, for some reason.
+    with open(0, 'rb') as open_file:
+      for line in open_file.readlines():
+          try:
+            # this can return a utf-8 encoding error, so we wrap this whole
+            # block in a try-except for UnicodeDecodeError
+            err = json.loads(line)
+            if 'error_class' in err:
+                key = err['error_class']
+                if not key in clusters:
+                    clus = {
+                        'error_class': key,
+                        'num_errors': 0,
+                        'num_lines': 0,
+                        'code_location': [],
+                        'code': [],
+                    }
+                    clusters[key] = clus
+                clus = clusters[key]
+                clus['num_errors'] = clus['num_errors'] + 1
+                err_num_lines = err['end_pos']['row'] - err['start_pos']['row'] + 1
+                clus['num_lines'] = clus['num_lines'] + err_num_lines
 
-            if add_to_code_lines(clus['code_location'], err['file']):
-                clus['code_location'].append(get_file_and_location(err))
-                clus['code'].append(get_code_lines(err))
+                if add_to_code_lines(clus['code_location'], err['file']):
+                    clus['code_location'].append(get_file_and_location(err))
+                    clus['code'].append(get_code_lines(err))
+          except UnicodeDecodeError:
+              print(f"Broken UTF-8 in line {line}", file=sys.stderr)
+              pass
 
     return clusters
 
