@@ -3,6 +3,8 @@ module.exports = grammar({
 
   /**
    * We want to test our ability to deal with externals.  
+   * There are three allowed kinds, demonstrated here. 
+   * Strings, patterns, and identifiers.
    */
   externals: $ => [
     "foo",
@@ -11,10 +13,6 @@ module.exports = grammar({
   ],
 
   rules: {
-    // used to be bad:
-    // program: ($) => seq('a', $.extra),
-
-    // good:
     program: ($) => repeat(choice("foo", /\n/, $.bar))
   },
 });
