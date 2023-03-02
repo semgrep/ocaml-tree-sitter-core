@@ -2,8 +2,8 @@ module.exports = grammar({
   name: "externals",
 
   /**
-   * We want to test our ability to deal with externals.  
-   * There are three allowed kinds, demonstrated here. 
+   * We want to test our ability to deal with externals.
+   * There are three allowed kinds, demonstrated here.
    * Strings, patterns, and identifiers.
    */
   externals: $ => [

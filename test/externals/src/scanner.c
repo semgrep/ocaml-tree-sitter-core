@@ -7,7 +7,7 @@ enum TokenType {
 };
 
 /**
- * For this toy example, we don't actually need any state. 
+ * For this toy example, we don't actually need any state.
  */
 void *tree_sitter_externals_external_scanner_create() {
   return NULL;
@@ -25,7 +25,7 @@ unsigned tree_sitter_externals_external_scanner_serialize(
     char *buffer
 ) {
   // With no state to store, we write 0 bytes.
-  return 0; 
+  return 0;
 }
 
 void tree_sitter_externals_external_scanner_deserialize(
