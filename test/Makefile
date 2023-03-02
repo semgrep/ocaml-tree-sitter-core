@@ -22,7 +22,8 @@ TESTS = \
   explicit-extra \
   reserved \
   inline \
-  pattern-name
+  pattern-name \
+  externals
 
 # Build and run all the tests.
 .PHONY: test
