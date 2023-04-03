@@ -48,31 +48,8 @@ let load_string ?(src_name = "<source>") ?src_file src_contents =
     lines = Array.of_list lines;
   }
 
-(*
-   Non-trivial function to read correctly from any kind of file,
-   including named pipes such as those created by bash via
-   "process substitution" e.g. echo <(echo hello)
-*)
-let read_file path =
-  let buf_len = 4096 in
-  let extbuf = Buffer.create 4096 in
-  let buf = Bytes.create buf_len in
-  let rec loop fd =
-    match Unix.read fd buf 0 buf_len with
-    | 0 -> Buffer.contents extbuf
-    | num_bytes ->
-        assert (num_bytes > 0);
-        assert (num_bytes <= buf_len);
-        Buffer.add_subbytes extbuf buf 0 num_bytes;
-        loop fd
-  in
-  let fd = Unix.openfile path [Unix.O_RDONLY] 0 in
-  Fun.protect
-    ~finally:(fun () -> Unix.close fd)
-    (fun () -> loop fd)
-
 let load_file path =
-  let data = read_file path in
+  let data = Util_file.read_file path in
   load_string ~src_name:path ~src_file:path data
 
 let safe_get_row x row =
