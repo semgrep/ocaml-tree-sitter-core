@@ -253,6 +253,7 @@ cat > "$dst_dir"/lib/dune <<EOF
     (language cxx)
     (names ${cxx_files})
     (flags -fPIC
+           -I %{env:TREESITTER_INCDIR=/usr/local/include}
            -I .)
   )
 )
