@@ -32,6 +32,10 @@ type node = {
      tagged appropriately to avoid confusion. *)
   ~kind <ocaml default="Literal \"\"">: node_kind;
 
+  (* Missing nodes are suggested by tree-sitter. They don't exist in the
+     input. *)
+  ~is_missing: bool;
+
  (* Unique ID assigned right after parsing the json file so as to facilitate
     further processing. *)
   ~id: int;

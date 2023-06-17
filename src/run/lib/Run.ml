@@ -171,6 +171,8 @@ let nothing capture =
   | Matcher.Capture.Nothing -> ()
   | _ -> assert false
 
+type error_kind = Error_node | Missing_node
+
 (*
    Extract the error nodes from the original tree.
    This is meant for reporting errors, especially if the errors can't
@@ -183,22 +185,35 @@ let extract_error_nodes root_node =
   let rec extract ~parent acc node =
     match node.kind with
     | Error ->
-        (parent, node) :: acc
+        (parent, node, Error_node) :: acc
     | _ ->
-        match node.children with
-        | None -> acc
-        | Some children ->
-            List.fold_left (extract ~parent:(Some node)) acc children
+        if node.is_missing then
+          (parent, node, Missing_node) :: acc
+        else
+          match node.children with
+          | None -> acc
+          | Some children ->
+              List.fold_left (extract ~parent:(Some node)) acc children
   in
   extract ~parent:None [] root_node
   |> List.rev
 
 let extract_errors src root_node =
   extract_error_nodes root_node
-  |> List.map (fun (parent, error_node) ->
-    Tree_sitter_error.create
-      Tree_sitter_error_t.External src ?parent error_node
-      "Unrecognized construct"
+  |> List.map (fun (parent, node, error_kind) ->
+    match error_kind with
+    | Error_node ->
+        Tree_sitter_error.create
+          Tree_sitter_error_t.External src ?parent node
+          "Unrecognized construct"
+    | Missing_node ->
+        Tree_sitter_error.create
+          Tree_sitter_error_t.External src ?parent node
+          ("Missing element in input code: " ^
+           (match node.kind with
+            | Literal s -> Printf.sprintf "%S" s
+            | Name s -> s
+            | Error -> "???" (* should not happen *)))
   )
 
 let rec filter_nodes keep nodes =
@@ -210,18 +225,39 @@ and filter_node keep node =
   else
     None
 
+let has_missing_children node =
+  match node.children with
+  | None -> false
+  | Some children -> List.exists (fun child -> child.is_missing) children
+
 let make_keep ~blacklist =
   let tbl = Hashtbl.create 100 in
   List.iter (fun s -> Hashtbl.replace tbl s ()) blacklist;
   let keep node =
     not (node.kind = Error)
+    && not (has_missing_children node)
     && not (Hashtbl.mem tbl node.type_)
   in
   keep
 
 (*
-   Remove error nodes and extra nodes, which are nodes that can appear
-   anywhere in the tree.
+   Remove error nodes, missing nodes, and extra nodes.
+
+   Error nodes indicate unexpected input and can be removed from tree
+   while respecting the grammar (because the error bubbles up until
+   it's an optional position such as in a repeat()).
+
+   Missing nodes are suggested nodes that don't exist in the input.
+   Removing them removes them from a tuple (seq()), making the whole parsing
+   fail. Removing a minimal subtree like it's done for error nodes requires
+   knowledge of the grammar (e.g. is a sequence of nodes from a repeat() or
+   a seq()?) and would have to be done at the time of recovering the typed
+   CST, adding complexity.
+   As a cheap improvement, we remove all the siblings of the missing node
+   since we know it's a seq(), and hope that the seq() was in an optional
+   position and won't cause a collapse of the whole tree.
+
+   Extra nodes are nodes that can appear anywhere in the tree such as comments.
 *)
 let remove_extras ~extras =
   let keep = make_keep ~blacklist:extras in
