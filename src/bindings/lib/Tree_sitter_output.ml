@@ -19,12 +19,14 @@ let rec of_ts_node get_node_id ts_node =
         | None -> Literal type_
         | Some _ -> Name type_
   in
+  let is_missing = Node.is_missing ts_node in
   {
     type_;
     start_pos;
     end_pos;
     children;
     kind;
+    is_missing;
     id;
   }
 

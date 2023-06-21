@@ -171,8 +171,10 @@ let nothing capture =
   | Matcher.Capture.Nothing -> ()
   | _ -> assert false
 
+type error_kind = Error_node | Missing_node
+
 (*
-   Extract the error nodes from the original tree.
+   Extract the ERROR and MISSING nodes from the original tree.
    This is meant for reporting errors, especially if the errors can't
    be recovered from.
 
@@ -183,22 +185,35 @@ let extract_error_nodes root_node =
   let rec extract ~parent acc node =
     match node.kind with
     | Error ->
-        (parent, node) :: acc
+        (parent, node, Error_node) :: acc
     | _ ->
-        match node.children with
-        | None -> acc
-        | Some children ->
-            List.fold_left (extract ~parent:(Some node)) acc children
+        if node.is_missing then
+          (parent, node, Missing_node) :: acc
+        else
+          match node.children with
+          | None -> acc
+          | Some children ->
+              List.fold_left (extract ~parent:(Some node)) acc children
   in
   extract ~parent:None [] root_node
   |> List.rev
 
 let extract_errors src root_node =
   extract_error_nodes root_node
-  |> List.map (fun (parent, error_node) ->
-    Tree_sitter_error.create
-      Tree_sitter_error_t.External src ?parent error_node
-      "Unrecognized construct"
+  |> List.map (fun (parent, node, error_kind) ->
+    match error_kind with
+    | Error_node ->
+        Tree_sitter_error.create
+          Tree_sitter_error_t.External src ?parent node
+          "Unrecognized construct"
+    | Missing_node ->
+        Tree_sitter_error.create
+          Tree_sitter_error_t.External src ?parent node
+          ("Missing element in input code: " ^
+           (match node.kind with
+            | Literal s -> Printf.sprintf "%S" s
+            | Name s -> s
+            | Error -> "???" (* should not happen *)))
   )
 
 let rec filter_nodes keep nodes =
@@ -220,8 +235,17 @@ let make_keep ~blacklist =
   keep
 
 (*
-   Remove error nodes and extra nodes, which are nodes that can appear
-   anywhere in the tree.
+   Remove error nodes, missing nodes, and extra nodes.
+
+   Error nodes indicate unexpected input and can be removed from the tree
+   while respecting the grammar (because the error bubbles up until
+   it's an optional position such as in a repeat()).
+
+   Missing nodes are suggested nodes that don't exist in the input.
+   Missing nodes are left in place so as to keep the tree well-formed
+   but they're reported as errors.
+
+   Extra nodes are nodes that can appear anywhere in the tree such as comments.
 *)
 let remove_extras ~extras =
   let keep = make_keep ~blacklist:extras in

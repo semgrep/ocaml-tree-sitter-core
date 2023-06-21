@@ -72,7 +72,7 @@ for expect in ok xfail; do
       mkdir -p $(dirname "$cst")
       if [[ "$expect" = ok ]]; then
         # Expect success
-        if "$parser" "$src" 2>&1 > "$cst"; then
+        if "$parser" "$src" > "$cst" 2>&1; then
           pass=$(( pass + 1 ))
           echo "PASS: $src"
         else
@@ -82,7 +82,7 @@ for expect in ok xfail; do
         fi
       else
         # Expect error status
-        if "$parser" "$src" 2>&1 > "$cst"; then
+        if "$parser" "$src" > "$cst" 2>&1; then
           xpass=$(( xpass + 1 ))
           echo "XPASS: $src"
           echo "$common_path" >> "$xpass_list"
