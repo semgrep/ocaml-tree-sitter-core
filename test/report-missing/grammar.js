@@ -10,6 +10,9 @@ module.exports = grammar({
       seq(
         'b', ';'
       ),
+      seq(
+        'c', /;/
+      ),
     ),
     terminator: $ => /[;?.]/
   }
