@@ -17,7 +17,7 @@ TESTS = \
   anon-pat \
   prec \
   ignore-error \
-  ignore-missing \
+  report-missing \
   pattern \
   inline-token \
   explicit-extra \

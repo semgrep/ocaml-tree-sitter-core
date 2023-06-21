@@ -174,7 +174,7 @@ let nothing capture =
 type error_kind = Error_node | Missing_node
 
 (*
-   Extract the error nodes from the original tree.
+   Extract the ERROR and MISSING nodes from the original tree.
    This is meant for reporting errors, especially if the errors can't
    be recovered from.
 
@@ -225,17 +225,11 @@ and filter_node keep node =
   else
     None
 
-let has_missing_children node =
-  match node.children with
-  | None -> false
-  | Some children -> List.exists (fun child -> child.is_missing) children
-
 let make_keep ~blacklist =
   let tbl = Hashtbl.create 100 in
   List.iter (fun s -> Hashtbl.replace tbl s ()) blacklist;
   let keep node =
     not (node.kind = Error)
-    && not (has_missing_children node)
     && not (Hashtbl.mem tbl node.type_)
   in
   keep

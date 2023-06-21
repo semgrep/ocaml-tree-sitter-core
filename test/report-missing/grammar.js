@@ -1,5 +1,5 @@
 module.exports = grammar({
-  name: "ignore_missing",
+  name: "report_missing",
   rules: {
     program: $ => repeat($.tuple),
 
@@ -11,6 +11,6 @@ module.exports = grammar({
         'b', ';'
       ),
     ),
-    terminator: $ => /[;?.]+/
+    terminator: $ => /[;?.]/
   }
 });
