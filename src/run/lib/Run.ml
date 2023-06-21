@@ -242,14 +242,8 @@ let make_keep ~blacklist =
    it's an optional position such as in a repeat()).
 
    Missing nodes are suggested nodes that don't exist in the input.
-   Removing them removes them from a tuple (seq()), making the whole parsing
-   fail. Removing a minimal subtree like it's done for error nodes requires
-   knowledge of the grammar (e.g. is a sequence of nodes from a repeat() or
-   a seq()?) and would have to be done at the time of recovering the typed
-   CST, adding complexity.
-   As a cheap improvement, we remove all the siblings of the missing node
-   since we know it's a seq(), and hope that the seq() was in an optional
-   position and won't cause a collapse of the whole tree.
+   Missing nodes are left in place so as to keep the tree well-formed
+   but they're reported as errors.
 
    Extra nodes are nodes that can appear anywhere in the tree such as comments.
 *)
