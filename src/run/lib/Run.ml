@@ -237,7 +237,7 @@ let make_keep ~blacklist =
 (*
    Remove error nodes, missing nodes, and extra nodes.
 
-   Error nodes indicate unexpected input and can be removed from tree
+   Error nodes indicate unexpected input and can be removed from the tree
    while respecting the grammar (because the error bubbles up until
    it's an optional position such as in a repeat()).
 
