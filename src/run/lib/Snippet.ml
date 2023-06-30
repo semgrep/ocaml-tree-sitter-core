@@ -2,8 +2,6 @@
    Functions to extract a good snippet of code, with the error highlighted.
 *)
 
-open Printf
-
 type position = Tree_sitter_bindings.Tree_sitter_output_t.position = {
   row: int; (* line number, starting from 0. *)
   column: int; (* position within the line, starting from 0. *)
@@ -64,6 +62,10 @@ let extract
     ~start_pos
     ~end_pos
     (src : Src_file.t) =
+  (*
+     The lines stored in src.lines are complete, including the trailing
+     LF character.
+  *)
   let src_line_count = Array.length src.lines in
   if src_line_count = 0 then []
   else
@@ -83,10 +85,18 @@ let extract
         (* Highlight nothing. *)
         add [Normal line]
       else
+        (* Highlight something *)
       if start_line = end_line - 1 then
+        let start_column = start_pos.column in
+        let end_column =
+          (* Highlight the start position even if the range is empty.
+             If we're at the end of the line, we'll produce (Highlight "\n")
+             which is rendered as a special case by the highlighter. *)
+          max (start_column + 1) end_pos.column
+        in
         (* Highlight substring in the middle of a line. *)
-        let ab, c = split line end_pos.column in
-        let a, b = split ab start_pos.column in
+        let ab, c = split line end_column in
+        let a, b = split ab start_column in
         add [
           Normal a;
           Highlight b;
@@ -116,7 +126,7 @@ let extract
 let ansi_term_highlight s =
   match s with
   | "" -> s
-  | s -> ANSITerminal.(sprintf [Bold; red] "%s" s)
+  | s -> ANSITerminal.(sprintf [Bold; Underlined; red] "%s" s)
 
 let format_line buf ~color line =
   let highlight =
@@ -126,10 +136,11 @@ let format_line buf ~color line =
   List.iter (fun frag ->
     match frag with
     | Normal s -> Buffer.add_string buf s
+    | Highlight "\n" ->
+        Buffer.add_string buf (highlight " \n")
     | Highlight s -> Buffer.add_string buf (highlight s)
     | Ellipsis -> Buffer.add_string buf "…"
-  ) line;
-  bprintf buf "\n"
+  ) line
 
 let replace s char =
   String.make (String.length s) char
@@ -140,10 +151,11 @@ let format_underline buf ~color line =
     List.iter (fun frag ->
       match frag with
       | Normal s -> Buffer.add_string buf (replace s ' ')
+      | Highlight "\n" ->
+          Buffer.add_string buf "^\n"
       | Highlight s -> Buffer.add_string buf (replace s '^')
       | Ellipsis -> Buffer.add_string buf " "
-    ) line;
-    bprintf buf "\n"
+    ) line
   )
 
 let format ~color lines =
