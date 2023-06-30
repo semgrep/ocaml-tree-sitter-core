@@ -216,7 +216,6 @@ cat > "$dst_dir"/lib/dune <<EOF
 (library
   (public_name $package.${lang_dashes})
   (name tree_sitter_${lang_underscores})
-  (preprocess (pps ppx_sexp_conv))
   (libraries atdgen-runtime tree-sitter.run)
 
   ; A copy of the C headers for the tree-sitter library is found locally.

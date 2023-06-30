@@ -1,7 +1,6 @@
 (library
  (public_name tree-sitter.run)
  (name tree_sitter_run)
- (preprocess (pps ppx_sexp_conv))
  (libraries
    ANSITerminal
    atdgen-runtime
