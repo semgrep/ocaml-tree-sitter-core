@@ -56,6 +56,30 @@ let shorten_snippet_line line =
 let shorten_snippet_lines lines =
   List.map shorten_snippet_line lines
 
+let rec list_last = function
+  | [x] -> Some x
+  | _ :: xs -> list_last xs
+  | [] -> None
+
+let add_missing_newline_to_line line =
+  match list_last line with
+  | None -> line
+  | Some last_fragment ->
+      let misses_newline =
+        match last_fragment with
+        | Ellipsis -> true
+        | (Normal s
+          | Highlight s) ->
+            s = "" || s.[String.length s - 1] <> '\n'
+      in
+      if misses_newline then
+        line @ [Normal "\n"]
+      else
+        line
+
+let add_missing_newlines lines =
+  List.map add_missing_newline_to_line lines
+
 let extract
     ?(lines_before = 2)
     ?(lines_after = 2)
@@ -142,8 +166,12 @@ let format_line buf ~color line =
     | Ellipsis -> Buffer.add_string buf "…"
   ) line
 
+(* Replace all characters except newlines *)
 let replace s char =
-  String.make (String.length s) char
+  String.map (function
+    | '\n' -> '\n'
+    | _ -> char
+  ) s
 
 let format_underline buf ~color line =
   if not color
@@ -160,8 +188,10 @@ let format_underline buf ~color line =
 
 let format ~color lines =
   let buf = Buffer.create 1000 in
-  List.iter (fun line ->
+  lines
+  |> add_missing_newlines
+  |> List.iter (fun line ->
     format_line buf ~color line;
     format_underline buf ~color line;
-  ) lines;
+  );
   Buffer.contents buf
