@@ -102,7 +102,7 @@ val internal_error :
    Format an error message. Highlight the error for an ANSI terminal iff
    'color' is true. 'color' is false by default.
 *)
-val to_string : ?color:bool -> t -> string
+val to_string : ?style:Snippet.style -> t -> string
 
 (*
    Append errors to error log in json format, one object per line.

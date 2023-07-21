@@ -29,6 +29,11 @@ val extract :
   start_pos:position ->
   end_pos:position -> Src_file.t -> t
 
+type style =
+  | Auto (* best-effort guess *)
+  | Color (* use ANSI-terminal-compatible highlighting *)
+  | Text (* use text-based highlighting *)
+
 (*
    Render a snippet as text. If 'color' is true, the output will use
    color in a manner compatible with an ANSI terminal. Otherwise
@@ -37,4 +42,4 @@ val extract :
 
    Missing newlines are added automatically.
 *)
-val format : color:bool -> t -> string
+val format : style:style -> t -> string

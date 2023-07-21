@@ -8,7 +8,7 @@ open Printf
 open Tree_sitter_run
 
 let check_format_with_color (lines, expected_res) =
-  let res = Snippet.format ~color:true lines in
+  let res = Snippet.format ~style:Color lines in
   printf "Highlighted result:\n%s" res;
   (* This is for copy-pasting the expected string into the OCaml test: *)
   printf "Same, OCaml-escaped: %S\n" res;
@@ -16,7 +16,7 @@ let check_format_with_color (lines, expected_res) =
   Alcotest.(check string) "equal" expected_res res
 
 let check_format_without_color (lines, expected_res) =
-  let res = Snippet.format ~color:false lines in
+  let res = Snippet.format ~style:Text lines in
   printf "Highlighted result:\n%s" res;
   (* This is for copy-pasting the expected string into the OCaml test: *)
   printf "Same, OCaml-escaped: %S\n" res;
@@ -82,7 +82,7 @@ let highlight
   let start_pos : Loc.pos = { row = start_row; column = start_column } in
   let end_pos : Loc.pos = { row = end_row; column = end_column } in
   Snippet.extract ~start_pos ~end_pos src
-  |> Snippet.format ~color:false
+  |> Snippet.format ~style:Text
 
 let check_extract
     ~data ?start_row ?start_column ?end_row ?end_column

@@ -173,7 +173,15 @@ let format_underline buf ~color line =
     ) line
   )
 
-let format ~color lines =
+type style = Auto | Color | Text
+
+let format ~style lines =
+  let color =
+    match style with
+    | Auto -> Unix.(isatty stdout) && Unix.(isatty stderr)
+    | Color -> true
+    | Text -> false
+  in
   let buf = Buffer.create 1000 in
   lines
   |> List.iter (fun line ->
