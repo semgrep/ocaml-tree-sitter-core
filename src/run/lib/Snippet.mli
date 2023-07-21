@@ -32,7 +32,8 @@ val extract :
 (*
    Render a snippet as text. If 'color' is true, the output will use
    color in a manner compatible with an ANSI terminal. Otherwise
-   the text to be highlighted is underlined with '^^^'.
+   the text to be highlighted is underlined with '^^^'. The latter will
+   produce incorrect results on lines containing multi-byte characters.
 
    Missing newlines are added automatically.
 *)
