@@ -16,6 +16,7 @@ type snippet_line = snippet_fragment list
 
 type t = snippet_line list
 
+(* Split string at the specified position. *)
 let split s pos2 =
   let a = Util_string.safe_sub s 0 pos2 in
   let b = Util_string.safe_sub s pos2 (String.length s - pos2) in
@@ -56,29 +57,12 @@ let shorten_snippet_line line =
 let shorten_snippet_lines lines =
   List.map shorten_snippet_line lines
 
-let rec list_last = function
-  | [x] -> Some x
-  | _ :: xs -> list_last xs
-  | [] -> None
-
-let add_missing_newline_to_line line =
-  match list_last line with
-  | None -> line
-  | Some last_fragment ->
-      let misses_newline =
-        match last_fragment with
-        | Ellipsis -> true
-        | (Normal s
-          | Highlight s) ->
-            s = "" || s.[String.length s - 1] <> '\n'
-      in
-      if misses_newline then
-        line @ [Normal "\n"]
-      else
-        line
-
-let add_missing_newlines lines =
-  List.map add_missing_newline_to_line lines
+(* Ensure all lines are LF-terminated. *)
+let add_missing_newline line =
+  if line = "" || line.[String.length line - 1] <> '\n' then
+    line ^ "\n"
+  else
+    line
 
 let extract
     ?(lines_before = 2)
@@ -104,7 +88,10 @@ let extract
     let line_acc = ref [] in
     let add line = line_acc := line :: !line_acc in
     for line_num = snip_start_line to snip_end_line - 1 do
-      let line = Src_file.safe_get_row src line_num in
+      let line =
+        Src_file.safe_get_row src line_num
+        |> add_missing_newline
+      in
       if line_num < start_line || line_num >= end_line then
         (* Highlight nothing. *)
         add [Normal line]
@@ -186,10 +173,17 @@ let format_underline buf ~color line =
     ) line
   )
 
-let format ~color lines =
+type style = Auto | Color | Text
+
+let format ~style lines =
+  let color =
+    match style with
+    | Auto -> Unix.(isatty stdout) && Unix.(isatty stderr)
+    | Color -> true
+    | Text -> false
+  in
   let buf = Buffer.create 1000 in
   lines
-  |> add_missing_newlines
   |> List.iter (fun line ->
     format_line buf ~color line;
     format_underline buf ~color line;

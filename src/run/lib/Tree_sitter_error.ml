@@ -125,7 +125,7 @@ let string_of_file_info (src_info : Src_file.info) =
    in a human-readable and possibly computer-readable format (TODO check with
    emacs etc.)
 *)
-let to_string ?(color = false) (err : t) =
+let to_string ?(style = Snippet.Text) (err : t) =
   let start = err.start_pos in
   let end_ = err.end_pos in
   let loc =
@@ -149,7 +149,7 @@ let to_string ?(color = false) (err : t) =
 %s
 %s%s%s"
     loc
-    (Snippet.format ~color err.snippet)
+    (Snippet.format ~style err.snippet)
     error_class
     err.msg
 

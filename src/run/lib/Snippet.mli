@@ -29,11 +29,17 @@ val extract :
   start_pos:position ->
   end_pos:position -> Src_file.t -> t
 
+type style =
+  | Auto (* best-effort guess based on stdout and stderr *)
+  | Color (* use ANSI-terminal-compatible highlighting *)
+  | Text (* use text-based highlighting *)
+
 (*
    Render a snippet as text. If 'color' is true, the output will use
    color in a manner compatible with an ANSI terminal. Otherwise
-   the text to be highlighted is underlined with '^^^'.
+   the text to be highlighted is underlined with '^^^'. The latter will
+   produce incorrect results on lines containing multi-byte characters.
 
    Missing newlines are added automatically.
 *)
-val format : color:bool -> t -> string
+val format : style:style -> t -> string

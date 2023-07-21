@@ -99,10 +99,10 @@ val internal_error :
   string -> 'a
 
 (*
-   Format an error message. Highlight the error for an ANSI terminal iff
-   'color' is true. 'color' is false by default.
+   Format an error message. Highlight the error according to the value
+   of 'style' whose default is 'Auto' (see the Snippet module for details).
 *)
-val to_string : ?color:bool -> t -> string
+val to_string : ?style:Snippet.style -> t -> string
 
 (*
    Append errors to error log in json format, one object per line.

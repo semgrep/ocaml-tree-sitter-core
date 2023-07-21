@@ -126,9 +126,6 @@ let parse_command_line ~lang =
   | `Version | `Help -> exit 0
   | `Ok config -> config
 
-let use_color () =
-  !ANSITerminal.isatty Unix.stderr
-
 let safe_run f =
   Printexc.record_backtrace true;
   try f ()
@@ -138,7 +135,7 @@ let safe_run f =
     let msg, exit_code, show_trace =
       match e with
       | Tree_sitter_error.Error err ->
-          let msg = Tree_sitter_error.to_string ~color:(use_color ()) err in
+          let msg = Tree_sitter_error.to_string ~style:Auto err in
           let exit_code =
             match err.kind with
             | External -> Exit.external_parsing_error
@@ -164,7 +161,7 @@ let safe_run f =
 
 let print_error err =
   eprintf "Error: %s\n"
-    (Tree_sitter_error.to_string ~color:(use_color ()) err)
+    (Tree_sitter_error.to_string ~style:Auto err)
 
 let print_errors errors =
   List.iter print_error errors
