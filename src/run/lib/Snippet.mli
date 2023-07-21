@@ -30,7 +30,7 @@ val extract :
   end_pos:position -> Src_file.t -> t
 
 type style =
-  | Auto (* best-effort guess *)
+  | Auto (* best-effort guess based on stdout and stderr *)
   | Color (* use ANSI-terminal-compatible highlighting *)
   | Text (* use text-based highlighting *)
 
