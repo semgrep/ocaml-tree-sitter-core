@@ -204,11 +204,11 @@ let extract_errors src root_node =
     match error_kind with
     | Error_node ->
         Tree_sitter_error.create
-          Tree_sitter_error_t.External src ?parent node
+          Tree_sitter_error_t.Error_node src ?parent node
           "Unrecognized construct"
     | Missing_node ->
         Tree_sitter_error.create
-          Tree_sitter_error_t.External src ?parent node
+          Tree_sitter_error_t.Missing_node src ?parent node
           ("Missing element in input code: " ^
            (match node.kind with
             | Literal s -> Printf.sprintf "%S" s

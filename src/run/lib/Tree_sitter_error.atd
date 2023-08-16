@@ -9,8 +9,11 @@ type position <ocaml from="Tree_sitter_bindings.Tree_sitter_output"
                      t="position"> = abstract
 
 type error_kind = [
-  | Internal (* a bug *)
-  | External (* malformed input or bug, but we don't know *)
+  | Internal (* bug in the translation from one tree type to another *)
+  | Error_node (* a subtree that can be ignored while preserving the
+                  well-formedness of the CST *)
+  | Missing_node (* a fake node inserted by the parser to fix an ill-formed
+                    CST. *)
 ] <ocaml repr="classic">
 
 (*
@@ -23,6 +26,6 @@ type json_error = {
   file: string;
   start_pos: position;
   end_pos: position;
-  substring: string;
+  substring: string; (* empty for a Missing_node *)
   ?error_class: string option;
 }
