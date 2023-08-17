@@ -138,7 +138,7 @@ let safe_run f =
           let msg = Tree_sitter_error.to_string ~style:Auto err in
           let exit_code =
             match err.kind with
-            | External -> Exit.external_parsing_error
+            | Error_node | Missing_node -> Exit.external_parsing_error
             | Internal -> Exit.internal_parsing_error
           in
           msg, exit_code, false

@@ -79,16 +79,6 @@ val create :
   string -> t
 
 (*
-   Fail, raising an External_error exception.
-   The string argument is an arbitrary message to be printed as part of
-   an error message.
-*)
-val external_error :
-  Src_file.t ->
-  Tree_sitter_bindings.Tree_sitter_output_t.node ->
-  string -> 'a
-
-(*
    Fail, raising an Internal_error exception.
    The string argument is an arbitrary message to be printed as part of
    an error message.

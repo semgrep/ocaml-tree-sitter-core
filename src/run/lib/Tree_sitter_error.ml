@@ -110,9 +110,6 @@ let create kind src ?parent node msg =
 let fail kind src node msg =
   raise (Error (create kind src node msg))
 
-let external_error src node msg =
-  fail External src node msg
-
 let internal_error src node msg =
   fail Internal src node msg
 
