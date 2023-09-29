@@ -20,6 +20,7 @@ depends: [
   "cmdliner"
   "conf-pkg-config"
   "dune" {>= "2.1"}
+  "dune-configurator" {>= "3.10.0"}
   "ocaml"
   "ppx_deriving"
   "sexplib"
