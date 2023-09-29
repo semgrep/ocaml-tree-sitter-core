@@ -21,7 +21,7 @@ depends: [
   "conf-pkg-config"
   "dune" {>= "2.1"}
   "dune-configurator" {>= "3.10.0"}
-  "ocaml"
+  "ocaml" {>= "5.0.0"}
   "ppx_deriving"
   "sexplib"
   "tsort" {>= "2.0"}
