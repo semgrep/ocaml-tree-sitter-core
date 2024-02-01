@@ -8,6 +8,7 @@ license: "GPL-3.0-only"
 
 build: [
   ["./configure"]
+  ["./scripts/install-tree-sitter-lib"]
   [make]
 ]
 
@@ -35,5 +36,5 @@ for recovering a full CST from the output for a tree-sitter parser.
 """
 
 url {
-  src: "git+https://github.com/returntocorp/ocaml-tree-sitter"
+  src: "git+https://github.com/semgrep/ocaml-tree-sitter-core"
 }
