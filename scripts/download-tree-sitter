@@ -82,7 +82,9 @@ Re-using tree-sitter sources found locally:
 EOF
   else
     echo "Fetching tarball for tree-sitter-$version."
-    curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
+    if [[ "$lazy" = true && ! -f "v"$version".tar.gz" ]]; then
+      curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
+    fi
     tar xf v"$version".tar.gz
     if [[ ! -d "$src_dir" ]]; then
       error "Archive didn't unpack into the expected folder '$src_dir'."
