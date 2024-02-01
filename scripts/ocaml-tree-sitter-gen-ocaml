@@ -213,6 +213,9 @@ CAMLprim value octs_create_parser_${lang_underscores}(value unit) {
 EOF
 
 cat > "$dst_dir"/lib/dune <<EOF
+; required to install tree_sitter/parser.h
+(include_subdirs qualified)
+
 (library
   (public_name $package.${lang_dashes})
   (name tree_sitter_${lang_underscores})
@@ -288,7 +291,7 @@ EOF
 # plugged into an existing git project without modifications.
 
 cat > "$dst_dir"/dune-project <<EOF
-(lang dune 2.0)
+(lang dune 3.7)
 (name tree-sitter-$lang)
 EOF
 
