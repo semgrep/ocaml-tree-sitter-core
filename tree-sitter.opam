@@ -4,7 +4,7 @@ authors: ["r2c"]
 homepage: "https://github.com/returntocorp/ocaml-tree-sitter"
 bug-reports: "https://github.com/returntocorp/ocaml-tree-sitter/issues"
 dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
-license: "GPL-3.0-only"
+license: "LGPL-2.1"
 
 build: [
   ["./configure"]
