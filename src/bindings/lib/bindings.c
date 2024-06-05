@@ -21,7 +21,6 @@
 */
 
 #include <string.h>
-#include <tree_sitter/api.h>
 
 #include <caml/alloc.h>
 #include <caml/bigarray.h>
@@ -30,6 +29,7 @@
 #include <caml/memory.h>
 #include <caml/mlvalues.h>
 #include <caml/threads.h>
+#include <tree_sitter/api.h>
 
 typedef struct _parser {
   TSParser *parser;
@@ -79,9 +79,9 @@ const char *octs_read(void *payload, uint32_t byte_offset, TSPoint position,
     value strVal = Field(result, 0);
     *bytes_read = caml_string_length(strVal);
     return String_val(strVal);
-  }
-  else
+  } else {
     return NULL;
+  }
 }
 
 CAMLprim value octs_parser_parse(value vParser, value vTree, value vRead) {
@@ -119,8 +119,8 @@ CAMLprim value octs_parser_parse_string(value vParser, value vSource) {
   TSParser *tsparser = p->parser;
 
   const char *source_code = String_val(vSource);
-  TSTree *tree =
-      ts_parser_parse_string(tsparser, NULL, source_code, caml_string_length(vSource));
+  TSTree *tree = ts_parser_parse_string(tsparser, NULL, source_code,
+                                        caml_string_length(vSource));
 
   tree_W treeWrapper = {.tree = tree};
   v = caml_alloc_custom(&tree_custom_ops, sizeof treeWrapper, 0, 1);
