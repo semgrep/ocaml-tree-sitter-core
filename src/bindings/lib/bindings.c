@@ -102,17 +102,15 @@ CAMLprim value octs_parser_parse(value vParser, value vTree, value vRead) {
     oldTree = t->tree;
   }
 
-  TSInput input;
-  input.payload = (void *)vRead;
-  input.read = &octs_read;
-  input.encoding = TSInputEncodingUTF8;
+  TSInput input = {.payload = (void *)vRead,
+                   .read = &octs_read,
+                   .encoding = TSInputEncodingUTF8};
 
   TSTree *tree = ts_parser_parse(tsparser, oldTree, input);
 
-  tree_W treeWrapper;
-  treeWrapper.tree = tree;
-  ret = caml_alloc_custom(&tree_custom_ops, sizeof(tree_W), 0, 1);
-  memcpy(Data_custom_val(ret), &treeWrapper, sizeof(tree_W));
+  tree_W treeWrapper = {.tree = tree};
+  ret = caml_alloc_custom(&tree_custom_ops, sizeof treeWrapper, 0, 1);
+  memcpy(Data_custom_val(ret), &treeWrapper, sizeof treeWrapper);
 
   CAMLreturn(ret);
 };
@@ -128,10 +126,9 @@ CAMLprim value octs_parser_parse_string(value vParser, value vSource) {
   TSTree *tree =
       ts_parser_parse_string(tsparser, NULL, source_code, strlen(source_code));
 
-  tree_W treeWrapper;
-  treeWrapper.tree = tree;
-  v = caml_alloc_custom(&tree_custom_ops, sizeof(tree_W), 0, 1);
-  memcpy(Data_custom_val(v), &treeWrapper, sizeof(tree_W));
+  tree_W treeWrapper = {.tree = tree};
+  v = caml_alloc_custom(&tree_custom_ops, sizeof treeWrapper, 0, 1);
+  memcpy(Data_custom_val(v), &treeWrapper, sizeof treeWrapper);
 
   CAMLreturn(v);
 };
@@ -170,37 +167,21 @@ CAMLprim value octs_tree_edit_native(value vTree, value vStartByte,
   tree_W *t = Data_custom_val(vTree);
   TSTree *tree = t->tree;
 
-  TSInputEdit edit;
-  edit.start_byte = Long_val(vStartByte);
-  edit.old_end_byte = Long_val(vOldEndByte);
-  edit.new_end_byte = Long_val(vNewEndByte);
-
-  edit.start_point.row = Long_val(vStartLine);
-  edit.start_point.column = 0;
-  edit.old_end_point.row = Long_val(vOldEndLine);
-  edit.old_end_point.column = 0;
-  edit.new_end_point.row = Long_val(vNewEndLine);
-  edit.new_end_point.column = 0;
-
-  /*printf("SENDING EDIT:\n start_byte: %ld\n old_end_byte: %ld\n new_end_byte:
-    %ld\n, start_row: %ld\n start_col: %ld\n old_end_row: %ld\n old_end_col:
-    %ld\n new_end_row: %ld\n new_end_col: %ld\n", edit.start_byte,
-    edit.old_end_byte,
-    edit.new_end_byte,
-    edit.start_point.row,
-    edit.start_point.column,
-    edit.old_end_point.row,
-    edit.old_end_point.column,
-    edit.new_end_point.row,
-    edit.new_end_point.column);*/
+  TSInputEdit edit = {
+      .start_byte = Long_val(vStartByte),
+      .old_end_byte = Long_val(vOldEndByte),
+      .new_end_byte = Long_val(vNewEndByte),
+      .start_point = {.row = Long_val(vStartLine), .column = 0},
+      .old_end_point = {.row = Long_val(vOldEndLine), .column = 0},
+      .new_end_point = {.row = Long_val(vNewEndLine), .column = 0},
+  };
 
   TSTree *ret = ts_tree_copy(tree);
 
   ts_tree_edit(ret, &edit);
-  tree_W treeWrapper;
-  treeWrapper.tree = ret;
-  v = caml_alloc_custom(&tree_custom_ops, sizeof(tree_W), 0, 1);
-  memcpy(Data_custom_val(v), &treeWrapper, sizeof(tree_W));
+  tree_W treeWrapper = {.tree = ret};
+  v = caml_alloc_custom(&tree_custom_ops, sizeof treeWrapper, 0, 1);
+  memcpy(Data_custom_val(v), &treeWrapper, sizeof treeWrapper);
 
   CAMLreturn(v);
 };
@@ -412,13 +393,16 @@ CAMLprim value octs_node_descendant_for_point_range(value vNode,
 
   TSNode *node = Data_custom_val(vNode);
 
-  TSPoint start;
-  TSPoint end;
-  start.row = Int_val(vStartRow);
-  start.column = Int_val(vStartColumn);
+  TSPoint start = {
+      .row = Int_val(vStartRow),
+      .column = Int_val(vStartColumn),
 
-  end.row = Int_val(vEndRow);
-  end.column = Int_val(vEndColumn);
+  };
+
+  TSPoint end = {
+      .row = Int_val(vEndRow),
+      .column = Int_val(vEndColumn),
+  };
 
   TSNode descendant = ts_node_descendant_for_point_range(*node, start, end);
   v = caml_alloc_custom(&TSNode_custom_ops, sizeof(TSNode), 0, 1);
