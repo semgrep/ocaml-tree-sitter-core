@@ -23,3 +23,7 @@ _build
 
 # The installation root of tree-sitter
 /tree-sitter
+
+# Used for C LSP implementations
+compile_commands.json
+.cache
