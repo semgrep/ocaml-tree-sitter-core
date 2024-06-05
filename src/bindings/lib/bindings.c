@@ -79,10 +79,8 @@ const char *octs_read(void *payload, uint32_t byte_offset, TSPoint position,
   *bytes_read = 0;
   if (Is_block(result)) {
     value strVal = Field(result, 0);
-
-    const char *str = String_val(strVal);
-    *bytes_read = strlen(str);
-    return str;
+    *bytes_read = caml_string_length(strVal);
+    return String_val(strVal);
   }
   else
     return NULL;
@@ -124,7 +122,7 @@ CAMLprim value octs_parser_parse_string(value vParser, value vSource) {
 
   const char *source_code = String_val(vSource);
   TSTree *tree =
-      ts_parser_parse_string(tsparser, NULL, source_code, strlen(source_code));
+      ts_parser_parse_string(tsparser, NULL, source_code, caml_string_length(vSource));
 
   tree_W treeWrapper = {.tree = tree};
   v = caml_alloc_custom(&tree_custom_ops, sizeof treeWrapper, 0, 1);
