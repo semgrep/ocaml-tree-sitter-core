@@ -9,7 +9,7 @@ prog_name=$(basename "$0")
 # The official version of tree-sitter we use for the code generator and
 # for the runtime library. Please try to keep this as the single source
 # of truth.
-default_version="0.20.6"
+default_version="0.22.6"
 
 error() {
   echo "Current directory: $(pwd)" >&2
