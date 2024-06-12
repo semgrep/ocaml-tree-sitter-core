@@ -59,6 +59,7 @@ gen-c:
 	# 'src/grammar.json', not the usual 'grammar.js'. Creating our
 	# own unparseable 'grammar.js' is a protection against using
 	# the wrong grammar.
+	# Tracked at https://github.com/tree-sitter/tree-sitter/issues/3415
 	@echo "..... not the input grammar! Use 'tree-sitter generate src/grammar.json'" \
 	  > grammar.js
 
