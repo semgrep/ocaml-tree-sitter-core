@@ -28,9 +28,10 @@ SONAME_MAJOR := $(word 1,$(subst ., ,$(VERSION)))
 SONAME_MINOR := $(word 2,$(subst ., ,$(VERSION)))
 
 # OS-specific bits
-ifeq ($(OS),Windows_NT)
-  $(error "Windows is not supported")
-else ifeq ($(shell uname),Darwin)
+#ifeq ($(OS),Windows_NT)
+#  $(error "Windows is not supported")
+#else ifeq ($(shell uname),Darwin)
+ifeq ($(shell uname),Darwin)
   SOEXT = dylib
   SOEXTVER_MAJOR = $(SONAME_MAJOR).dylib
   SOEXTVER = $(SONAME_MAJOR).$(SONAME_MINOR).dylib
