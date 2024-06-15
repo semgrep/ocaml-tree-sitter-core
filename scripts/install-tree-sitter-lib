@@ -55,12 +55,6 @@ dir_name=$(dirname "$BASH_SOURCE")
   cd downloads/tree-sitter
   make PREFIX="$prefix"
   make PREFIX="$prefix" install
-
-  # This is probably the wrong way of making <tree_sitter/parser.h>
-  # available but it works. We need this to compile tree-sitter
-  # parsers to JavaScript with Emscripten in semgrep.
-  mkdir -p "$prefix"/include/
-  cp lib/src/parser.h "$prefix"/include/
 )
 
 cat <<EOF
