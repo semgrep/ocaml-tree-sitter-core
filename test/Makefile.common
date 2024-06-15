@@ -53,15 +53,6 @@ gen-c:
 	else \
 	  echo "src/parser.c for $(LANG) is up to date."; \
 	fi
-	# tree-sitter 0.22.6 creates a dummy 'grammar.js' file if
-	# there isn't one already. This creates confusing situations
-	# because our input grammar as created by ocaml-tree-sitter is
-	# 'src/grammar.json', not the usual 'grammar.js'. Creating our
-	# own unparseable 'grammar.js' is a protection against using
-	# the wrong grammar.
-	# Tracked at https://github.com/tree-sitter/tree-sitter/issues/3415
-	@echo "..... not the input grammar! Use 'tree-sitter generate src/grammar.json'" \
-	  > grammar.js
 
 .PHONY: gen-ocaml
 gen-ocaml: ocaml-src/tree-sitter-lang.opam

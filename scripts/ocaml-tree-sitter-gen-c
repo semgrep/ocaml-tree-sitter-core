@@ -42,6 +42,16 @@ else
   # This mechanism is used with languages whose base grammar is defined
   # in a tree-sitter-* submodule.
 
+  # tree-sitter 0.22.6 creates a dummy 'grammar.js' file if
+  # there isn't one already. This creates confusing situations
+  # because our input grammar as created by ocaml-tree-sitter is
+  # 'src/grammar.json', not the usual 'grammar.js'. Creating our
+  # own unparseable 'grammar.js' is a protection against using
+  # the wrong grammar.
+  # Tracked at https://github.com/tree-sitter/tree-sitter/issues/3415
+  echo "..... not the input grammar! Use 'tree-sitter generate src/grammar.json'" \
+    > grammar.js
+
   orig_grammar_json="$import_from"/src/grammar.json
   if [[ ! -e "$orig_grammar_json" ]]; then
     cat >&2 <<EOF
