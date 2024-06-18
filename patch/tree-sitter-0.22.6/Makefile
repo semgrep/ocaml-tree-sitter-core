@@ -28,9 +28,15 @@ SONAME_MAJOR := $(word 1,$(subst ., ,$(VERSION)))
 SONAME_MINOR := $(word 2,$(subst ., ,$(VERSION)))
 
 # OS-specific bits
-#ifeq ($(OS),Windows_NT)
-#  $(error "Windows is not supported")
-#else ifeq ($(shell uname),Darwin)
+
+# This makefile doesn't work in a native Windows environment
+ifeq ($(OS),Windows_NT)
+  # but it works with Cygwin
+  ifneq ($(OSTYPE),cygwin)
+    $(error "Windows is not supported by this Makefile")
+  endif
+endif
+
 ifeq ($(shell uname),Darwin)
   SOEXT = dylib
   SOEXTVER_MAJOR = $(SONAME_MAJOR).dylib
