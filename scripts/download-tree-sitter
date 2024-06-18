@@ -87,21 +87,23 @@ EOF
     if [[ ! -d "$src_dir" ]]; then
       error "Archive didn't unpack into the expected folder '$src_dir'."
     fi
+
+    case "$version" in
+      0.20.6)
+      ;;
+      0.22.6)
+        # See https://github.com/tree-sitter/tree-sitter/pull/3417
+        # regarding Windows/Cygwin support
+        patch --backup \
+          tree-sitter-0.22.6/Makefile \
+          ../patch/tree-sitter-0.22.6/Makefile.patch
+        ;;
+      *)
+        cat >&2 <<EOF
+*** tree-sitter version: $version
+*** Warning: tree-sitter 0.22.6 required patching the Makefile!
+*** Remove this code once we're fully migrated to a version > 0.22.6
+EOF
+    esac
   fi
 )
-
-case "$version" in
-  0.20.6)
-    ;;
-  0.22.6)
-    # See https://github.com/tree-sitter/tree-sitter/pull/3417
-    # regarding Windows support
-    mv downloads/tree-sitter-0.22.6/Makefile \
-       downloads/tree-sitter-0.22.6/Makefile.orig
-    cp patch/tree-sitter-0.22.6/Makefile downloads/tree-sitter-0.22.6/
-    ;;
-  *)
-    echo "*** tree-sitter version: $version"
-    echo "*** Warning: tree-sitter 0.22.6 required patching the Makefile!"
-    echo "*** Remove this code once we're fully migrated to a version > 0.22.6"
-esac
