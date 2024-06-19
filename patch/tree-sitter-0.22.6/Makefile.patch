@@ -1,5 +1,5 @@
 --- ../../downloads/tree-sitter-0.22.6/Makefile.orig	2024-05-05 13:47:18.000000000 -0700
-+++ ../../downloads/tree-sitter-0.22.6/Makefile	2024-06-18 16:05:05.402925942 -0700
++++ ../../downloads/tree-sitter-0.22.6/Makefile	2024-06-18 17:57:34.217371030 -0700
 @@ -8,12 +8,12 @@
 
  # collect sources
@@ -23,7 +23,7 @@
 
  # OS-specific bits
 +
-+OSTYPE := $(shell echo "$$OSTYPE")
++OSTYPE := $(shell bash -c 'echo "$$OSTYPE"')
 +
 +# This makefile doesn't work in a native Windows environment
  ifeq ($(OS),Windows_NT)
