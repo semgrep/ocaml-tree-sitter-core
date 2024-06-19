@@ -1,5 +1,5 @@
 --- ../../downloads/tree-sitter-0.22.6/Makefile.orig	2024-05-05 13:47:18.000000000 -0700
-+++ ../../downloads/tree-sitter-0.22.6/Makefile	2024-06-18 19:27:48.892528589 -0700
++++ ../../downloads/tree-sitter-0.22.6/Makefile	2024-06-18 19:52:35.772310737 -0700
 @@ -8,12 +8,12 @@
 
  # collect sources
@@ -18,26 +18,17 @@
  endif
  OBJ := $(SRC:.c=.o)
 
-@@ -28,21 +28,30 @@
+@@ -28,21 +28,20 @@
  SONAME_MINOR := $(word 2,$(subst ., ,$(VERSION)))
 
  # OS-specific bits
-+
-+UNAME_S := $(shell uname -s)
-+
-+# This makefile doesn't work in a native Windows environment
- ifeq ($(OS),Windows_NT)
+-ifeq ($(OS),Windows_NT)
 -	$(error "Windows is not supported")
 -else ifeq ($(shell uname),Darwin)
 -	SOEXT = dylib
 -	SOEXTVER_MAJOR = $(SONAME_MAJOR).dylib
 -	SOEXTVER = $(SONAME_MAJOR).$(SONAME_MINOR).dylib
 -	LINKSHARED += -dynamiclib -Wl,-install_name,$(LIBDIR)/libtree-sitter.$(SONAME_MAJOR).dylib
-+  # but it works with Cygwin
-+  ifneq ($(findstring CYGWIN,$(UNAME_S)),CYGWIN)
-+    $(error "Windows is not supported by this Makefile")
-+  endif
-+endif
 +
 +ifeq ($(shell uname),Darwin)
 +  SOEXT = dylib
