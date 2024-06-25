@@ -23,6 +23,7 @@ type simplify_conf = {
 type to_js_conf = {
   input_path: string option;
   output_path: string option;
+  sort_rules: bool;
 }
 
 type cmd_conf =
@@ -61,7 +62,7 @@ let simplify (conf : simplify_conf) =
   Simplify_grammar.run conf.grammar conf.output_path
 
 let to_js (conf : to_js_conf) =
-  To_JS.run conf.input_path conf.output_path
+  To_JS.run ~sort_rules:conf.sort_rules conf.input_path conf.output_path
 
 let run conf =
   safe_run (fun () ->
@@ -160,6 +161,13 @@ let to_js_cmd =
     in
     Arg.value (Arg.pos 1 Arg.(some string) None info) in
 
+  let sort_rules_term : bool Term.t =
+    let info = Arg.info ["sort-rules"]
+        ~doc:"Sort the rule definitions alphabetically. The first rule \
+              remains first because it is the grammar's entry point."
+    in
+    Arg.value (Arg.flag info) in
+
   let doc =
     "recover a tree-sitter grammar.js from grammar.json" in
 
@@ -172,13 +180,14 @@ let to_js_cmd =
         https://github.com/returntocorp/ocaml-tree-sitter/issues.";
   ] in
   let info = Term.info ~doc ~man "to-js" in
-  let config input_path output_path =
-    To_JS { input_path; output_path }
+  let config input_path output_path sort_rules =
+    To_JS { input_path; output_path; sort_rules }
   in
   let cmdline_term = Term.(
     const config
     $ input_path_term
-    $ output_path_term) in
+    $ output_path_term
+    $ sort_rules_term) in
   (cmdline_term, info)
 
 let gen_cmd =

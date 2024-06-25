@@ -135,7 +135,35 @@ let pp_precedence_level ?prefix:_ ?(is_last = true) level =
   in
   [ Line (sprintf "[%s]" level |> comma is_last) ]
 
-let pp_grammar (x : grammar) : Indent.t =
+(*
+   Move the leading underscore to the end of the string for sorting purposes:
+     "_foo" -> "foo_"
+*)
+let move_leading_underscore str =
+  if str <> "" && str.[0] = '_' then
+    String.sub str 1 (String.length str - 1) ^ "_"
+  else
+    str
+
+(*
+   Compare rule names alphabetically, using the leading '_' only as a
+   last-resort disambiguator to allow 'foo' and '_foo' to appear in the
+   same region when comparing two grammars.
+*)
+let compare_rule_name a b =
+  String.compare (move_leading_underscore a) (move_leading_underscore b)
+
+let pp_grammar ~sort_rules (x : grammar) : Indent.t =
+  let rules =
+    if sort_rules then
+      match x.rules with
+      | entrypoint :: other_rules ->
+          entrypoint
+          :: List.sort (fun (a, _) (b, _) -> compare_rule_name a b) other_rules
+      | [] -> []
+    else
+      x.rules
+  in
   [
     Line
       "// JavaScript grammar recovered from JSON by 'ocaml-tree-sitter to-js'";
@@ -166,13 +194,13 @@ let pp_grammar (x : grammar) : Indent.t =
       Block (map pp_body x.extras |> flatten);
       Line "],";
       Line "rules: {";
-      Block (map pp_rule x.rules |> flatten);
+      Block (map pp_rule rules |> flatten);
       Line "}";
     ];
     Line "});";
   ]
 
-let run input_path output_path =
+let run ~sort_rules input_path output_path =
   let grammar =
     match input_path with
     | None ->
@@ -180,7 +208,7 @@ let run input_path output_path =
     | Some file ->
         Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar file
   in
-  let tree = pp_grammar grammar in
+  let tree = pp_grammar ~sort_rules grammar in
   match output_path with
   | None -> Indent.to_channel stdout tree
   | Some file -> Indent.to_file file tree
