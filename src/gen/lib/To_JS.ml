@@ -24,11 +24,38 @@ let pattern s =
 let rule s =
   sprintf "$.%s" s
 
+(*
+   Move the leading underscore to the end of the string for sorting purposes:
+     "_foo" -> "foo_"
+*)
+let move_leading_underscore str =
+  if str <> "" && str.[0] = '_' then
+    String.sub str 1 (String.length str - 1) ^ "_"
+  else
+    str
+
+(*
+   Compare rule names alphabetically, using the leading '_' only as a
+   last-resort disambiguator to allow 'foo' and '_foo' to appear in the
+   same region when comparing two grammars.
+*)
+let compare_rule_name a b =
+  String.compare (move_leading_underscore a) (move_leading_underscore b)
+
+(*
+   This is for sorting choice() elements
+*)
+let compare_rule_body (a : rule_body) (b : rule_body) =
+  match a, b with
+  | SYMBOL a, SYMBOL b -> compare_rule_name a b
+  | _ -> compare a b
+
 let pp_conflict ?prefix:_ ?(is_last = true) rule_list =
   let rules = List.map rule rule_list |> String.concat ", " in
   [ Line (sprintf "[%s]" rules |> comma is_last) ]
 
-let rec map (f : ?prefix:string -> ?is_last:bool -> _ -> _) xs =
+let rec map
+    (f : ?prefix:string -> ?is_last:bool -> _ -> _) xs =
   match xs with
   | [] -> []
   | [x] -> [f ~is_last:true x]
@@ -46,76 +73,90 @@ let pp_prec_value ~is_last x =
   let s = string_of_prec_value x in
   pp_value ~is_last s
 
-let rec pp_body ?(prefix = "") ?(is_last = true) body =
-  let cons, args =
-    match body with
-    | SYMBOL s -> rule s, None
-    | STRING s -> str s, None
-    | PATTERN s -> pattern s, None
-    | BLANK -> "\"\" /* blank */", None
-    | REPEAT x -> "repeat", Some (pp_body x)
-    | REPEAT1 x -> "repeat1", Some (pp_body x)
-    | CHOICE [x; BLANK] -> "optional", Some (pp_body x)
-    | CHOICE xs -> "choice", Some (map pp_body xs |> flatten)
-    | SEQ xs -> "seq", Some (map pp_body xs |> flatten)
-    | PREC (prec_value, x) ->
-        "prec", Some [
+(*
+   The 'sort_choices' setting is the same for all recursive calls
+   unlike the other options 'prefix' and 'is_last'.
+*)
+let pp_body ~sort_choices ?prefix ?is_last body =
+  let rec pp_body ?(prefix = "") ?(is_last = true) body =
+    let cons, args =
+      match body with
+      | SYMBOL s -> rule s, None
+      | STRING s -> str s, None
+      | PATTERN s -> pattern s, None
+      | BLANK -> "\"\" /* blank */", None
+      | REPEAT x -> "repeat", Some (pp_body x)
+      | REPEAT1 x -> "repeat1", Some (pp_body x)
+      | CHOICE [x; BLANK] -> "optional", Some (pp_body x)
+      | CHOICE xs ->
+          let xs =
+            if sort_choices then
+              List.sort compare_rule_body xs
+            else
+              xs
+          in
+          "choice", Some (map pp_body xs |> flatten)
+      | SEQ xs -> "seq", Some (map pp_body xs |> flatten)
+      | PREC (prec_value, x) ->
+          "prec", Some [
+            Inline (pp_prec_value ~is_last:false prec_value);
+            Inline (pp_body ~is_last:true x);
+          ]
+      | PREC_DYNAMIC (n, x) ->
+          "prec.dynamic", Some [
+            Inline (pp_value ~is_last:false (string_of_int n));
+            Inline (pp_body ~is_last:true x)
+          ]
+      | PREC_LEFT (opt_prec_value, x) ->
+          "prec.left", Some (pp_opt_prec opt_prec_value x)
+      | PREC_RIGHT (opt_prec_value, x) ->
+          "prec.right", Some (pp_opt_prec opt_prec_value x)
+      | ALIAS x -> "alias", Some (pp_alias x)
+      | FIELD (name, x) -> "field", Some (pp_field name x)
+      | IMMEDIATE_TOKEN x -> "token.immediate", Some (pp_body x)
+      | TOKEN x -> "token", Some (pp_body x)
+    in
+    match args with
+    | None ->
+        [ Line (sprintf "%s%s" prefix (cons |> comma is_last)) ]
+    | Some args ->
+        [
+          Line (sprintf "%s%s(" prefix cons);
+          Block args;
+          Line (")" |> comma is_last)
+        ]
+
+  and pp_opt_prec opt_prec_value x =
+    let body = pp_body ~is_last:true x in
+    match opt_prec_value with
+    | None -> body
+    | Some prec_value ->
+        [
           Inline (pp_prec_value ~is_last:false prec_value);
-          Inline (pp_body ~is_last:true x);
+          Inline body;
         ]
-    | PREC_DYNAMIC (n, x) ->
-        "prec.dynamic", Some [
-          Inline (pp_value ~is_last:false (string_of_int n));
-          Inline (pp_body ~is_last:true x)
-        ]
-    | PREC_LEFT (opt_prec_value, x) ->
-        "prec.left", Some (pp_opt_prec opt_prec_value x)
-    | PREC_RIGHT (opt_prec_value, x) ->
-        "prec.right", Some (pp_opt_prec opt_prec_value x)
-    | ALIAS x -> "alias", Some (pp_alias x)
-    | FIELD (name, x) -> "field", Some (pp_field name x)
-    | IMMEDIATE_TOKEN x -> "token.immediate", Some (pp_body x)
-    | TOKEN x -> "token", Some (pp_body x)
+
+  and pp_alias x =
+    let new_name =
+      match x.named with
+      | true -> rule x.value
+      | false -> str x.value
+    in
+    [
+      Inline (pp_body ~is_last:false x.content);
+      Line new_name;
+    ]
+
+  and pp_field name x =
+    [
+      Line (str name ^ ",");
+      Inline (pp_body ~is_last:true x);
+    ]
   in
-  match args with
-  | None ->
-      [ Line (sprintf "%s%s" prefix (cons |> comma is_last)) ]
-  | Some args ->
-      [
-        Line (sprintf "%s%s(" prefix cons);
-        Block args;
-        Line (")" |> comma is_last)
-      ]
+  pp_body ?prefix ?is_last body
 
-and pp_opt_prec opt_prec_value x =
-  let body = pp_body ~is_last:true x in
-  match opt_prec_value with
-  | None -> body
-  | Some prec_value ->
-      [
-        Inline (pp_prec_value ~is_last:false prec_value);
-        Inline body;
-      ]
-
-and pp_alias x =
-  let new_name =
-    match x.named with
-    | true -> rule x.value
-    | false -> str x.value
-  in
-  [
-    Inline (pp_body ~is_last:false x.content);
-    Line new_name;
-  ]
-
-and pp_field name x =
-  [
-    Line (str name ^ ",");
-    Inline (pp_body ~is_last:true x);
-  ]
-
-let pp_rule ?prefix:_ ?is_last (name, body) =
-  pp_body ~prefix:(sprintf "%s: $ => " name) ?is_last body
+let pp_rule ~sort_choices ?prefix:_ ?is_last (name, body) =
+  pp_body ~sort_choices ~prefix:(sprintf "%s: $ => " name) ?is_last body
 
 let pp_word (x : ident option) =
   match x with
@@ -135,7 +176,18 @@ let pp_precedence_level ?prefix:_ ?(is_last = true) level =
   in
   [ Line (sprintf "[%s]" level |> comma is_last) ]
 
-let pp_grammar (x : grammar) : Indent.t =
+let pp_grammar ~sort_choices ~sort_rules (x : grammar) : Indent.t =
+  let rules =
+    if sort_rules then
+      match x.rules with
+      | entrypoint :: other_rules ->
+          entrypoint
+          :: List.sort (fun (a, _) (b, _) -> compare_rule_name a b) other_rules
+      | [] -> []
+    else
+      x.rules
+  in
+  let pp_body = pp_body ~sort_choices in
   [
     Line
       "// JavaScript grammar recovered from JSON by 'ocaml-tree-sitter to-js'";
@@ -166,13 +218,13 @@ let pp_grammar (x : grammar) : Indent.t =
       Block (map pp_body x.extras |> flatten);
       Line "],";
       Line "rules: {";
-      Block (map pp_rule x.rules |> flatten);
+      Block (map (pp_rule ~sort_choices) rules |> flatten);
       Line "}";
     ];
     Line "});";
   ]
 
-let run input_path output_path =
+let run ~sort_choices ~sort_rules input_path output_path =
   let grammar =
     match input_path with
     | None ->
@@ -180,7 +232,7 @@ let run input_path output_path =
     | Some file ->
         Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar file
   in
-  let tree = pp_grammar grammar in
+  let tree = pp_grammar ~sort_choices ~sort_rules grammar in
   match output_path with
   | None -> Indent.to_channel stdout tree
   | Some file -> Indent.to_file file tree
