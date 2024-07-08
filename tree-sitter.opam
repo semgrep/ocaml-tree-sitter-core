@@ -21,8 +21,6 @@ build: [
   ]
 ]
 
-install: [make "install"]
-
 depends: [
   "alcotest"
   "ANSITerminal"
