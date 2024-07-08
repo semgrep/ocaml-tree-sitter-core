@@ -5,7 +5,7 @@
 module C = Configurator.V1
 
 let () =
-  C.main ~name:"foo" (fun c ->
+  C.main ~name:"tree-sitter" (fun c ->
     let default : C.Pkg_config.package_conf = {
       libs = ["-ltree-sitter"];
       cflags = []

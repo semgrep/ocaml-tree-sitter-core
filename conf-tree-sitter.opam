@@ -1,0 +1,17 @@
+opam-version: "2.0"
+maintainer: "austin@semgrep.dev"
+authors: ["r2c"]
+homepage: "https://tree-sitter.github.io/tree-sitter/"
+bug-reports: "https://github.com/returntocorp/ocaml-tree-sitter/issues"
+dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
+license: "BSD-3-Clause"
+build: [["pkg-config" "tree-sitter"]]
+depends: ["conf-pkg-config" {build}]
+bug-reports: "https://github.com/ocaml/opam-repository/issues"
+depexts: [
+  ["tree-sitter"]
+]
+synopsis: "Virtual package relying on a tree-sitter system installation"
+description:
+  "This package can only install if the tree-sitter is installed on the system."
+flags: conf
