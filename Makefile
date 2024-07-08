@@ -10,6 +10,9 @@ include $(PROJECT_ROOT)/tree-sitter-config.mk
 .PHONY: build
 build:
 	dune build
+
+.PHONY: build-bin
+build-bin: build
 	test -d bin || { rm -f bin && mkdir bin; }
 	ln -sf ../_build/install/default/bin/ocaml-tree-sitter \
 	  bin/ocaml-tree-sitter

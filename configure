@@ -6,7 +6,14 @@
 
 set -eu
 
-default_prefix="$(pwd)"/tree-sitter
+OS=$(uname -s)
+if [ "$OS" = "Darwin" ]; then
+  # On macOS don't use the local version of tree-sitter since we can't statically link it
+  # instead use the system version
+  default_prefix=pkg-config tree-sitter --variable=prefix
+else
+  default_prefix="$(pwd)"/tree-sitter
+fi
 output_file_mk=tree-sitter-config.mk
 output_file_sh=tree-sitter-config.sh
 

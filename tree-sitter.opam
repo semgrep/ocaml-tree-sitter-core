@@ -19,7 +19,7 @@ depends: [
   "atdgen"
   "cmdliner"
   "conf-pkg-config"
-  "conf-tree-sitter" { build }
+  "conf-tree-sitter" {build}
   "dune" {>= "2.1"}
   "dune-configurator" {>= "3.10.0"}
   "ocaml"
