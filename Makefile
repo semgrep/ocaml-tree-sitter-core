@@ -58,8 +58,8 @@ e2e: build
 	$(MAKE) -C test
 
 .PHONY: install
-install:
-	dune install
+install: tree-sitter-config.sh
+	(./tree-sitter-config.sh && dune install)
 
 .PHONY: ci
 ci:
