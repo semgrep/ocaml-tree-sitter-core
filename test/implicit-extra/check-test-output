@@ -14,6 +14,5 @@ for actual in $targets; do
   diff -u "$expected" "$actual"
 done
 
-echo "Checking parse results."
-
-diff example-parse.expected <(./parse test/ok/example)
+echo "Checking parse results: example-parse.expected"
+diff -u example-parse.expected <(./parse test/ok/example)

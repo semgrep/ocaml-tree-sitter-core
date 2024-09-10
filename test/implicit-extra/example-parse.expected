@@ -40,30 +40,22 @@ Recovered typed CST:
   ]
 )
 Extras:
-|   Period
-|   "0:0-0:1"
-|   "."
-|   Comma
-|   "0:1-0:2"
-|   ","
-|   Period
-|   "0:6-0:7"
-|   "."
-|   Comma
-|   "0:7-0:8"
-|   ","
-|   Comma
-|   "0:12-0:13"
-|   ","
-|   Period
-|   "0:13-0:14"
-|   "."
-|   Period
-|   "0:18-0:19"
-|   "."
-|   Comma
-|   "0:19-0:20"
-|   ","
+period:
+"."
+comma:
+","
+period:
+"."
+comma:
+","
+comma:
+","
+period:
+"."
+period:
+"."
+comma:
+","
 total lines: 2
 error lines: 0
 error count: 0

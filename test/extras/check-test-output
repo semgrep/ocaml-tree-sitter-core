@@ -4,7 +4,7 @@
 #
 set -eu
 
-if ! grep Complex_extra test.out/ok/complex_extra.cst > /dev/null; then
+if ! grep 'complex_extra:' test.out/ok/complex_extra.cst > /dev/null; then
   echo "Extra 'complex_extra' is missing from test.out/ok/complex_extra.cst"
   exit 1
 fi

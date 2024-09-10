@@ -199,6 +199,15 @@ let gen ~cst_module_name ~is_extra grammar =
   |> Codegen_util.interleave [Line ""]
   |> List.flatten
 
+let generate_dumper grammar =
+  sprintf "\
+
+let dump_tree root =
+  map_%s () root
+  |> Tree_sitter_run.Raw_tree.to_channel stdout
+"
+    (trans grammar.entrypoint)
+
 let generate_map_extra grammar =
   let cases =
     grammar.extras
@@ -211,18 +220,20 @@ let generate_map_extra grammar =
     |> String.concat ""
   in
   sprintf "\
+
 let map_extra (env : env) (x : CST.extra) =
   match x with
 %s"
     cases
 
-let generate_dumper grammar =
-  sprintf "\
-
-let dump_tree root =
-  map_%s () root
-  |> Tree_sitter_run.Raw_tree.to_channel stdout
-
+let generate_extra_dumper grammar =
+  match grammar.extras with
+  | [] ->
+      "\
+let dump_extras (extras : CST.extras) = ()
+"
+  | _ ->
+      sprintf "\
 %s
 let dump_extras (extras : CST.extras) =
   List.iter (fun extra ->
@@ -237,8 +248,7 @@ let dump_extras (extras : CST.extras) =
     Tree_sitter_run.Raw_tree.to_channel stdout raw_tree
   ) extras
 "
-    (trans grammar.entrypoint)
-    (generate_map_extra grammar)
+        (generate_map_extra grammar)
 
 let make_is_extra grammar =
   let tbl = Hashtbl.create 100 in
@@ -253,3 +263,4 @@ let generate ~cst_module_name grammar =
   make_header grammar
   ^ Indent.to_string tree
   ^ generate_dumper grammar
+  ^ generate_extra_dumper grammar
