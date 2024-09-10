@@ -15,6 +15,8 @@ type exp =
 
 type capture = matcher_token Matcher.capture
 
+val get_loc : Tree_sitter_bindings.Tree_sitter_output_t.node -> Loc.t
+
 val match_tree :
   (string * exp option) list ->
   Src_file.t ->
@@ -38,6 +40,14 @@ val extract_errors :
   Tree_sitter_error.t list
 
 val remove_extras :
-  extras:string list ->
+  keep_node:(Tree_sitter_bindings.Tree_sitter_output_t.node -> bool) ->
   Tree_sitter_bindings.Tree_sitter_output_t.node ->
   Tree_sitter_bindings.Tree_sitter_output_t.node
+
+val translate :
+  extras:string list ->
+  translate_root:(Tree_sitter_bindings.Tree_sitter_output_t.node -> 'a) ->
+  translate_extra:(Tree_sitter_bindings.Tree_sitter_output_t.node ->
+                   'b option) ->
+  Tree_sitter_bindings.Tree_sitter_output_t.node ->
+  'a * 'b list
