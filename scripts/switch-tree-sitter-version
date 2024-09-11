@@ -1,0 +1,35 @@
+#! /usr/bin/env bash
+#
+# Change the tree-sitter version used for local development and rebuild
+# what's necessary.
+#
+set -eu
+
+error() {
+  (
+    echo "[$0] Error: $*"
+    echo "Supported versions: 0.20.6 0.22.6"
+  )
+  exit 1
+}
+
+if [[ $# -ne 1 ]]; then
+  error "Exactly one argument is expected, the tree-sitter version ID"
+fi
+
+version=''
+case "$1" in
+  0.20.6)
+    version=0.20.6
+    ;;
+  0.22.6)
+    version=0.22.6
+    ;;
+  *)
+    error "Unsupported version '$1'"
+esac
+
+echo "$version" > tree-sitter-version
+./scripts/update-version-symlinks
+
+echo "You can now run 'make setup' to download and build tree-sitter $version."

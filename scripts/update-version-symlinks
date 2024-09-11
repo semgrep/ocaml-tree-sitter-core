@@ -1,0 +1,41 @@
+#! /usr/bin/env bash
+#
+# Run this script to update local symlinks after changing the tree-sitter
+# version in the file 'tree-sitter-version'.
+#
+# This facilitates development that requires switching between different
+# tree-sitter versions. The compiled tree-sitter libraries and binaries
+# go into a versioned folder e.g. tree-sitter-0.22.6 and are therefore
+# preserved when switching back and forth between versions. 
+#
+# If the user wishes to install the tree-sitter CLI or runtime library
+# elsewhere than the default 'tree-sitter/', they can do so by passing the
+# '--prefix' option. In this case, the symlinks we create here become
+# irrelevant.
+#
+set -eu
+
+version=$(cat tree-sitter-version)
+
+echo "Updating symlinks 'downloads/tree-sitter' and 'tree-sitter'"
+
+(
+  cd downloads
+  rm -f tree-sitter
+  ln -s tree-sitter-"$version" tree-sitter
+)
+
+if [[ -d tree-sitter ]] && [[ ! -L tree-sitter ]]; then
+  # The issue is that we want to be able to use two different versions of
+  # the tree-sitter CLI. To make this convenient, the 'tree-sitter' folder
+  # is now a symlink to the versioned folder name.
+  echo "*** Your tree-sitter installation is old. Removing it."
+  rm -rf tree-sitter
+fi
+
+# Remove the symlink and set it to the new install folder.
+# It allows us to use this script to switch tree-sitter versions without
+# rebuilding everything.
+rm -f tree-sitter
+ln -s tree-sitter-"$version" tree-sitter
+mkdir -p tree-sitter-"$version"
