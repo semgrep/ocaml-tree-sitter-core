@@ -21,5 +21,9 @@ _build
 /tree-sitter-config.mk
 /tree-sitter-config.sh
 
-# The installation root of tree-sitter
+# The default installation root of tree-sitter
 /tree-sitter
+/tree-sitter-*.*.*
+
+# The file containing the tree-sitter version being used
+/tree-sitter-version

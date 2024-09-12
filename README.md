@@ -61,6 +61,20 @@ $ make setup
 $ ./scripts/rebuild-everything  # needs root access to install libtree-sitter
 ```
 
+### tree-sitter version
+
+The default tree-sitter version to use is in the
+`tree-sitter-version.default` file.
+
+Under the default configuration used for local development purposes,
+the version being actually used is stored in the file
+`tree-sitter-version`. This can be changed by invoking
+`./scripts/switch-tree-sitter-version` before `make setup`.
+We made this available to facilitate the transition from tree-sitter 0.20.6 to
+0.22.6 in ocaml-tree-sitter-semgrep where the integration of some
+grammars needs to be updated. The latest version of these grammars are
+compatible with 0.22.6 but their OCaml integration in Semgrep needs work.
+
 Documentation
 --
 

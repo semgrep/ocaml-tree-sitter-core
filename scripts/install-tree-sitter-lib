@@ -49,6 +49,7 @@ done
 libdir="$prefix"/lib
 
 dir_name=$(dirname "$BASH_SOURCE")
+"$dir_name"/update-version-symlinks
 "$dir_name"/download-tree-sitter --lazy
 
 (

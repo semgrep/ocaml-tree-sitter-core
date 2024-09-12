@@ -18,6 +18,8 @@ build:
 #
 .PHONY: setup
 setup:
+	test -f tree-sitter-version \
+	|| cp tree-sitter-version.default tree-sitter-version
 	./scripts/check-prerequisites
 	./scripts/install-tree-sitter-cli
 	./scripts/install-tree-sitter-lib
