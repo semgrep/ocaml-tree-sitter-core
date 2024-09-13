@@ -250,7 +250,7 @@ let format_extra_def extras =
                format_body (Symbol rule_name);
              ]))
           )
-          |> Fmt.classic_variant
+          |> Fmt.poly_variant
         in
         Some cases
   in

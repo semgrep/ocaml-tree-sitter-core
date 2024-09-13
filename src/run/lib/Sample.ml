@@ -26,8 +26,9 @@ module CST = struct
   type statement = (expression * (Loc.t * string (* ";" *)))
   type program = statement list (* zero or more *)
   type comment = (Loc.t * string)
-  type extra =
-    | Comment of comment
+  type extra = [
+    | `Comment of comment
+  ]
 end
 
 module Parse = struct
@@ -162,7 +163,7 @@ module Parse = struct
     | "comment" ->
         (match translate_tree src node trans_comment with
          | None -> None
-         | Some x -> Some (Comment x))
+         | Some x -> Some (`Comment x))
     | _ -> None
 
   (* generated *)

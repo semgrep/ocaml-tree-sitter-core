@@ -214,7 +214,7 @@ let generate_map_extra grammar =
     |> List.map (fun rule_name ->
       let constructor =
         Codegen_util.translate_ident_uppercase rule_name in
-      sprintf "  | %s (_loc, x) -> (%S, %S, map_%s env x)\n"
+      sprintf "  | `%s (_loc, x) -> (%S, %S, map_%s env x)\n"
         constructor rule_name (trans rule_name) (trans rule_name)
     )
     |> String.concat ""

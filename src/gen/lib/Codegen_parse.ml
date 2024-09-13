@@ -422,7 +422,7 @@ let gen_trans_extras grammar =
                            "(match translate_tree src node trans_%s with"
                            (trans name));
                    Line "| None -> None";
-                   Line (sprintf "| Some x -> Some (%s (Run.get_loc node, x)))"
+                   Line (sprintf "| Some x -> Some (`%s (Run.get_loc node, x)))"
                            (Codegen_util.translate_ident_uppercase name));
                  ];
                ]
