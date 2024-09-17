@@ -41,6 +41,7 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+./scripts/update-version-symlinks
 version=$(cat tree-sitter-version)
 
 mkdir -p downloads
