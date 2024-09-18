@@ -173,7 +173,7 @@ let gen_rule_mapper_binding ~cst_module_name (rule : rule) =
     Block (gen_mapper_body_multi env);
   ]
 
-let gen ~cst_module_name grammar =
+let gen ~cst_module_name ~is_extra grammar =
   List.filter_map (fun rule_group ->
     let is_rec =
       match rule_group with
@@ -182,7 +182,7 @@ let gen ~cst_module_name grammar =
     in
     let bindings =
       List.filter_map (fun rule ->
-        if rule.is_inlined_type then
+        if rule.is_inlined_type && not (is_extra rule.name) then
           None
         else
           Some (gen_rule_mapper_binding ~cst_module_name rule)
@@ -204,14 +204,63 @@ let generate_dumper grammar =
 
 let dump_tree root =
   map_%s () root
-  |> Tree_sitter_run.Raw_tree.to_string
-  |> print_string
+  |> Tree_sitter_run.Raw_tree.to_channel stdout
 "
     (trans grammar.entrypoint)
 
+let generate_map_extra grammar =
+  let cases =
+    grammar.extras
+    |> List.map (fun rule_name ->
+      let constructor =
+        Codegen_util.translate_ident_uppercase rule_name in
+      sprintf "  | `%s (_loc, x) -> (%S, %S, map_%s env x)\n"
+        constructor rule_name (trans rule_name) (trans rule_name)
+    )
+    |> String.concat ""
+  in
+  sprintf "\
+
+let map_extra (env : env) (x : CST.extra) =
+  match x with
+%s"
+    cases
+
+let generate_extra_dumper grammar =
+  match grammar.extras with
+  | [] ->
+      "\
+let dump_extras (extras : CST.extras) = ()
+"
+  | _ ->
+      sprintf "\
+%s
+let dump_extras (extras : CST.extras) =
+  List.iter (fun extra ->
+    let ts_rule_name, ocaml_type_name, raw_tree = map_extra () extra in
+    let details =
+      if ocaml_type_name <> ts_rule_name then
+        Printf.sprintf \" (OCaml type '%%s')\" ocaml_type_name
+      else
+        \"\"
+    in
+    Printf.printf \"%%s%%s:\\n\" ts_rule_name details;
+    Tree_sitter_run.Raw_tree.to_channel stdout raw_tree
+  ) extras
+"
+        (generate_map_extra grammar)
+
+let make_is_extra grammar =
+  let tbl = Hashtbl.create 100 in
+  List.iter (fun rule_name -> Hashtbl.replace tbl rule_name ()) grammar.extras;
+  fun rule_name ->
+    Hashtbl.mem tbl rule_name
+
 let generate ~cst_module_name grammar =
   let inline_grammar = Nice_typedefs.rearrange_rules grammar in
-  let tree = gen ~cst_module_name inline_grammar in
+  let is_extra = make_is_extra grammar in
+  let tree = gen ~cst_module_name ~is_extra inline_grammar in
   make_header grammar
   ^ Indent.to_string tree
   ^ generate_dumper grammar
+  ^ generate_extra_dumper grammar

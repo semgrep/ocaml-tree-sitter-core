@@ -25,6 +25,10 @@ module CST = struct
   ]
   type statement = (expression * (Loc.t * string (* ";" *)))
   type program = statement list (* zero or more *)
+  type comment = (Loc.t * string)
+  type extra = [
+    | `Comment of comment
+  ]
 end
 
 module Parse = struct
@@ -81,6 +85,10 @@ module Parse = struct
         |];
       )
     );
+    (
+      "comment",
+      None
+    );
   ]
 
   (* generated *)
@@ -130,21 +138,50 @@ module Parse = struct
         )
     | _ -> assert false
 
-  (* generated *)
+  (* generated - entrypoint *)
   let trans_program ((kind, body) : mt) =
     match body with
     | Children v ->
         Run.repeat (fun v -> trans_statement (Run.matcher_token v)) v
     | _ -> assert false
 
+  (* generated - extra *)
+  let trans_comment ((kind, body) : mt) : CST.variable =
+    match body with
+    | Leaf v -> v
+    | _ -> assert false
+
+  let translate_tree src node trans_x =
+    let matched_tree = Run.match_tree children_regexps src node in
+    Option.map trans_x matched_tree
+
+  (* generated *)
+  let translate_extra src
+      (node : Tree_sitter_bindings.Tree_sitter_output_t.node)
+    : CST.extra option =
+    match node.type_ with
+    | "comment" ->
+        (match translate_tree src node trans_comment with
+         | None -> None
+         | Some x -> Some (`Comment x))
+    | _ -> None
+
+  (* generated *)
+  let translate_root src root_node =
+    translate_tree src root_node trans_program
+
   let parse_input_tree input_tree =
     let orig_root_node = Tree_sitter_parsing.root input_tree in
     let src = Tree_sitter_parsing.src input_tree in
     let errors = Run.extract_errors src orig_root_node in
-    let root_node = Run.remove_extras ~extras orig_root_node in
-    let matched_tree = Run.match_tree children_regexps src root_node in
-    let program = Option.map trans_program matched_tree in
-    Parsing_result.create src program errors
+    let opt_program, extras =
+      Run.translate
+        ~extras
+        ~translate_root:(translate_root src)
+        ~translate_extra:(translate_extra src)
+        orig_root_node
+    in
+    Parsing_result.create src opt_program extras errors
 
   let string ?src_file contents =
     let input_tree = parse_source_string ?src_file contents in

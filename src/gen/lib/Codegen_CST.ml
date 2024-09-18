@@ -71,10 +71,20 @@ module Fmt = struct
   let type_app param type_name =
     label param (atom type_name)
 
-  let product l =
+  (* About the need for parentheses:
+     - For polymorphic variants, the presence of parentheses changes nothing,
+       a standalone tuple is always created.
+     - For classic variants though, the presence parentheses forces the
+       creation of a tuple which is detachable from the variant constructor.
+       Without parentheses though, we save the allocation of a block. *)
+  let product ~paren l =
     match l with
     | [x] -> x
-    | l -> E.List (("(", "*", ")", Style.left_sep_paren_list), l)
+    | l ->
+        if paren then
+          E.List (("(", "*", ")", Style.left_sep_paren_list), l)
+        else
+          E.List (("", "*", "", Style.left_sep_paren_list), l)
 
   let classic_variant l =
     let cases =
@@ -110,7 +120,7 @@ module Fmt = struct
   let top_sequence l =
     E.List (("", "", "", Style.vert_seq), l)
 
-  let typedef pos (name, inlined, rhs) =
+  let typedef pos (name, inlined, opt_rhs) =
     let is_first = (pos = 0) in
     let type_ =
       if is_first then
@@ -122,7 +132,11 @@ module Fmt = struct
       if inlined then " (* inlined *)"
       else ""
     in
-    let code = def (sprintf "%s %s%s =" type_ name comment) rhs in
+    let code =
+      match opt_rhs with
+      | Some rhs -> def (sprintf "%s %s%s =" type_ name comment) rhs
+      | None -> atom (sprintf "%s %s%s" type_ name comment)
+    in
     if is_first then code
     else
       top_sequence [
@@ -206,7 +220,7 @@ let rec format_body ?def_name body : E.t =
   | Optional body ->
       Fmt.type_app (format_body body) "option"
   | Seq body_list ->
-      Fmt.product (format_seq body_list)
+      Fmt.product ~paren:true (format_seq body_list)
 
 and format_choice l =
   List.map (fun (name, body) ->
@@ -219,7 +233,29 @@ and format_seq l =
 let format_rule (rule : rule) =
   (trans rule.name,
    rule.is_inlined_type,
-   format_body ~def_name:rule.name rule.body)
+   Some (format_body ~def_name:rule.name rule.body))
+
+let format_extra_def extras =
+  let rhs =
+    match extras with
+    | [] -> None
+    | extras ->
+        let cases =
+          extras
+          |> List.map (fun rule_name ->
+            let constructor =
+              Codegen_util.translate_ident_uppercase rule_name in
+            (constructor, Some (Fmt.product ~paren:false [
+               format_body (Symbol "Loc.t");
+               format_body (Symbol rule_name);
+             ]))
+          )
+          |> Fmt.poly_variant
+        in
+        Some cases
+  in
+  [[("extra", false, rhs)];
+   [("extras", false, Some (Fmt.atom "extra list"))]]
 
 (*
    1. Identify names that are used at most once, becoming candidates
@@ -242,7 +278,7 @@ let format_types grammar =
       Fmt.recursive_typedefs x;
       Fmt.atom ""
     ]
-  ) semi_formatted_defs
+  ) (semi_formatted_defs @ format_extra_def grammar.extras)
   |> Fmt.top_sequence
 
 let generate grammar =

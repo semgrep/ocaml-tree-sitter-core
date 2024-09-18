@@ -10,6 +10,22 @@ let translate_ident =
   in
   fun ident -> Protect_ident.add_translation map ident
 
+(* Capitalize an identifier to be used in OCaml code for variants and such.
+   It checks that the argument starts with an ASCII letter. *)
+let translate_ident_uppercase s =
+  let res = String.capitalize_ascii s |> translate_ident in
+  if String.length res > 0 &&
+     match res.[0] with
+     | 'A'..'Z' -> true
+     | _ -> false
+  then
+    res
+  else
+    invalid_arg (
+      sprintf "translate_ident_uppercase: cannot capitalize identifier %S"
+        s
+    )
+
 let interleave sep l =
   let rec loop = function
     | [] -> []

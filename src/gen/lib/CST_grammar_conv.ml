@@ -5,10 +5,11 @@
 open CST_grammar
 
 (*
-   Traverse the grammar starting from the entrypoint, return the set of
-   visited rule names.
+   Traverse the grammar starting from all the entrypoints, which
+   are the main entrypoint (first rule in the tree-sitter grammar)
+   and the extras. Return the set of visited rule names.
 *)
-let detect_used ~entrypoint rules =
+let detect_used ~entrypoints rules =
   let rule_tbl = Hashtbl.create 100 in
   List.iter (fun (name, x) -> Hashtbl.add rule_tbl name x) rules;
   let get_rule name =
@@ -48,7 +49,7 @@ let detect_used ~entrypoint rules =
     | None -> ()
     | Some x -> scan x
   in
-  visit entrypoint;
+  List.iter visit entrypoints;
   was_visited
 
 let name_of_body opt_rule_name body =
@@ -241,14 +242,16 @@ let tsort_rules rules =
     ) group
   ) sorted
 
+(*
+   Extras can be rule names, strings or patterns.
+   Here we only keep rule names. We need them to identify tree nodes that
+   are extras and should be handled independently from the grammar.
+*)
 let filter_extras bodies =
   List.filter_map (fun (x : Tree_sitter_t.rule_body) ->
     match x with
     | SYMBOL name -> Some name
-    | STRING name ->
-        (* Results in tree-sitter parse error at the moment.
-           Presumably not super useful. *)
-        Some name
+    | STRING _ -> None
     | _ -> None
   ) bodies
 
@@ -259,7 +262,8 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
     | (name, _) :: _ -> name
     | _ -> "program"
   in
-  let is_used = detect_used ~entrypoint x.rules in
+  let extras = filter_extras x.extras in
+  let is_used = detect_used ~entrypoints:(entrypoint :: extras) x.rules in
   let grammar_rules = translate_rules x.rules in
   let all_rules =
     make_external_rules x.externals @ grammar_rules
@@ -270,12 +274,11 @@ let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
         body;
         is_rec = true; (* set correctly by tsort below *)
         is_inlined_rule = is_inlined_rule;
-        is_inlined_type = false
+        is_inlined_type = false;
       }
     )
   in
   let sorted_rules = tsort_rules all_rules in
-  let extras = filter_extras x.extras in
   {
     name = x.name;
     entrypoint;

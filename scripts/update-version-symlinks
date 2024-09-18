@@ -15,9 +15,13 @@
 #
 set -eu
 
+if [[ ! -e tree-sitter-version ]]; then
+  cp tree-sitter-version.default tree-sitter-version
+fi
 version=$(cat tree-sitter-version)
 
 echo "Updating symlinks 'downloads/tree-sitter' and 'tree-sitter'"
+mkdir -p downloads
 
 (
   cd downloads

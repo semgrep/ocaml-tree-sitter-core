@@ -163,8 +163,9 @@ type grammar = {
   (* rules, grouped and sorted in dependency order. *)
 
   extras: string list;
-  (* node names that don't belong to any rule and can occur anywhere,
-     such as comments. *)
+  (* rules names for constructs that can occur anywhere independently from
+     the grammar, such as comments. Other extras such as string literals
+     and patterns were removed because we don't need them. *)
 }
 [@@deriving show {with_path = false}]
 

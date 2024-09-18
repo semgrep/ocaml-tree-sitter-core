@@ -49,3 +49,8 @@ val format :
 val to_string :
   ?format_any: ('a -> Tree_sitter_gen.Indent.t) ->
   'a t -> string
+
+val to_channel :
+  ?format_any: ('a -> Tree_sitter_gen.Indent.t) ->
+  out_channel ->
+  'a t -> unit

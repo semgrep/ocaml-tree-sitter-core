@@ -77,7 +77,13 @@ let ocaml_builtin_types = [
   "option";
 ]
 
-let ocaml_reserved = ocaml_keywords @ ocaml_builtin_types
+let reserved_type_names = [
+  "extra";
+  "extras";
+]
+
+let ocaml_reserved =
+  ocaml_keywords @ ocaml_builtin_types @ reserved_type_names
 
 (*
    Map from input identifier to output identifier and vice-versa.

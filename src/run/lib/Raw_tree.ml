@@ -64,3 +64,7 @@ let format ?(format_any = fun _ -> [Line "??"]) x =
 let to_string ?format_any x =
   format ?format_any x
   |> Tree_sitter_gen.Indent.to_string
+
+let to_channel ?format_any oc x =
+  to_string ?format_any x
+  |> output_string oc
