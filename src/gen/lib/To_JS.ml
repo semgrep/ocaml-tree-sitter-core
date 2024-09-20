@@ -224,7 +224,42 @@ let pp_grammar ~sort_choices ~sort_rules (x : grammar) : Indent.t =
     Line "});";
   ]
 
-let run ~sort_choices ~sort_rules input_path output_path =
+let rec strip (body : rule_body) =
+  match body with
+  | SYMBOL _
+  | STRING _
+  | PATTERN _
+  | BLANK -> body
+  | REPEAT x -> REPEAT (strip x)
+  | REPEAT1 x -> REPEAT1 (strip x)
+  | CHOICE xs -> CHOICE (List.map strip xs)
+  | SEQ xs -> SEQ (List.map strip xs)
+  | PREC (_prec_value, x) -> strip x
+  | PREC_DYNAMIC (_n, x) -> strip x
+  | PREC_LEFT (_opt_prec_value, x) -> strip x
+  | PREC_RIGHT (_opt_prec_value, x) -> strip x
+  | ALIAS x -> strip x.content
+  | FIELD (_name, x) -> strip x
+  | IMMEDIATE_TOKEN x -> strip x
+  | TOKEN x -> strip x
+
+(*
+   Eliminate all the constructs that don't affect the structure of the
+   tree as reflected by the types in the generated file CST.ml.
+*)
+let strip_grammar (grammar : grammar) =
+  {
+    grammar with
+    extras = List.map strip grammar.extras;
+    inline = [];
+    conflicts = [];
+    precedences = [];
+    externals = (* is this useful to keep? *) List.map strip grammar.externals;
+    supertypes = [];
+    rules = List.map (fun (name, body) -> (name, strip body)) grammar.rules;
+  }
+
+let run ~sort_choices ~sort_rules ~strip input_path output_path =
   let grammar =
     match input_path with
     | None ->
@@ -232,6 +267,7 @@ let run ~sort_choices ~sort_rules input_path output_path =
     | Some file ->
         Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar file
   in
+  let grammar = if strip then strip_grammar grammar else grammar in
   let tree = pp_grammar ~sort_choices ~sort_rules grammar in
   match output_path with
   | None -> Indent.to_channel stdout tree
