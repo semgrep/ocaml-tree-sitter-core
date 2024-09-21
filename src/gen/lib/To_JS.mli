@@ -16,4 +16,5 @@
 val run :
   sort_choices:bool ->
   sort_rules:bool ->
+  strip:bool ->
   string option -> string option -> unit

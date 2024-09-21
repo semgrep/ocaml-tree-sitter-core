@@ -25,6 +25,7 @@ type to_js_conf = {
   output_path: string option;
   sort_choices: bool;
   sort_rules: bool;
+  strip: bool;
 }
 
 type cmd_conf =
@@ -66,6 +67,7 @@ let to_js (conf : to_js_conf) =
   To_JS.run
     ~sort_choices:conf.sort_choices
     ~sort_rules:conf.sort_rules
+    ~strip:conf.strip
     conf.input_path conf.output_path
 
 let run conf =
@@ -179,6 +181,23 @@ let to_js_cmd =
     in
     Arg.value (Arg.flag info) in
 
+  let strip_term : bool Term.t =
+    let info = Arg.info ["strip"]
+        ~doc:"Remove elements that don't affect the generated OCaml types \
+              such as precedences."
+    in
+    Arg.value (Arg.flag info) in
+
+  let normalize_term : bool Term.t =
+    let info = Arg.info ["normalize"]
+        ~doc:"Shorthand for all the options that rearrange the grammar \
+              so as to make them easier to compare while ignoring the parts \
+              that don't affect the generated types in file 'CST.ml'. \
+              It currently combines --sort-choices, --sort-rules, \
+              and --strip."
+    in
+    Arg.value (Arg.flag info) in
+
   let doc =
     "recover a tree-sitter grammar.js from grammar.json" in
 
@@ -191,15 +210,22 @@ let to_js_cmd =
         https://github.com/returntocorp/ocaml-tree-sitter/issues.";
   ] in
   let info = Term.info ~doc ~man "to-js" in
-  let config input_path output_path sort_choices sort_rules =
-    To_JS { input_path; output_path; sort_choices; sort_rules }
+  let config input_path output_path sort_choices sort_rules strip normalize =
+    let sort_choices, sort_rules, strip =
+      normalize || sort_choices,
+      normalize || sort_rules,
+      normalize || strip
+    in
+    To_JS { input_path; output_path; sort_choices; sort_rules; strip }
   in
   let cmdline_term = Term.(
     const config
     $ input_path_term
     $ output_path_term
     $ sort_choices_term
-    $ sort_rules_term) in
+    $ sort_rules_term
+    $ strip_term
+    $ normalize_term) in
   (cmdline_term, info)
 
 let gen_cmd =
