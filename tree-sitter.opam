@@ -1,10 +1,10 @@
 opam-version: "2.0"
-maintainer: "martin@r2c.dev"
-authors: ["r2c"]
-homepage: "https://github.com/returntocorp/ocaml-tree-sitter"
-bug-reports: "https://github.com/returntocorp/ocaml-tree-sitter/issues"
-dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
-license: "LGPL-2.1"
+license: "LGPL-2.1-only"
+maintainer: "martin@semgrep.dev"
+authors: ["Semgrep, Inc."]
+homepage: "https://github.com/semgrep/ocaml-tree-sitter-core"
+bug-reports: "https://github.com/semgrep/ocaml-tree-sitter-core/issues"
+dev-repo: "git+https://github.com/semgrep/ocaml-tree-sitter-core.git"
 
 build: [
   ["./configure"]
@@ -35,5 +35,5 @@ for recovering a full CST from the output for a tree-sitter parser.
 """
 
 url {
-  src: "git+https://github.com/returntocorp/ocaml-tree-sitter"
+  src: "git+https://github.com/semgrep/ocaml-tree-sitter"
 }

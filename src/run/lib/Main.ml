@@ -111,7 +111,7 @@ of the full CST by ocaml-tree-sitter."
         lang);
   `S Manpage.s_bugs;
   `P "Check out bug reports at
-      https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+      https://github.com/semgrep/ocaml-tree-sitter-core/issues.";
 ]
 
 let parse_command_line ~lang =

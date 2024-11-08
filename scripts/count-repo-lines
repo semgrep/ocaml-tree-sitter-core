@@ -10,7 +10,7 @@ usage() {
   cat <<EOF
 Clone a git repo and count the lines of files with a specific extension.
 Usage: $prog_name FILE_EXT URL
-Example: $prog_name .ml https://github.com/returntocorp/semgrep.git
+Example: $prog_name .ml https://github.com/semgrep/semgrep.git
 EOF
 }
 

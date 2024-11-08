@@ -154,7 +154,7 @@ let translate_precedences translate_name ll =
 (* Handle extras that appear in ordinary rules.
  *
  * This addresses the issue outlined in
- * https://github.com/returntocorp/ocaml-tree-sitter-core/issues/36.
+ * https://github.com/semgrep/ocaml-tree-sitter-core/issues/36.
  *
  * If an extra appears in an ordinary rule, it is, in the general case,
  * impossible for ocaml-tree-sitter to tell from the CST whether an extra should
