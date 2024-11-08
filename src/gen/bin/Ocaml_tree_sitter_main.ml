@@ -138,7 +138,7 @@ let simplify_cmd =
         for easier support by ocaml-tree-sitter.";
     `S Manpage.s_bugs;
     `P "Check out bug reports at
-        https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+        https://github.com/semgrep/ocaml-tree-sitter-core/issues.";
   ] in
   let info = Term.info ~doc ~man "simplify" in
   let config grammar output_path =
@@ -207,7 +207,7 @@ let to_js_cmd =
         for easier support by ocaml-tree-sitter.";
     `S Manpage.s_bugs;
     `P "Check out bug reports at
-        https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+        https://github.com/semgrep/ocaml-tree-sitter-core/issues.";
   ] in
   let info = Term.info ~doc ~man "to-js" in
   let config input_path output_path sort_choices sort_rules strip normalize =
@@ -252,7 +252,7 @@ let gen_cmd =
       to process the output of such a parser.";
     `S Manpage.s_bugs;
     `P "Check out bug reports at
-      https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+      https://github.com/semgrep/ocaml-tree-sitter-core/issues.";
   ] in
   let version = "0.0.0" in
   let info = Term.info ~version ~doc ~man "gen" in
@@ -268,7 +268,7 @@ let root_cmd =
     but there is `gen` and `simplify` subcommands. Checkout their help page";
     `S Manpage.s_bugs;
     `P "Check out bug reports at
-      https://github.com/returntocorp/ocaml-tree-sitter/issues.";
+      https://github.com/semgrep/ocaml-tree-sitter-core/issues.";
   ] in
   let doc = "Generate OCaml parsers based on tree-sitter grammars" in
   let info = Term.info ~man ~doc "ocaml-tree-sitter" in

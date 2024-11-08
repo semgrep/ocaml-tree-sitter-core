@@ -1,12 +1,12 @@
 ocaml-tree-sitter-core
 ==
 
-[![CircleCI](https://circleci.com/gh/returntocorp/ocaml-tree-sitter-core.svg?style=svg)](https://circleci.com/gh/returntocorp/ocaml-tree-sitter-core)
+[![CircleCI](https://circleci.com/gh/semgrep/ocaml-tree-sitter-core.svg?style=svg)](https://circleci.com/gh/semgrep/ocaml-tree-sitter-core)
 
 Generate OCaml parsers based on
 [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.
 This project was originally intended
-for [semgrep](https://github.com/returntocorp/semgrep).
+for [semgrep](https://github.com/semgrep/semgrep).
 This repository contains the code for generating code for tree-sitter
 grammars but does not contain grammars for specific languages other
 than tests.
@@ -14,12 +14,12 @@ than tests.
 The ocaml-tree-sitter repositories are:
 * **ocaml-tree-sitter-core**: this repo; provides the code generator that
   takes a tree-sitter grammar and produces an OCaml library from it.
-* [ocaml-tree-sitter-languages](https://github.com/returntocorp/ocaml-tree-sitter-languages): community repository that has scripts
+* [ocaml-tree-sitter-languages](https://github.com/semgrep/ocaml-tree-sitter-languages): community repository that has scripts
   for building and publishing OCaml libraries for parsing a variety of
   programming languages.
-* [ocaml-tree-sitter-semgrep](https://github.com/returntocorp/ocaml-tree-sitter-semgrep): same as ocaml-tree-sitter-languages but
+* [ocaml-tree-sitter-semgrep](https://github.com/semgrep/ocaml-tree-sitter-semgrep): same as ocaml-tree-sitter-languages but
   extends each language with constructs specific to
-  [semgrep](https://github.com/returntocorp/semgrep) patterns.
+  [semgrep](https://github.com/semgrep/semgrep) patterns.
 
 Installation
 --
@@ -27,14 +27,14 @@ Installation
 Installing `ocaml-tree-sitter` alone isn't of great use at the
 moment. It is useful as part of the flow for generating OCaml parsers
 from tree-sitter grammars, which is done from the `lang/` folder
-in [ocaml-tree-sitter-semgrep](https://github.com/returntocorp/ocaml-tree-sitter-semgrep).
+in [ocaml-tree-sitter-semgrep](https://github.com/semgrep/ocaml-tree-sitter-semgrep).
 See the **Contributing** instructions below.
 
 Contributing
 --
 
 Before you get started, make sure you're ok with signing the
-[CLA](https://cla-assistant.io/returntocorp/ocaml-tree-sitter-core)
+[CLA](https://cla-assistant.io/semgrep/ocaml-tree-sitter-core)
 which will be needed before we accept your pull request. The goal is
 only to allow future relicensing without having to track down any past
 contributor, if such need were to arise. Note that the current license is
@@ -80,14 +80,14 @@ Documentation
 
 We have limited [documentation](doc) which is mostly targeted at
 early contributors. It's growing organically based on demand, so don't
-hesitate to [file an issue](https://github.com/returntocorp/ocaml-tree-sitter/issues)
+hesitate to [file an issue](https://github.com/semgrep/ocaml-tree-sitter-core/issues)
 explaining what you're trying to do.
 
 License
 --
 
 ocaml-tree-sitter is free software with contributors from multiple
-organizations. The project is driven by [r2c](https://github.com/returntocorp).
+organizations. The project is driven by [Semgrep](https://github.com/semgrep).
 
 - OCaml code developed specifically for this project is
   distributed under the terms of the [GNU LGPL 2.1](LICENSE).
