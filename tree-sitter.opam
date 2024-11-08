@@ -1,5 +1,5 @@
 opam-version: "2.0"
-license: "LGPL-2.1"
+license: "LGPL-2.1-only"
 maintainer: "martin@semgrep.dev"
 authors: ["Semgrep, Inc."]
 homepage: "https://github.com/semgrep/ocaml-tree-sitter-core"
