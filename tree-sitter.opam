@@ -7,11 +7,9 @@ dev-repo: "git+https://github.com/returntocorp/ocaml-tree-sitter.git"
 license: "LGPL-2.1"
 
 build: [
-  ["./configure"]
-  [make]
 ]
 
-install: [make "install"]
+install: []
 
 depends: [
   "alcotest"
