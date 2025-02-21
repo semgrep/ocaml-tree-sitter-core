@@ -52,10 +52,30 @@ dir_name=$(dirname "$BASH_SOURCE")
 "$dir_name"/update-version-symlinks
 "$dir_name"/download-tree-sitter --lazy
 
+# We use tree-sitter's Makefile to build the tree-sitter library. It
+# uses the $(CC), $(AR), and $(STRIP) Make variables to find
+# (respectfully) the C compiler, ar, and strip tools. These tools may
+# be prefixed by the target triplet in case of cross-compilation, as
+# in x86_64-w64-mingw32-gcc. The Makefile cannot discover these
+# prefixed tools, they have to be passed as variables or through the
+# environment. As we're building an OCaml library, and opam is likely
+# installed, ask opam which C compiler is used by the OCaml toolchain
+# installed in the current opam switch. Guess the complete name of the
+# ar and strip tool from the C compiler name. Users invoking this
+# script can always set $CC, $AR, and $STRIP as environment variables.
+
+if [[ -z "${CC:-}" ]]; then
+  CC=$(opam var sys-ocaml-cc 2>/dev/null || \
+         opam exec -- ocamlc -config-var c_compiler 2>/dev/null || \
+         opam exec -- ocamlopt -config-var c_compiler 2>/dev/null)
+fi
+: ${AR:=${CC:+$(printf "%s" "$CC" | sed -E 's/(-?)[^-]*$/\1ar/')}}
+: ${STRIP:=${CC:+$(printf "%s" "$CC" | sed -E 's/(-?)[^-]*$/\1strip/')}}
+
 (
   cd downloads/tree-sitter
-  make PREFIX="$prefix"
-  make PREFIX="$prefix" install
+  make PREFIX="$prefix" ${CC:+CC=$CC} ${AR:+AR=$AR} ${STRIP:+STRIP=$STRIP}
+  make install PREFIX="$prefix" ${CC:+CC=$CC}
 )
 
 cat <<EOF
