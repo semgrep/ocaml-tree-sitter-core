@@ -7,11 +7,9 @@ bug-reports: "https://github.com/semgrep/ocaml-tree-sitter-core/issues"
 dev-repo: "git+https://github.com/semgrep/ocaml-tree-sitter-core.git"
 
 build: [
-  ["./configure"]
-  [make]
 ]
 
-install: [make "install"]
+install: []
 
 depends: [
   "alcotest"
