@@ -17,7 +17,7 @@ index e021e877..84d76ee8 100644
  LIBDIR ?= $(PREFIX)/lib
 +BINDIR ?= $(PREFIX)/bin
  PCLIBDIR ?= $(LIBDIR)/pkgconfig
- 
+
  # collect sources
 @@ -21,25 +22,26 @@ OBJ := $(SRC:.c=.o)
  ARFLAGS := rcs
@@ -25,11 +25,11 @@ index e021e877..84d76ee8 100644
  override CFLAGS += -std=c11 -fPIC -fvisibility=hidden
 -override CFLAGS += -Ilib/src -Ilib/src/wasm -Ilib/include
 +override CPPFLAGS += -Ilib/src -Ilib/src/wasm -Ilib/include
- 
+
  # ABI versioning
  SONAME_MAJOR := $(word 1,$(subst ., ,$(VERSION)))
  SONAME_MINOR := $(word 2,$(subst ., ,$(VERSION)))
- 
+
  # OS-specific bits
 -ifeq ($(OS),Windows_NT)
 -	$(error "Windows is not supported")
@@ -59,7 +59,7 @@ index e021e877..84d76ee8 100644
 @@ -56,6 +58,9 @@ ifneq ($(STRIP),)
  	$(STRIP) $@
  endif
- 
+
 +# For MinGW-w64 targets
 +libtree-sitter.dll.a: libtree-sitter.$(SOEXT)
 +
@@ -68,11 +68,11 @@ index e021e877..84d76ee8 100644
  		-e 's|@LIBDIR@|$(LIBDIR)|' \
 @@ -64,16 +69,22 @@ tree-sitter.pc: tree-sitter.pc.in
  		-e 's|@PREFIX@|$(PREFIX)|' $< > $@
- 
+
  clean:
 -	$(RM) $(OBJ) tree-sitter.pc libtree-sitter.a libtree-sitter.$(SOEXT)
 +	$(RM) $(OBJ) tree-sitter.pc libtree-sitter.a libtree-sitter.$(SOEXT) libtree-stitter.dll.a
- 
+
  install: all
  	install -d '$(DESTDIR)$(INCLUDEDIR)'/tree_sitter '$(DESTDIR)$(PCLIBDIR)' '$(DESTDIR)$(LIBDIR)'
  	install -m644 lib/include/tree_sitter/api.h '$(DESTDIR)$(INCLUDEDIR)'/tree_sitter/api.h
@@ -89,7 +89,7 @@ index e021e877..84d76ee8 100644
 +	cd '$(DESTDIR)$(LIBDIR)' && ln -sf libtree-sitter.$(SOEXTVER) libtree-sitter.$(SOEXTVER_MAJOR)
 +	cd '$(DESTDIR)$(LIBDIR)' && ln -sf libtree-sitter.$(SOEXTVER_MAJOR) libtree-sitter.$(SOEXT)
 +endif
- 
+
  uninstall:
  	$(RM) '$(DESTDIR)$(LIBDIR)'/libtree-sitter.a \
 @@ -82,6 +93,7 @@ uninstall:
@@ -97,9 +97,8 @@ index e021e877..84d76ee8 100644
  		'$(DESTDIR)$(INCLUDEDIR)'/tree_sitter/api.h \
  		'$(DESTDIR)$(PCLIBDIR)'/tree-sitter.pc
 +	rmdir '$(DESTDIR)$(INCLUDEDIR)'/tree_sitter
- 
- .PHONY: all install uninstall clean
- 
--- 
-2.45.1
 
+ .PHONY: all install uninstall clean
+
+--
+2.45.1
