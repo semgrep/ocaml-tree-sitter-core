@@ -40,9 +40,6 @@ val file :
   string ->
   (CST.%s, CST.extra) Tree_sitter_run.Parsing_result.t
 
-(** Whether to print debugging information. Default: false. *)
-val debug : bool ref
-
 (** The original tree-sitter parser. *)
 val ts_parser : Tree_sitter_bindings.Tree_sitter_API.ts_parser
 
@@ -78,8 +75,6 @@ let constant_header = "\
 
 open Tree_sitter_bindings
 open Tree_sitter_run
-
-let debug = ref false
 
 type mt = Run.matcher_token
 "
