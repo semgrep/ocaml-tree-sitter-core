@@ -6,7 +6,7 @@
 # This facilitates development that requires switching between different
 # tree-sitter versions. The compiled tree-sitter libraries and binaries
 # go into a versioned folder e.g. tree-sitter-0.22.6 and are therefore
-# preserved when switching back and forth between versions. 
+# preserved when switching back and forth between versions.
 #
 # If the user wishes to install the tree-sitter CLI or runtime library
 # elsewhere than the default 'tree-sitter/', they can do so by passing the
