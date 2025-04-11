@@ -55,7 +55,8 @@ mkdir -p downloads
     rm -rf "$src_dir"
   fi
 
-  if [[ -d "$src_dir" ]]; then
+  # exists and non-empty
+  if [[ -d "$src_dir" && -n "$(ls -A "$src_dir")" ]]; then
     cat <<EOF
 Re-using tree-sitter sources found locally:
   $(pwd)/$src_dir
