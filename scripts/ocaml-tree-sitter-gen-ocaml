@@ -8,6 +8,9 @@
 # ├── bin
 # │   ├── dune
 # │   └── Main.ml
+# ├── config
+# │   ├── dune
+# │   ├── discover.ml
 # ├── lib
 # │   ├── bindings.c
 # │   ├── Boilerplate.ml
@@ -125,6 +128,7 @@ lang_underscores=$(echo "$lang" | tr 'A-Z-' 'a-z_')
 #
 rm -rf "$dst_dir"
 mkdir -p "$dst_dir"/lib
+mkdir -p "$dst_dir"/config
 
 # Build the lists of C and C++ files to compile, without their extension.
 #
@@ -212,6 +216,34 @@ CAMLprim value octs_create_parser_${lang_underscores}(value unit) {
 };
 EOF
 
+cat > "$dst_dir"/config/dune <<EOF
+(executable
+ (name discover)
+ (libraries dune.configurator))
+EOF
+
+cat > "$dst_dir"/config/discover.ml <<EOF
+(* This was adapted from the dune manual at
+   https://dune.readthedocs.io/en/stable/quick-start.html
+*)
+module C = Configurator.V1
+
+let () =
+  C.main ~name:"configure-c-flags" (fun c ->
+    let c_library_flags =
+      (* The -rpath option tells the linker to hardcode this search location in
+         the binary.
+         This works as long as libtree-sitter stays where it is, which is fine
+         for test executables. Production executables should instead link
+         statically against libtree-sitter to avoid problems in locating the
+         library at runtime. *)
+      match C.ocaml_config_var c "os_type" with
+      | Some "Win32" -> [] (* Compilation on Windows does not support rpath *)
+      | _ -> ["(-Wl,-rpath,%{env:TREESITTER_LIBDIR=/usr/local/lib})"]
+    in
+    C.Flags.write_lines "c_library_flags.sexp" c_library_flags)
+EOF
+
 cat > "$dst_dir"/lib/dune <<EOF
 ; required to install tree_sitter/parser.h
 (include_subdirs qualified)
@@ -238,17 +270,15 @@ cat > "$dst_dir"/lib/dune <<EOF
   ; The -rpath option tells the linker to hardcode this search location
   ; in the binary.
   ;
-  ; This works as long as libtree-sitter stays where it is, which is
-  ; fine for test executables. Production executables should instead
-  ; link statically against libree-sitter to avoid problems in locating
-  ; the library at runtime.
+  ; Including the c_library_flags.sexp allows customizing the linker arguments
+  ; based on the platform we build on.
   ;
   (c_library_flags
     (
       -L%{env:TREESITTER_LIBDIR=/usr/local/lib}
       -lstdc++
       -ltree-sitter
-      -Wl,-rpath,%{env:TREESITTER_LIBDIR=/usr/local/lib}
+      (:include c_library_flags.sexp)
     )
   )
   (foreign_stubs
@@ -259,6 +289,10 @@ cat > "$dst_dir"/lib/dune <<EOF
            -I .)
   )
 )
+
+(rule
+ (targets c_library_flags.sexp)
+ (action (run ../config/discover.exe)))
 EOF
 
 cat > "$dst_dir"/bin/dune <<EOF
