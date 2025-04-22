@@ -238,7 +238,7 @@ let () =
          statically against libtree-sitter to avoid problems in locating the
          library at runtime. *)
       match C.ocaml_config_var c "os_type" with
-      | Some "Win32" -> [] (* Compilation on Windows does not support rpath *)
+      | Some "Win32" -> ["()"] (* Compilation on Windows does not support rpath *)
       | _ -> ["(-Wl,-rpath,%{env:TREESITTER_LIBDIR=/usr/local/lib})"]
     in
     C.Flags.write_lines "c_library_flags.sexp" c_library_flags)
