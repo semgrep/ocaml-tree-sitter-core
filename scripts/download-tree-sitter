@@ -79,6 +79,8 @@ EOF
           -i ../patch/tree-sitter-0.22.6/0001-Makefile-backports.patch \
           tree-sitter-0.22.6/Makefile
         ;;
+      0.25.3)
+        ;;
       *)
         cat >&2 <<EOF
 *** tree-sitter version: $version
