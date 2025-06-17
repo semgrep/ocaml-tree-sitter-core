@@ -41,7 +41,7 @@ let win_safe_open_in_bin file : in_channel =
   |> Unix.in_channel_of_descr
 
 let read_file path =
-  if !jsoo then (let ic = open_in_bin path in
+  if !jsoo then (let ic = win_safe_open_in_bin path in
                  let s = really_input_string ic (in_channel_length ic) in
                  close_in ic;
                  s) else
