@@ -30,6 +30,16 @@ let jsoo = ref false
    unclear.
 *)
 
+(* copied from `OSS/libs/commons/UFile.ml` *)
+(* Temporary files created using Python's [tempfile.NamedTemporaryFiles] on
+    Windows enables the [FILE_SHARE_DELETE] sharing mode. Files that have open
+    handles with the [FILE_SHARE_DELETE] sharing mode can only be re-opened in
+    that mode. To make sure we won't run into problems opening the file, we
+    add the [O_SHARE_DELETE] flag when opening all files. *)
+let win_safe_open_in_bin file : in_channel =
+  Unix.openfile file [ O_CREAT; O_RDONLY; O_SHARE_DELETE ] 0o666
+  |> Unix.in_channel_of_descr
+
 let read_file path =
   if !jsoo then (let ic = open_in_bin path in
                  let s = really_input_string ic (in_channel_length ic) in
