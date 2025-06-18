@@ -23,6 +23,15 @@
    unclear.
 *)
 
+(* copied from `OSS/libs/commons/UFile.ml` *)
+(* Temporary files created using Python's [tempfile.NamedTemporaryFiles] on
+    Windows enables the [FILE_SHARE_DELETE] sharing mode. Files that have open
+    handles with the [FILE_SHARE_DELETE] sharing mode can only be re-opened in
+    that mode. To make sure we won't run into problems opening the file, we
+    add the [O_SHARE_DELETE] flag when opening all files. *)
+let win_safe_open_in_bin file : Unix.file_descr =
+  Unix.openfile file [ O_CREAT; O_RDONLY; O_SHARE_DELETE ] 0o666
+
 let read_file path =
   let buf_len = 4096 in
   let extbuf = Buffer.create 4096 in
@@ -36,7 +45,7 @@ let read_file path =
         Buffer.add_subbytes extbuf buf 0 num_bytes;
         loop fd
   in
-  let fd = Unix.openfile path [Unix.O_RDONLY] 0 in
+  let fd = win_safe_open_in_bin path in
   Fun.protect
     ~finally:(fun () -> Unix.close fd)
     (fun () -> loop fd)
