@@ -75,7 +75,6 @@ EOF
         # See feat: Windows support using MinGW-w64
         # https://github.com/tree-sitter/tree-sitter/pull/4201
         # https://github.com/tree-sitter/tree-sitter/pull/4203
-	cd tree-sitter-0.22.6
         patch -p1 -N -b \
           -i ../patch/tree-sitter-0.22.6/0001-Makefile-backports.patch \
         ;;
