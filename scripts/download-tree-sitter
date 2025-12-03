@@ -76,7 +76,7 @@ EOF
         # https://github.com/tree-sitter/tree-sitter/pull/4201
         # https://github.com/tree-sitter/tree-sitter/pull/4203
         git apply --directory=tree-sitter-0.22.6 \
-          ../patch/tree-sitter-0.22.6/0001-Makefile-backports.patch \
+          ../patch/tree-sitter-0.22.6/0001-Makefile-backports.patch
         ;;
       *)
         cat >&2 <<EOF
