@@ -1,3 +1,14 @@
+From 7a6bc07ac901a202f04dc38e4c95a22873cd0568 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Antonin=20D=C3=A9cimo?= <antonin@tarides.com>
+Date: Thu, 13 Feb 2025 16:22:19 +0100
+Subject: [PATCH] Makefile backports
+
+---
+ Makefile | 38 +++++++++++++++++++++++++-------------
+ 1 file changed, 25 insertions(+), 13 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index e021e877..84d76ee8 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -4,6 +4,7 @@ VERSION := 0.22.6
