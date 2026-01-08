@@ -31,7 +31,3 @@ description: """
 Ocaml-tree-sitter translates a tree-sitter json grammar to OCaml code
 for recovering a full CST from the output for a tree-sitter parser.
 """
-
-url {
-  src: "git+https://github.com/semgrep/ocaml-tree-sitter"
-}
