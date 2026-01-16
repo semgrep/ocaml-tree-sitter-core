@@ -3,42 +3,45 @@
 ; tree-sitter can be installed by cloning its git repo, then
 ; 'make && make install'
 ;
-(library
-  (public_name tree-sitter.bindings)
-  (name tree_sitter_bindings)
-  (libraries atdgen-runtime)
-  (foreign_stubs
-    (language c)
-    (names bindings)
-    (flags
-      :standard
-      -I %{env:TREESITTER_INCDIR=/usr/local/include}
-      (:include c_flags.sexp)
-    )
-  )
+; Configuration is handled by config/discover.ml which uses pkg-config
+; to find tree-sitter and generate c_flags.sexp and c_library_flags.sexp.
+;
 
-  ; TREESITTER_LIBDIR is meant to be some nonstandard location containing the
-  ; desired version of the tree-sitter library.
-  (c_library_flags
-    :standard
-    -L%{env:TREESITTER_LIBDIR=/usr/local/lib}
-    -ltree-sitter
-    (:include c_library_flags.sexp)
-  )
-)
+(library
+ (public_name tree-sitter.bindings)
+ (name tree_sitter_bindings)
+ (libraries atdgen-runtime)
+ (foreign_stubs
+  (language c)
+  (names bindings)
+  (flags
+   :standard
+   (:include c_flags.sexp)))
+ (c_library_flags
+  :standard
+  (:include c_library_flags.sexp)))
 
 (rule
  (targets c_flags.sexp c_library_flags.sexp)
- (action  (run ./config/discover.exe)))
+ (deps ../../../tree-sitter-out) ; todo: pkg-config path
+ (action
+  (setenv
+   PKG_CONFIG_PATH
+   "%{project_root}/tree-sitter-out/lib/pkgconfig:%{env:PKG_CONFIG_PATH=}"
+   (run ./config/discover.exe))))
 
 ; atdgen preprocessing for json support
+
 (rule
  (targets Tree_sitter_output_j.ml Tree_sitter_output_j.mli)
- (deps    Tree_sitter_output.atd)
- (action  (run atdgen -j -j-std %{deps})))
+ (deps Tree_sitter_output.atd)
+ (action
+  (run atdgen -j -j-std %{deps})))
 
 ; atdgen preprocessing for json support
+
 (rule
  (targets Tree_sitter_output_t.ml Tree_sitter_output_t.mli)
- (deps    Tree_sitter_output.atd)
- (action  (run atdgen -t %{deps})))
+ (deps Tree_sitter_output.atd)
+ (action
+  (run atdgen -t %{deps})))

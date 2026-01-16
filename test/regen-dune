@@ -1,0 +1,6 @@
+#!/usr/bin/env fish
+
+set fish_trace true
+
+for lang in (fd -t d -d 1 | sed s/.\$//);
+end

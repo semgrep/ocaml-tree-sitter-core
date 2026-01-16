@@ -53,13 +53,23 @@ license no matter what.
    `git commit`.
 4. Check out the [extra instructions for MacOS](doc/macos.md).
 
-For building or rebuilding everything after big changes, use these scripts:
+For building or rebuilding everything after big changes:
+```bash
+# Install OCaml dependencies (if not already installed)
+$ opam install --deps-only .
+
+# Build and test (automatically sets up tree-sitter on first build)
+$ dune build
+$ dune runtest
+
+# Test a specific language
+$ dune build @test-arithmetic
+
+# Regenerate test dune files (after adding/removing test languages)
+$ cd test && ./gen-dune-files
 ```
-$ make distclean
-$ ./configure
-$ make setup
-$ ./scripts/rebuild-everything  # needs root access to install libtree-sitter
-```
+
+Tree-sitter is installed automatically on first build (~2-5 minutes). For custom tree-sitter paths, run `./configure --prefix /path` before building.
 
 ### tree-sitter version
 
