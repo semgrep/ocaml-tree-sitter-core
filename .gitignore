@@ -1,6 +1,6 @@
 /bin
 tmp
-/downloads
+/tree-sitter-repo
 
 # Dune build data
 _build
@@ -24,6 +24,3 @@ _build
 # The default installation root of tree-sitter
 /tree-sitter
 /tree-sitter-*.*.*
-
-# The file containing the tree-sitter version being used
-/tree-sitter-version

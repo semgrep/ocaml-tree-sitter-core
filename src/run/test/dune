@@ -1,4 +1,3 @@
 (library
-  (name test_tree_sitter_run)
-  (libraries tree_sitter_run alcotest)
-)
+ (name test_tree_sitter_run)
+ (libraries tree_sitter_run alcotest))
