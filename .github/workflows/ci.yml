@@ -24,20 +24,24 @@ jobs:
           opam-pin: false
           save-opam-post-run: true
 
-      - name: Configure
-        run: ./configure
+      # tree-sitter's CLI is built from source with cargo; libclang is needed
+      # for its Rust bindgen step. m4 and pkg-config are needed to build the
+      # OCaml dependencies and to locate the tree-sitter runtime.
+      - name: Set up build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang-dev m4 pkg-config
+          rustup default stable
+          rustup update
 
       - name: Install dependencies
-        run: opam exec -- make setup
+        run: opam install --deps-only -y .
 
       - name: Build
-        run: opam exec -- make
+        run: opam exec -- dune build --verbose
 
       - name: Install
-        run: opam exec -- make install
+        run: opam exec -- dune build @install
 
-      - name: Unit tests
-        run: opam exec -- make unit
-
-      - name: End-to-end tests
-        run: opam exec -- make e2e
+      - name: Tests
+        run: opam exec -- dune runtest --verbose

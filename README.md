@@ -53,33 +53,34 @@ license no matter what.
    `git commit`.
 4. Check out the [extra instructions for MacOS](doc/macos.md).
 
-For building or rebuilding everything after big changes, use these scripts:
-```
-$ make distclean
-$ ./configure
-$ make setup
-$ ./scripts/rebuild-everything  # needs root access to install libtree-sitter
+For building or rebuilding everything after big changes:
+```bash
+# Install OCaml dependencies (if not already installed)
+$ opam install --deps-only .
+
+# Build and test (automatically sets up tree-sitter on first build)
+$ dune build
+$ dune runtest
 ```
 
 ### tree-sitter version
 
 The default tree-sitter version to use is in the
-`tree-sitter-version.default` file.
+`tree-sitter-version` file.
 
 Under the default configuration used for local development purposes,
 the version being actually used is stored in the file
-`tree-sitter-version`. This can be changed by invoking
-`./scripts/switch-tree-sitter-version` before `make setup`. Each version
-is installed into its own `tree-sitter-<version>/` directory, and the
-`tree-sitter` symlink points at the currently selected one.
+`tree-sitter-version`. To use a different version, edit that file;
+dune will download and build the corresponding tree-sitter sources on
+the next build.
 
 **IMPORTANT** Note that the selection in `tree-sitter-version` affects
 the tree-sitter runtime that the `ocaml-tree-sitter` code generator
-and its OCaml bindings are compiled against. It is also used to install a
-given version's CLI and runtime library into `tree-sitter-<version>/`.
+and its OCaml bindings are compiled against, as well as the CLI used to
+generate parsers.
 
 It does **not** determine which tree-sitter version grammars are built with.
-In `ocaml-tree-sitter-semgrep`, every grammar is build by the tree-sitter version
+In `ocaml-tree-sitter-semgrep`, every grammar is built by the tree-sitter version
 specified by the `lang/languages-<version>` lists.
 See the "tree-sitter versions (per language)" section of the
 `ocaml-tree-sitter-semgrep` README.

@@ -52,7 +52,7 @@ index e021e877..84d76ee8 100644
 -	LINKSHARED += -shared -Wl,-soname,libtree-sitter.so.$(SONAME_MAJOR)
 +	SOEXTVER_MAJOR = $(SOEXT).$(SONAME_MAJOR)
 +	SOEXTVER = $(SOEXT).$(SONAME_MAJOR).$(SONAME_MINOR)
-+	LINKSHARED += -shared -Wl,-soname,libtree-sitter.$(SOEXTVER)
++	LINKSHARED += -shared -Wl,-z,noexecstack -Wl,-soname,libtree-sitter.$(SOEXTVER)
  endif
  ifneq ($(filter $(shell uname),FreeBSD NetBSD DragonFly),)
  	PCLIBDIR := $(PREFIX)/libdata/pkgconfig
