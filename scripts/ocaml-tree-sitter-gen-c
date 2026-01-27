@@ -21,6 +21,23 @@ EOF
   exit 1
 }
 
+tree_sitter_generate() {
+    # Switch on tree sitter version (before/after 0.24.0) due to some
+    # configuration changes. See
+    # <https://github.com/tree-sitter/tree-sitter/commit/b2359e402070445181482f2e351400276d94c968>.
+    if tree-sitter --version \
+      | sed "s/^tree-sitter \\([0-9.]*\\).*$/0.24.0\\n\\1/" \
+      | sort -V -C 2>/dev/null; then
+      # Use ABI 14.
+      # `tree-sitter.json` is required to generate with ABI 15, but we haven't
+      # switched to using this. See also
+      # <https://tree-sitter.github.io/tree-sitter/cli/init>
+      tree-sitter generate --abi=14 $*
+    else
+      tree-sitter generate --no-bindings $*
+    fi
+}
+
 # Generate C source code for the grammar, in two passes:
 #
 # 1. Import files from semgrep-grammars
@@ -33,7 +50,7 @@ if [[ -e grammar.js ]]; then
   # consist of a local 'grammar.json' file.
 
   echo "$name: Generating initial 'grammar.json' from 'grammar.js'."
-  tree-sitter generate --no-bindings
+  tree_sitter_generate
   mkdir -p src
   if [[ -e orig/LICENSE ]]; then cp -L orig/LICENSE src; fi
   if [[ -e orig/scanner.c ]]; then cp -L orig/scanner.c src; fi
@@ -76,7 +93,7 @@ ocaml-tree-sitter to-js src/grammar.json.orig grammar-rev.js.orig
 ocaml-tree-sitter to-js src/grammar.json grammar-rev.js
 
 echo "$name: Generating definitive 'parser.c'."
-tree-sitter generate src/grammar.json --no-bindings
+tree_sitter_generate src/grammar.json
 
 # Make sure we get an error in case of OOM leading to no src/parser.c
 test -f src/parser.c || error \
