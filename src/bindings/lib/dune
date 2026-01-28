@@ -23,7 +23,8 @@
 
 (rule
  (targets c_flags.sexp c_library_flags.sexp)
- (deps (:tree-sitter-prefix %{project_root}/tree-sitter-out))
+ (deps
+  (:tree-sitter-prefix %{project_root}/tree-sitter-out))
  (action
   (setenv
    PKG_CONFIG_PATH

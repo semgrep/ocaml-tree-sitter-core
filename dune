@@ -1,13 +1,36 @@
 (dirs :standard)
 
 (rule
+ (action
+  (with-stdout-to
+   tree-sitter-sources.tgz
+   (run
+    curl
+    -L
+    https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v%{read-lines:tree-sitter-version}.tar.gz))))
+
+(rule
  (mode
   (promote (until-clean)))
- (deps tree-sitter-version)
  (target
   (dir tree-sitter-repo))
+ (deps
+  (:source-archive tree-sitter-sources.tgz)
+  (:patches
+   (source_tree patch)))
  (action
-  (run %{project_root}/scripts/download-tree-sitter %{target})))
+  (progn
+   (run mkdir -p %{target})
+   (run tar xf %{source-archive} -C %{target} --strip-components=1)
+   (bash
+    ; Apply each patch for this version. nullglob needed so we don't fail when
+    ; a version has no patches (otherwise the for loop has one iteration over
+    ; the literal pattern, when the glob fails to expand)
+    "shopt -s nullglob; 
+     for patch in patch/tree-sitter-%{read-lines:tree-sitter-version}/*.patch; do
+       patch_path=$(realpath $patch);
+       patch -N -b -i $patch_path -d %{target};
+     done"))))
 
 (rule
  (deps tree-sitter-repo)
