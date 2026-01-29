@@ -1,2 +1,88 @@
-; Don't build the generated OCaml code. For now.
-(dirs :standard \ test lang)
+(dirs :standard)
+
+(rule
+ (mode
+  (promote (until-clean)))
+ (deps tree-sitter-version)
+ (target
+  (dir tree-sitter-repo))
+ (action
+  (run %{project_root}/scripts/download-tree-sitter %{target})))
+
+(rule
+ (deps tree-sitter-repo)
+ (target
+  (dir tree-sitter-out))
+ (action
+  (chdir
+   tree-sitter-repo
+   (progn
+    ; Note: we need absolute paths here so that the generated .pc file results
+    ; in absolute paths for pkg-config.
+    (bash "PREFIX=$(realpath %{project_root})/tree-sitter-out make")
+    (bash "PREFIX=$(realpath %{project_root})/tree-sitter-out make install")
+    ; Remove shared libs to avoid dynamic linking
+    ; macos
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.0.26.dylib)
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.0.dylib)
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.dylib)
+    ; windows
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.0.26.dll)
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.0.dll)
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.dll)
+    ; linux
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.0.26.so)
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.0.so)
+    (run rm -f %{project_root}/tree-sitter-out/lib/libtree-sitter.so)))))
+
+(rule
+ (deps tree-sitter-repo)
+ (target tree-sitter)
+ (action
+  (chdir
+   tree-sitter-repo
+   ; Don't infer deps/targets since otherwise dune expects cloning the repo to
+   ; create target/release/tree-sitter
+   (no-infer
+    (progn
+     (run cargo build --release)
+     (copy target/release/tree-sitter ../tree-sitter))))))
+
+; Main build - depends on setup
+
+(alias
+ (name build)
+ (deps
+  tree-sitter-out
+  (alias_rec src/all)))
+
+; Convenience symlink
+
+(rule
+ (alias post-build)
+ (deps
+  (alias build))
+ (action
+  (bash
+   "mkdir -p bin && ln -sf ../_build/install/default/bin/ocaml-tree-sitter bin/ocaml-tree-sitter || true")))
+
+(alias
+ (name runtest)
+ (deps
+  (alias build)))
+
+(install
+ (section lib)
+ (package tree-sitter)
+ (files
+  (glob_files tree-sitter-out/lib/*)))
+
+(install
+ (section lib)
+ (package tree-sitter)
+ (dirs tree-sitter-out/include))
+
+(install
+ (section bin)
+ (package tree-sitter)
+ (files tree-sitter))

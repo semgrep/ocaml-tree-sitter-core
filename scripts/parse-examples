@@ -6,8 +6,8 @@ set -eu -o pipefail
 
 usage() {
   cat <<EOF
-Usage: $(basename "$0") LANG
-Parse sample source files written in language LANG.
+Usage: $(basename "$0") PARSER LANG
+Parse sample source files with PARSER, written in language LANG.
 
 Input files that are expected to parse successfully must be located in
 test/ok or in its subfolders. Files that are expected to fail must be
@@ -15,14 +15,13 @@ placed under test/xfail.
 EOF
 }
 
-if [[ $# != 1 ]]; then
+if [[ $# != 2 ]]; then
   usage >&2
   exit 1
 fi
 
-lang="$1"
-
-parser=./parse-"$lang"
+parser="$1"
+lang="$2"
 
 # Run the parser from source to ocaml CST
 #
@@ -114,7 +113,7 @@ The lists of failing targets are here:
   - '$xpass_list': parsing was expected to fail but succeeded
 
 The output of the parser for each file was put in '$outdir/'. Alternatively,
-you can run the parser './parse-$lang' on an arbitrary file to see
+you can run the parser '$parser' on an arbitrary file to see
 what the CST looks like. If a target fails but the parser can't be fixed
 right away, move it to 'test/xfail/'. You may create subfolders such as
 'test/xfail/todo' or 'text/xfail/experimental' to be more descriptive.

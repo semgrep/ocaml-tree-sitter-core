@@ -1,13 +1,11 @@
 #! /usr/bin/env bash
 #
 # Complete the opam setup already in place in the docker image
-# ocaml/opam2:debian-stable.
+# ocaml/opam:debian
 #
-
-sudo apt-get update
 sudo apt-get install -y m4 pkg-config
 
-opam switch 4.10
+opam switch 5.4
 
 if ! (opam repo list | grep -q http); then
   opam repo add --all -k git github \
@@ -15,3 +13,6 @@ if ! (opam repo list | grep -q http); then
 fi
 
 opam update
+opam install dune
+opam exec -- dune build tree-sitter.opam
+opam install --deps-only -y .

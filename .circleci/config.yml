@@ -8,38 +8,32 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: returntocorp/ocaml:ubuntu
+      - image: ocaml/opam:debian-ocaml-5.4
 
     working_directory: ~/ocaml-tree-sitter
     steps:
       - checkout
       - run:
-          name: set up node
+          name: fetch submodules
+          command: git submodule update --init --recursive
+      - run:
+          name: set up rust, for tree-sitter
+          command: sudo apt-get install -y rustup libclang-dev && rustup default stable && rustup update
+      - run:
+          name: set up node, for tree-sitter
           command: ./scripts/setup-node
       - run:
-          name: fetch submodules
-          command: git submodule update --init --recursive --depth 1
-      - run:
-          name: configure
-          command: ./configure
-      - run:
-          name: install dependencies
-          command: opam exec -- make setup
-      - run:
-          name: check code formatting
-          command: ./scripts/lint
+          name: set up opam
+          command: ./scripts/setup-opam
       - run:
           name: build
-          command: opam exec -- make
+          command: opam exec -- dune build --verbose
       - run:
           name: install
-          command: opam exec -- make install
+          command: opam exec -- dune build @install
       - run:
-          name: unit tests
-          command: opam exec -- make unit
-      - run:
-          name: end-to-end tests
-          command: opam exec -- make e2e
+          name: test
+          command: opam exec -- dune runtest --verbose
 
 workflows:
   version: 2

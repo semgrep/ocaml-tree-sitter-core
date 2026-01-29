@@ -3,6 +3,7 @@
 
    Allows reading and writing tree-sitter grammars in a type-safe manner.
 *)
+(* Compare with <https://github.com/tree-sitter/tree-sitter/blob/master/docs/src/assets/schemas/grammar.schema.json> *)
 
 type ident = string
 
