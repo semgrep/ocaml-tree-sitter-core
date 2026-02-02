@@ -22,21 +22,18 @@ let rec remove_leading_underscores s =
 let normalize_name s =
   String.lowercase_ascii s
 
-(*
-   Create a function that removes the leading underscores and avoids conflicts
+(* Create a function that removes the leading underscores and avoids conflicts
    by appending a suffix as needed.
 
-     "foo" -> "foo"
      "_bar" -> "bar"   // eliminate leading underscore
      "bar" -> "bar_"   // append a suffix because 'bar' is taken
      "_bar" -> "bar"   // '_bar' still maps to the same thing as earlier
-     "_foo" -> "foo_"  // append a suffix because 'foo' is taken
-*)
+     "_foo" -> "foo_"  // append a suffix because 'foo' is taken *)
 let make_name_translator () =
   let map = Protect_ident.create ~reserved_dst:[] () in
   fun name ->
-    let preferred_name = remove_leading_underscores name |> normalize_name in
-    Protect_ident.add_translation map name ~preferred_dst:preferred_name
+    let preferred_dst = name |> normalize_name |> remove_leading_underscores in
+    Protect_ident.add_translation map name ~preferred_dst
 
 let simplify_rule_body translate_name =
   let rec simplify (x : rule_body) : rule_body =
@@ -263,6 +260,21 @@ let simplify_grammar grammar =
   let translate_name = make_name_translator () in
   let simplify = simplify_rule_body translate_name in
 
+  (* Hidden REPEAT/REPEAT1 rules cause LR conflicts that tree-sitter ignores
+     when the rule is hidden. When we unhide these rules, tree-sitter requires
+     the conflicts to be explicitly declared. *)
+  let unhidden_repeat_conflicts =
+    grammar.rules
+    |> List.filter_map (fun (name, body) ->
+      if String.length name > 0 && name.[0] = '_' then
+        match body with
+        | REPEAT _ | REPEAT1 _ -> Some [translate_name name]
+        | _ -> None
+      else
+        None
+    )
+  in
+
   (* Keep inlined rules, which we'll use for deinlining. See Deinlining.ml. *)
   let simplified_rules =
     List.map (fun (name, rule_body) ->
@@ -274,7 +286,7 @@ let simplify_grammar grammar =
     word = Option.map translate_name grammar.word;
     extras = List.map simplify grammar.extras;
     inline = [];
-    conflicts = List.map (List.map translate_name) grammar.conflicts;
+    conflicts = List.map (List.map translate_name) grammar.conflicts @ unhidden_repeat_conflicts;
     precedences = translate_precedences translate_name grammar.precedences;
     externals = List.map simplify grammar.externals;
     supertypes = [];
