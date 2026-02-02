@@ -37,6 +37,7 @@ let get_token_node_name (token_contents : rule_body) : token_node_name option =
     | PREC_RIGHT (_prec, x) -> get x
     | ALIAS alias -> get alias.content
     | FIELD (_field_name, x) -> get x
+    | RESERVED reserved -> get reserved.reserved_content
   in
   get token_contents
 
@@ -69,6 +70,7 @@ let extract_alias_rules_from_body add_rule body =
     | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, extract x)
     | ALIAS alias -> ALIAS { alias with content = extract alias.content }
     | FIELD (field_name, x) -> FIELD (field_name, extract x)
+    | RESERVED reserved -> RESERVED { reserved with reserved_content = extract reserved.reserved_content }
   in
   match body with
   | PATTERN _

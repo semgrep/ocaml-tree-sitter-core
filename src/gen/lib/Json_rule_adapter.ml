@@ -45,6 +45,7 @@ let normalize_variant_object fields =
     | "FIELD" -> Some (`List [get "name"; get "content"])
     | "IMMEDIATE_TOKEN" -> Some (get "content")
     | "TOKEN" -> Some (get "content")
+    | "RESERVED" -> Some (`Assoc fields)
     | _ -> raise Malformed
   in
   match opt_value with
@@ -109,6 +110,11 @@ let restore (json : json) : json =
             )
         | "IMMEDIATE_TOKEN" -> ["content", value]
         | "TOKEN" -> ["content", value]
+        | "RESERVED" ->
+            (match value with
+             | `Assoc fields -> fields
+             | _ -> assert false
+            )
         | _ -> assert false
   in
   `Assoc (("type", `String type_) :: optional_fields)
