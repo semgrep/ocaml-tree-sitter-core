@@ -111,6 +111,7 @@ let name_ts_rule_body (body : Tree_sitter_t.rule_body) =
     | FIELD (field_name, _x) -> field_name
     | IMMEDIATE_TOKEN x -> "imm_tok_" ^ name_rule_body x
     | TOKEN x -> "tok_" ^ name_rule_body x
+    | RESERVED reserved -> "reserved_" ^ name_rule_body reserved.reserved_content
   in
   let full_name = name_rule_body body in
   Abbrev.words full_name

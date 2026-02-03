@@ -43,6 +43,7 @@ let detect_used ~entrypoints rules =
         if not (was_visited name) then
           visit name;
         scan content
+    | RESERVED reserved -> scan reserved.reserved_content
   and visit name =
     mark_visited name;
     match get_rule name with
@@ -129,6 +130,7 @@ let rec strip (x : Tree_sitter_t.rule_body) : Tree_sitter_t.rule_body =
   | PREC_RIGHT (_, x) -> strip x
   | FIELD (_, x) -> strip x
   | ALIAS alias -> ALIAS { alias with content = strip alias.content }
+  | RESERVED reserved -> RESERVED { reserved with reserved_content = strip reserved.reserved_content }
 
 (*
    Simple translation without normalization. Get rid of PREC_*
@@ -172,6 +174,7 @@ let translate ~rule_name (x : Tree_sitter_t.rule_body) =
     | PREC_LEFT _ -> assert false
     | PREC_RIGHT _ -> assert false
     | FIELD _ -> assert false
+    | RESERVED reserved -> translate reserved.reserved_content
 
   and translate_choice opt_rule_name cases =
     let translated_cases = List.map translate cases |> Util_list.deduplicate in

@@ -65,6 +65,9 @@ let simplify_rule_body translate_name =
     | FIELD (field_name, x) -> FIELD (field_name, simplify x)
     | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (simplify x)
     | TOKEN x -> TOKEN (simplify x)
+    | RESERVED reserved ->
+        let content = simplify reserved.reserved_content in
+        RESERVED { reserved with reserved_content = content }
   in
   simplify
 
@@ -130,6 +133,9 @@ let apply_inline grammar =
     | FIELD (field_name, x) -> FIELD (field_name, inline parents x)
     | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (inline parents x)
     | TOKEN x -> TOKEN (inline parents x)
+    | RESERVED reserved ->
+        let content = inline parents reserved.reserved_content in
+        RESERVED { reserved with reserved_content = content }
   in
   let inline_rules rules =
     List.map (fun (name, body) ->
@@ -223,6 +229,9 @@ let alias_extras grammar =
     | FIELD (field_name, x) -> FIELD (field_name, insert_aliases x)
     | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (insert_aliases x)
     | TOKEN x -> TOKEN (insert_aliases x)
+    | RESERVED reserved ->
+        let content = insert_aliases reserved.reserved_content in
+        RESERVED { reserved with reserved_content = content }
   in
   let rules =
     List.map (fun (id, body) -> (id, insert_aliases body)) grammar.rules in
@@ -290,6 +299,7 @@ let simplify_grammar grammar =
     precedences = translate_precedences translate_name grammar.precedences;
     externals = List.map simplify grammar.externals;
     supertypes = [];
+    reserved = List.map (fun (name, rules) -> (name, List.map simplify rules)) grammar.reserved;
     rules = simplified_rules; (* includes inlined rules on purpose *)
   }
 

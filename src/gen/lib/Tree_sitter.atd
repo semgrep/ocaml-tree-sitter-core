@@ -23,6 +23,11 @@ type grammar = {
   ~externals: rule_body list;
 
   ~supertypes: ident list; (* rule names *)
+
+  (* Reserved words for specific contexts (tree-sitter >= 0.25.9).
+     Maps context names to lists of reserved word rules. *)
+  ~reserved: (ident * rule_body list) list <json repr="object">;
+
   rules: (ident * rule_body) list <json repr="object">;
 }
 
@@ -48,6 +53,9 @@ type rule_body = [
   | TOKEN of rule_body
       (* may obey a complex parsing rule but is exposed in the parser output
          as a node without children, i.e. a token. *)
+
+  | RESERVED of reserved
+      (* marks a rule as reserved within a specific context *)
 
 ] <json adapter.ocaml="Json_rule_adapter"> (* see Json_rule_adapter.ml *)
   <ocaml repr="classic">
@@ -76,4 +84,9 @@ type alias = {
      transformation and must be preserved. Aliases from the source grammar
      should not be preserved. *)
   ~must_be_preserved: bool;
+}
+
+type reserved = {
+  context_name: string;
+  reserved_content <json name="content">: rule_body;
 }

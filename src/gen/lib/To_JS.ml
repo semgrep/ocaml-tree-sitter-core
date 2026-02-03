@@ -115,6 +115,7 @@ let pp_body ~sort_choices ?prefix ?is_last body =
       | FIELD (name, x) -> "field", Some (pp_field name x)
       | IMMEDIATE_TOKEN x -> "token.immediate", Some (pp_body x)
       | TOKEN x -> "token", Some (pp_body x)
+      | RESERVED reserved -> "reserved", Some (pp_reserved reserved)
     in
     match args with
     | None ->
@@ -151,6 +152,11 @@ let pp_body ~sort_choices ?prefix ?is_last body =
     [
       Line (str name ^ ",");
       Inline (pp_body ~is_last:true x);
+    ]
+  and pp_reserved reserved =
+    [
+      Line (str reserved.context_name ^ ",");
+      Inline (pp_body ~is_last:true reserved.reserved_content);
     ]
   in
   pp_body ?prefix ?is_last body
@@ -242,6 +248,7 @@ let rec strip (body : rule_body) =
   | FIELD (_name, x) -> strip x
   | IMMEDIATE_TOKEN x -> strip x
   | TOKEN x -> strip x
+  | RESERVED reserved -> strip reserved.reserved_content
 
 (*
    Eliminate all the constructs that don't affect the structure of the
