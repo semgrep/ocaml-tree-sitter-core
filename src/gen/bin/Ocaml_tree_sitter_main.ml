@@ -54,8 +54,13 @@ let safe_run f =
 
 let gen (conf : gen_conf) =
   let tree_sitter_grammar =
-    Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar
-      conf.grammar
+    match
+      Yojson.Safe.from_file conf.grammar
+      |> Tree_sitter_grammar.grammar_of_yojson
+    with
+    | Ok g -> g
+    | Error e ->
+        failwith (Printf.sprintf "Failed to parse %s: %s" conf.grammar e)
   in
   let grammar = CST_grammar_conv.of_tree_sitter tree_sitter_grammar in
   Codegen.ocaml ?out_dir:conf.out_dir ~lang:conf.lang grammar

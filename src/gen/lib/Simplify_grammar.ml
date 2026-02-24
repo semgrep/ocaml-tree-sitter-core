@@ -3,7 +3,7 @@
 *)
 
 open Printf
-open Tree_sitter_t
+open Tree_sitter_grammar
 
 (* Remove leading underscores which otherwise tell tree-sitter that the
    rule is hidden. *)
@@ -36,21 +36,18 @@ let make_name_translator () =
     Protect_ident.add_translation map name ~preferred_dst
 
 let simplify_rule_body translate_name =
-  let rec simplify (x : rule_body) : rule_body =
+  let rec simplify (x : Rule_body.t) : Rule_body.t =
     match x with
-    | SYMBOL name -> SYMBOL (translate_name name)
-    | STRING _
-    | PATTERN _
-    | BLANK -> x
-    | REPEAT x -> REPEAT (simplify x)
-    | REPEAT1 x -> REPEAT1 (simplify x)
-    | CHOICE xs -> CHOICE (List.map simplify xs)
-    | SEQ xs -> SEQ (List.map simplify xs)
-    | PREC (prec, x) -> PREC (prec, simplify x)
-    | PREC_DYNAMIC (prec, x) -> PREC_DYNAMIC (prec, simplify x)
-    | PREC_LEFT (prec, x) -> PREC_LEFT (prec, simplify x)
-    | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, simplify x)
-    | ALIAS alias ->
+    | Symbol name -> Symbol (translate_name name)
+    | Literal _
+    | Pattern _
+    | Blank -> x
+    | Repeat x -> Repeat (simplify x)
+    | Repeat1 x -> Repeat1 (simplify x)
+    | Choice xs -> Choice (List.map simplify xs)
+    | Seq xs -> Seq (List.map simplify xs)
+    | Prec (type_, prec, x) -> Prec (type_, prec, simplify x)
+    | Alias alias ->
         let name =
           if alias.named then
             translate_name alias.value
@@ -59,15 +56,15 @@ let simplify_rule_body translate_name =
         in
         let content = simplify alias.content in
         if alias.must_be_preserved then
-          ALIAS { alias with value = name; content }
+          Alias { alias with value = name; content }
         else
           content
-    | FIELD (field_name, x) -> FIELD (field_name, simplify x)
-    | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (simplify x)
-    | TOKEN x -> TOKEN (simplify x)
-    | RESERVED reserved ->
-        let content = simplify reserved.reserved_content in
-        RESERVED { reserved with reserved_content = content }
+    | Field (field_name, x) -> Field (field_name, simplify x)
+    | Immediate_token x -> Immediate_token (simplify x)
+    | Token x -> Token (simplify x)
+    | Reserved reserved ->
+        let content = simplify reserved.content in
+        Reserved { reserved with content = content }
   in
   simplify
 
@@ -97,11 +94,11 @@ let apply_inline grammar =
     Hashtbl.find_opt inline_rules name in
 
   (* parents = stack of rule names being inlined, used to detect cycles. *)
-  let rec inline parents (x : rule_body) : rule_body =
+  let rec inline parents (x : Rule_body.t) : Rule_body.t =
     match x with
-    | SYMBOL name ->
+    | Symbol name ->
         (match get_inlined_body name with
-         | None -> SYMBOL name
+         | None -> Symbol name
          | Some body ->
              if List.mem name parents then
                failwith (
@@ -112,30 +109,27 @@ let apply_inline grammar =
              else
                inline (name :: parents) body
         )
-    | STRING _
-    | PATTERN _
-    | BLANK -> x
-    | REPEAT x -> REPEAT (inline parents x)
-    | REPEAT1 x -> REPEAT1 (inline parents x)
-    | CHOICE xs -> CHOICE (List.map (inline parents) xs)
-    | SEQ xs -> SEQ (List.map (inline parents) xs)
-    | PREC (prec, x) -> PREC (prec, inline parents x)
-    | PREC_DYNAMIC (prec, x) -> PREC_DYNAMIC (prec, inline parents x)
-    | PREC_LEFT (prec, x) -> PREC_LEFT (prec, inline parents x)
-    | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, inline parents x)
-    | ALIAS alias ->
+    | Literal _
+    | Pattern _
+    | Blank -> x
+    | Repeat x -> Repeat (inline parents x)
+    | Repeat1 x -> Repeat1 (inline parents x)
+    | Choice xs -> Choice (List.map (inline parents) xs)
+    | Seq xs -> Seq (List.map (inline parents) xs)
+    | Prec (type_, prec, x) -> Prec (type_, prec, inline parents x)
+    | Alias alias ->
         (* remove aliases other than those introduced automatically *)
         let content = inline parents alias.content in
         if alias.must_be_preserved then
-          ALIAS { alias with content }
+          Alias { alias with content }
         else
           content
-    | FIELD (field_name, x) -> FIELD (field_name, inline parents x)
-    | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (inline parents x)
-    | TOKEN x -> TOKEN (inline parents x)
-    | RESERVED reserved ->
-        let content = inline parents reserved.reserved_content in
-        RESERVED { reserved with reserved_content = content }
+    | Field (field_name, x) -> Field (field_name, inline parents x)
+    | Immediate_token x -> Immediate_token (inline parents x)
+    | Token x -> Token (inline parents x)
+    | Reserved reserved ->
+        let content = inline parents reserved.content in
+        Reserved { reserved with content = content }
   in
   let inline_rules rules =
     List.map (fun (name, body) ->
@@ -175,7 +169,7 @@ let alias_extras grammar =
       grammar.extras
       |> List.to_seq
       |> Seq.filter_map (function
-        | SYMBOL name -> Some name
+        | Rule_body.Symbol name -> Some name
         | _ -> None)
       |> Seq.map (fun name -> (name, ()))
       |> Hashtbl.of_seq
@@ -195,43 +189,40 @@ let alias_extras grammar =
   in
   let new_aliases = ref [] in
   let aliased_rules = ref [] in
-  let rec insert_aliases (x : rule_body) : rule_body =
+  let rec insert_aliases (x : Rule_body.t) : Rule_body.t =
     match x with
-    | SYMBOL name -> (
+    | Symbol name -> (
         if is_extra name then
           let new_name = Fresh.create_name fresh (name ^ "_explicit") in
           new_aliases := new_name :: !new_aliases;
           aliased_rules := name :: !aliased_rules;
-          ALIAS {
+          Alias {
             value=new_name;
             named=true;
-            content=SYMBOL name;
+            content=Symbol name;
             must_be_preserved=true;
           }
         else x)
     (* Cases below only traverse the structure. We could cut down on
        boilerplate by using deriving visitors on this data
        structure. *)
-    | STRING _
-    | PATTERN _
-    | BLANK -> x
-    | REPEAT x -> REPEAT (insert_aliases x)
-    | REPEAT1 x -> REPEAT1 (insert_aliases x)
-    | CHOICE xs -> CHOICE (List.map insert_aliases xs)
-    | SEQ xs -> SEQ (List.map insert_aliases xs)
-    | PREC (prec, x) -> PREC (prec, insert_aliases x)
-    | PREC_DYNAMIC (prec, x) -> PREC_DYNAMIC (prec, insert_aliases x)
-    | PREC_LEFT (prec, x) -> PREC_LEFT (prec, insert_aliases x)
-    | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, insert_aliases x)
-    | ALIAS alias ->
+    | Literal _
+    | Pattern _
+    | Blank -> x
+    | Repeat x -> Repeat (insert_aliases x)
+    | Repeat1 x -> Repeat1 (insert_aliases x)
+    | Choice xs -> Choice (List.map insert_aliases xs)
+    | Seq xs -> Seq (List.map insert_aliases xs)
+    | Prec (type_, prec, x) -> Prec (type_, prec, insert_aliases x)
+    | Alias alias ->
         let content = insert_aliases alias.content in
-        ALIAS { alias with content }
-    | FIELD (field_name, x) -> FIELD (field_name, insert_aliases x)
-    | IMMEDIATE_TOKEN x -> IMMEDIATE_TOKEN (insert_aliases x)
-    | TOKEN x -> TOKEN (insert_aliases x)
-    | RESERVED reserved ->
-        let content = insert_aliases reserved.reserved_content in
-        RESERVED { reserved with reserved_content = content }
+        Alias { alias with content }
+    | Field (field_name, x) -> Field (field_name, insert_aliases x)
+    | Immediate_token x -> Immediate_token (insert_aliases x)
+    | Token x -> Token (insert_aliases x)
+    | Reserved reserved ->
+        let content = insert_aliases reserved.content in
+        Reserved { reserved with content = content }
   in
   let rules =
     List.map (fun (id, body) -> (id, insert_aliases body)) grammar.rules in
@@ -240,7 +231,7 @@ let alias_extras grammar =
      (nmote) suspect that this isn't necessary, but for now we'll
      insert a blank rule for each new alias to satisfy this check.
   *)
-  let new_alias_rules = List.map (fun name -> name, BLANK) !new_aliases in
+  let new_alias_rules = List.map (fun name -> name, Rule_body.Blank) !new_aliases in
   let rules = rules @ new_alias_rules in
   let rules =
     (* Hack to work around https://github.com/tree-sitter/tree-sitter/issues/1834.
@@ -254,7 +245,7 @@ let alias_extras grammar =
         (fun i extra_name ->
            let dummy_name =
              Fresh.create_name fresh ("dummy_alias" ^ (string_of_int i)) in
-           let rule = SYMBOL extra_name in
+           let rule = Rule_body.Symbol extra_name in
            (dummy_name, rule)
         ) !aliased_rules
     in
@@ -269,15 +260,15 @@ let simplify_grammar grammar =
   let translate_name = make_name_translator () in
   let simplify = simplify_rule_body translate_name in
 
-  (* Hidden REPEAT/REPEAT1 rules cause LR conflicts that tree-sitter ignores
+  (* Hidden Repeat/Repeat1 rules cause LR conflicts that tree-sitter ignores
      when the rule is hidden. When we unhide these rules, tree-sitter requires
      the conflicts to be explicitly declared. *)
   let unhidden_repeat_conflicts =
     grammar.rules
-    |> List.filter_map (fun (name, body) ->
+    |> List.filter_map (fun ((name, body) : ident * Rule_body.t) ->
       if String.length name > 0 && name.[0] = '_' then
         match body with
-        | REPEAT _ | REPEAT1 _ -> Some [translate_name name]
+        | Repeat _ | Repeat1 _ -> Some [translate_name name]
         | _ -> None
       else
         None
@@ -292,6 +283,7 @@ let simplify_grammar grammar =
   in
   {
     name = grammar.name;
+    inherits = grammar.inherits;
     word = Option.map translate_name grammar.word;
     extras = List.map simplify grammar.extras;
     inline = [];
@@ -306,12 +298,13 @@ let simplify_grammar grammar =
 let run grammar output_file =
   let oc = open_out output_file in
   let orig_grammar =
-    Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar grammar
+    match Yojson.Safe.from_file grammar |> grammar_of_yojson with
+    | Ok g -> g
+    | Error e -> failwith (sprintf "Failed to parse %s: %s" grammar e)
   in
   let new_grammar = simplify_grammar orig_grammar in
-  let compact_json =
-    Atdgen_runtime.Util.Json.to_string Tree_sitter_j.write_grammar new_grammar
+  let pretty_json =
+    grammar_to_yojson new_grammar |> Yojson.Safe.pretty_to_string
   in
-  let pretty_json = Yojson.Safe.prettify compact_json in
   fprintf oc "%s\n%!" pretty_json;
   close_out oc

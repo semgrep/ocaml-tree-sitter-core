@@ -8,7 +8,7 @@
    The resulting name may be long and not unique.
    A hash can be appended to minimize conflicts, see 'hash_rule_body' below.
 *)
-val name_ts_rule_body : Tree_sitter_t.rule_body -> string
+val name_ts_rule_body : Tree_sitter_grammar.Rule_body.t -> string
 val name_rule_body : CST_grammar.rule_body -> string
 
 (*

@@ -17,12 +17,14 @@ depends: [
   "atdgen"
   "cmdliner" { >= "2.0.0" }
   "conf-pkg-config"
-  "dune" {>= "2.1"}
   "dune-configurator" {>= "3.10.0"}
+  "dune" {>= "2.1"}
   "ocaml"
+  "ppx_deriving_yojson"
   "ppx_deriving"
   "sexplib"
   "tsort" {>= "2.0"}
+  "yojson"
 ]
 
 synopsis: "Code generator for parsing the output of tree-sitter parsers"

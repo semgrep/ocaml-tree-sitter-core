@@ -1,24 +1,15 @@
 (library
  (public_name tree-sitter.gen)
  (name tree_sitter_gen)
- (preprocess (pps ppx_deriving.show ppx_deriving.ord))
+ (preprocess (pps ppx_deriving.show ppx_deriving.ord ppx_deriving_yojson))
  (libraries
    unix
-   atdgen-runtime
+   yojson
    re
    str
    tsort
+   easy-format
  )
 )
-
-(rule
- (targets Tree_sitter_j.ml Tree_sitter_j.mli)
- (deps    Tree_sitter.atd)
- (action  (run atdgen -j -j-std %{deps})))
-
-(rule
- (targets Tree_sitter_t.ml Tree_sitter_t.mli)
- (deps    Tree_sitter.atd)
- (action  (run atdgen -t %{deps})))
 
 (ocamllex Pattern_name)

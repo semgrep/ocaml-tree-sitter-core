@@ -11,88 +11,84 @@
 *)
 
 open Printf
-open Tree_sitter_t
+open Tree_sitter_grammar
 
 type token_node_name =
   | Literal of string
   | Name of string
 
-let get_token_node_name (token_contents : rule_body) : token_node_name option =
-  let rec get (x : rule_body) =
+let get_token_node_name (token_contents : Rule_body.t) : token_node_name option =
+  let rec get (x : Rule_body.t) =
     match x with
-    | SYMBOL name -> Some (Name name)
-    | STRING name -> Some (Literal name)
-    | BLANK -> None
-    | PATTERN _ -> None
+    | Symbol name -> Some (Name name)
+    | Literal name -> Some (Literal name)
+    | Blank -> None
+    | Pattern _ -> None
 
-    | IMMEDIATE_TOKEN _ -> None
-    | TOKEN _ -> None
-    | REPEAT _ -> None
-    | REPEAT1 _ -> None
-    | CHOICE _ -> None
-    | SEQ _ -> None
-    | PREC (_prec, x) -> get x
-    | PREC_DYNAMIC (_prec, x) -> get x
-    | PREC_LEFT (_prec, x) -> get x
-    | PREC_RIGHT (_prec, x) -> get x
-    | ALIAS alias -> get alias.content
-    | FIELD (_field_name, x) -> get x
-    | RESERVED reserved -> get reserved.reserved_content
+    | Immediate_token _ -> None
+    | Token _ -> None
+    | Repeat _ -> None
+    | Repeat1 _ -> None
+    | Choice _ -> None
+    | Seq _ -> None
+    | Prec (_type, _prec, x) -> get x
+    | Alias alias -> get alias.content
+    | Field (_field_name, x) -> get x
+    | Reserved reserved -> get reserved.content
   in
   get token_contents
 
-let extract_alias_rules_from_body add_rule body =
-  let rec extract (x : rule_body) =
+let extract_alias_rules_from_body add_rule (body : Rule_body.t) =
+  let rec extract (x : Rule_body.t) =
     match x with
-    | SYMBOL _
-    | STRING _
-    | BLANK -> x
+    | Symbol _
+    | Literal _
+    | Blank -> x
 
-    | PATTERN _
-    | IMMEDIATE_TOKEN _
-    | TOKEN _ as x ->
+    | Pattern _
+    | Immediate_token _
+    | Token _ as x ->
         let preferred_name = Type_name.name_ts_rule_body x in
         let name = add_rule preferred_name x in
-        ALIAS {
+        Alias {
           value = name;
           named = true;
           content = x;
           must_be_preserved = true;
         }
 
-    | REPEAT x -> REPEAT (extract x)
-    | REPEAT1 x -> REPEAT1 (extract x)
-    | CHOICE xs -> CHOICE (List.map extract xs)
-    | SEQ xs -> SEQ (List.map extract xs)
-    | PREC (prec, x) -> PREC (prec, extract x)
-    | PREC_DYNAMIC (prec, x) -> PREC_DYNAMIC (prec, extract x)
-    | PREC_LEFT (prec, x) -> PREC_LEFT (prec, extract x)
-    | PREC_RIGHT (prec, x) -> PREC_RIGHT (prec, extract x)
-    | ALIAS alias -> ALIAS { alias with content = extract alias.content }
-    | FIELD (field_name, x) -> FIELD (field_name, extract x)
-    | RESERVED reserved -> RESERVED { reserved with reserved_content = extract reserved.reserved_content }
+    | Repeat x -> Repeat (extract x)
+    | Repeat1 x -> Repeat1 (extract x)
+    | Choice xs -> Choice (List.map extract xs)
+    | Seq xs -> Seq (List.map extract xs)
+    | Prec (type_, prec, x) -> Prec (type_, prec, extract x)
+    | Alias alias -> Alias { alias with content = extract alias.content }
+    | Field (field_name, x) -> Field (field_name, extract x)
+    | Reserved reserved -> Reserved { reserved with content = extract reserved.content }
   in
   match body with
-  | PATTERN _
-  | IMMEDIATE_TOKEN _
-  | TOKEN _ as x ->
+  | Pattern _
+  | Immediate_token _
+  | Token _ as x ->
       (* already at the root of a rule body, will have a name. *)
       x
   | x -> extract x
 
+module Rule_body_map = Map.Make (Rule_body)
+
 let extract_rules make_unique rules =
   let new_rules = Hashtbl.create 100 in
-  let new_rule_bodies = Hashtbl.create 100 in
+  let new_rule_bodies = ref Rule_body_map.empty in
   let add_rule preferred_name rule_body =
     (* Avoid introducing two rules x and x_ for the same rule body if said
        body occurs multiple times in the grammar. Instead, share the same
        name and rule. *)
-    match Hashtbl.find_opt new_rule_bodies rule_body with
+    match Rule_body_map.find_opt rule_body !new_rule_bodies with
     | Some name -> name
     | None ->
         let name = make_unique preferred_name in
         Hashtbl.replace new_rules name rule_body;
-        Hashtbl.add new_rule_bodies rule_body name;
+        new_rule_bodies := Rule_body_map.add rule_body name !new_rule_bodies;
         name
   in
   let rewritten_rules =

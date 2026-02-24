@@ -4,8 +4,7 @@
    OCaml type definitions.
 
    A raw grammar definition as expressed in a grammar.json file is readable
-   and writable using the Tree_sitter_t and Tree_sitter_j modules derived
-   from Tree_sitter.atd.
+   and writable using the Tree_sitter_grammar module.
 
    The representation offered in this file is an irreversible view on
    a grammar.json file. In particular:
@@ -18,7 +17,7 @@
    TODO: clarify what we intend to do with this
 *)
 
-val of_tree_sitter : Tree_sitter_t.grammar -> CST_grammar.t
+val of_tree_sitter : Tree_sitter_grammar.grammar -> CST_grammar.t
 
 (* Sort and group the rules based on interdependencies. This is already
    done as part of 'of_tree_sitter'.
