@@ -91,7 +91,7 @@ and Rule_body : sig
   type t =
     | Symbol of ident
     | Literal of string
-    | Pattern of string
+    | Pattern of { value: string; flags: string option }
     | Blank
     | Repeat of t
     | Repeat1 of t
@@ -108,7 +108,7 @@ end = struct
   type t =
     | Symbol of ident
     | Literal of string
-    | Pattern of string
+    | Pattern of { value: string; flags: string option }
     | Blank
     | Repeat of t
     | Repeat1 of t
@@ -133,8 +133,13 @@ end = struct
         `Assoc ["type", `String "BLANK"]
     | Literal value ->
         `Assoc ["type", `String "STRING"; "value", `String value]
-    | Pattern value ->
-        `Assoc ["type", `String "PATTERN"; "value", `String value]
+    | Pattern { value; flags } ->
+        let fields = ["type", `String "PATTERN"; "value", `String value] in
+        let fields = match flags with
+          | None -> fields
+          | Some f -> fields @ ["flags", `String f]
+        in
+        `Assoc fields
     | Symbol name ->
         `Assoc ["type", `String "SYMBOL"; "name", `String name]
     | Seq members ->
@@ -189,7 +194,10 @@ end = struct
       match json |> member "type" |> to_string with
       | "BLANK"          -> Ok Blank
       | "STRING"         -> Ok (Literal (json |> member "value" |> to_string))
-      | "PATTERN"        -> Ok (Pattern (json |> member "value" |> to_string))
+      | "PATTERN"        ->
+          let value = json |> member "value" |> to_string in
+          let flags = json |> member "flags" |> to_string_option in
+          Ok (Pattern { value; flags })
       | "SYMBOL"         -> Ok (Symbol (json |> member "name" |> to_string))
       | "SEQ"            -> parse_members (fun m -> Seq m)
       | "CHOICE"         -> parse_members (fun m -> Choice m)

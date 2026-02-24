@@ -86,7 +86,7 @@ let name_ts_rule_body (body : Tree_sitter_grammar.Rule_body.t) =
     | Symbol ident -> ident
     | Literal s -> Punct.to_alphanum s
     | Blank -> "blank"
-    | Pattern pat -> "pat_" ^ name_pattern pat
+    | Pattern { value; _ } -> "pat_" ^ name_pattern value
     | Repeat x -> "rep_" ^ name_rule_body x
     | Repeat1 x -> "rep1_" ^ name_rule_body x
     | Choice (x :: _) -> "choice_" ^ name_rule_body x

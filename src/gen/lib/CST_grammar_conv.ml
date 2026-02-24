@@ -56,7 +56,7 @@ let name_of_body opt_rule_name (body : Tree_sitter_grammar.Rule_body.t) =
   | None ->
       match body with
       | Literal cst -> Some cst
-      | Pattern pat -> Some pat
+      | Pattern { value; _ } -> Some value
       | _ -> None
 
 (*
@@ -150,8 +150,8 @@ let translate ~rule_name (x : Tree_sitter_grammar.Rule_body.t) =
     | Symbol ident -> Symbol ident
     | Literal cst
     | Immediate_token (Literal cst) -> translate_constant rule_name cst
-    | Pattern pat
-    | Immediate_token (Pattern pat) -> translate_pattern rule_name pat
+    | Pattern { value; _ }
+    | Immediate_token (Pattern { value; _ }) -> translate_pattern rule_name value
     | Immediate_token body
     | Token body -> translate_token rule_name body
     | Blank -> Blank

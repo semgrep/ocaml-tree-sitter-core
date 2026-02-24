@@ -41,7 +41,7 @@ and Rule_body : sig
   type t =
     | Symbol of ident
     | Literal of string
-    | Pattern of string
+    | Pattern of { value: string; flags: string option }
     | Blank
     | Repeat of t
     | Repeat1 of t

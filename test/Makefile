@@ -24,7 +24,8 @@ TESTS = \
   reserved \
   inline \
   pattern-name \
-  externals
+  externals \
+  pattern-flags
 
 # Build and run all the tests.
 .PHONY: test
