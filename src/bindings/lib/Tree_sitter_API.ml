@@ -23,6 +23,9 @@ module Parser = struct
   external parse_string :
     ts_parser -> string -> ts_tree = "octs_parser_parse_string"
 
+  external set_timeout_micros :
+    ts_parser -> int64 -> unit = "octs_parser_set_timeout_micros"
+
   type read_function = int -> int -> int -> string option
 
   external parse :
