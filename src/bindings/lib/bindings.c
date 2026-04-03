@@ -126,7 +126,7 @@ CAMLprim value octs_parser_parse_string(value vParser, value vSource) {
 
   const char *source_code = String_val(vSource);
   TSTree *tree =
-      ts_parser_parse_string(tsparser, NULL, source_code, strlen(source_code));
+      ts_parser_parse_string(tsparser, NULL, source_code, caml_string_length(vSource));
 
   tree_W treeWrapper;
   treeWrapper.tree = tree;
