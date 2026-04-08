@@ -273,7 +273,7 @@ let scan_node_for_extras ~is_extra ~keep_node ~translate_extra node =
            subtree being rewritten each time we encounter an extra node.
            In practice, it should be ok. *)
         match remove_extras ~keep_node node
-              |> translate_extra with
+          |> translate_extra with
         | None -> acc
         | Some x -> x :: acc
       else

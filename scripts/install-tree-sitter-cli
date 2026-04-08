@@ -50,19 +50,37 @@ bindir="$prefix"/bin
 
 dir_name=$(dirname "$BASH_SOURCE")
 "$dir_name"/update-version-symlinks
-"$dir_name"/download-tree-sitter --lazy
+version=$(cat tree-sitter-version)
 
-(
-  cd downloads/tree-sitter
-  # '--release' produces a smaller (3x) and faster (25x) executable
-  cargo build --release
-)
+# Determine platform and architecture for pre-built binary download.
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m)
+case "$os" in
+  linux)  os_tag="linux" ;;
+  darwin) os_tag="macos" ;;
+  *)      echo "Unsupported OS: $os" >&2; exit 1 ;;
+esac
+case "$arch" in
+  x86_64)  arch_tag="x64" ;;
+  aarch64|arm64) arch_tag="arm64" ;;
+  *)       echo "Unsupported architecture: $arch" >&2; exit 1 ;;
+esac
 
-real_exe=downloads/tree-sitter/target/release/tree-sitter
+asset="tree-sitter-${os_tag}-${arch_tag}.gz"
+url="https://github.com/tree-sitter/tree-sitter/releases/download/v${version}/${asset}"
+
+mkdir -p downloads
+real_exe="downloads/tree-sitter-${version}-${os_tag}-${arch_tag}"
+
+if [[ ! -x "$real_exe" ]]; then
+  echo "Downloading tree-sitter $version pre-built binary for ${os_tag}-${arch_tag}."
+  curl -L "$url" | gunzip > "$real_exe"
+  chmod +x "$real_exe"
+fi
 
 if ! [[ -x "$real_exe" ]]; then
   cat >&2 <<EOF
-Compilation of tree-sitter failed or the binary is not where we were
+Download of tree-sitter failed or the binary is not where we were
 expecting it. The expected path is:
 $real_exe
 EOF
