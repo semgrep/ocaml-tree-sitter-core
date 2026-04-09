@@ -1,7 +1,7 @@
 ocaml-tree-sitter-core
 ==
 
-[![CircleCI](https://circleci.com/gh/semgrep/ocaml-tree-sitter-core.svg?style=svg)](https://circleci.com/gh/semgrep/ocaml-tree-sitter-core)
+[![CI](https://github.com/semgrep/ocaml-tree-sitter-core/actions/workflows/ci.yml/badge.svg)](https://github.com/semgrep/ocaml-tree-sitter-core/actions/workflows/ci.yml)
 
 Generate OCaml parsers based on
 [tree-sitter](https://tree-sitter.github.io/tree-sitter/) grammars.

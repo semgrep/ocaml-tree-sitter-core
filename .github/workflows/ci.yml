@@ -1,0 +1,43 @@
+name: Build and Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 18
+
+      - uses: semgrep/setup-ocaml@ce6a88f72f48e02a172c93eb93177b21659e7032
+        with:
+          cache-prefix: v5
+          ocaml-compiler: ocaml-variants.5.3.0+options,ocaml-option-flambda
+          opam-pin: false
+          save-opam-post-run: true
+
+      - name: Configure
+        run: ./configure
+
+      - name: Install dependencies
+        run: opam exec -- make setup
+
+      - name: Build
+        run: opam exec -- make
+
+      - name: Install
+        run: opam exec -- make install
+
+      - name: Unit tests
+        run: opam exec -- make unit
+
+      - name: End-to-end tests
+        run: opam exec -- make e2e
