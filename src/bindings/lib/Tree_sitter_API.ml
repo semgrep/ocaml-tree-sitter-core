@@ -29,13 +29,14 @@ module Parser = struct
     ts_parser -> ts_tree option -> read_function -> ts_tree
     = "octs_parser_parse"
 
-  let parse_read_function = (ref (fun _ _ _ -> None) : read_function ref)
+  let parse_read_function : read_function Domain.DLS.key =
+    Domain.DLS.new_key (fun () -> fun _ _ _ -> None)
 
   let parse_read (byte_offset : int) (row : int) (col : int) =
-    !parse_read_function byte_offset row col
+    (Domain.DLS.get parse_read_function) byte_offset row col
 
   let parse (parser : t) (tree : ts_tree option) read_function =
-    parse_read_function := read_function;
+    Domain.DLS.set parse_read_function read_function;
     parse parser tree parse_read
 
   let () = Callback.register "octs__parse_read" parse_read
