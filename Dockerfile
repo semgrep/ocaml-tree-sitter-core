@@ -10,7 +10,7 @@
 #   docker run -it ocaml-tree-sitter
 #
 
-FROM ocaml/opam2:debian-stable
+FROM ocaml/opam:debian-12-ocaml-5.3
 
 COPY --chown=opam:opam scripts /home/opam/ocaml-tree-sitter/scripts
 COPY --chown=opam:opam Makefile /home/opam/ocaml-tree-sitter/Makefile
