@@ -2,7 +2,7 @@
 #
 # Thorough cleanup and rebuild for development purposes.
 #
-# See 'Dockerfile' or '.circleci/config.yml' for similar steps that are
+# See 'Dockerfile' or '.github/workflows/ci.yml' for similar steps that are
 # continuously tested.
 #
 set -eu
