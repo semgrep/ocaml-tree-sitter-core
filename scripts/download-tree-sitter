@@ -44,6 +44,29 @@ done
 ./scripts/update-version-symlinks
 version=$(cat tree-sitter-version)
 
+# SHA-256 checksums for tree-sitter release tarballs.
+# Update this when bumping tree-sitter-version.
+# Verify against: https://github.com/tree-sitter/tree-sitter/releases
+expected_checksum() {
+  case "$1" in
+    0.20.6) echo "4d37eaef8a402a385998ff9aca3e1043b4a3bba899bceeff27a7178e1165b9de" ;;
+    0.22.6) echo "e2b687f74358ab6404730b7fb1a1ced7ddb3780202d37595ecd7b20a8f41861f" ;;
+    0.26.3) echo "7f4a7cf0a2cd217444063fe2a4d800bc9d21ed609badc2ac20c0841d67166550" ;;
+    *) error "No checksum registered for tree-sitter $1. Add one to expected_checksum in this script." ;;
+  esac
+}
+
+verify_checksum() {
+  local file="$1"
+  local expected="$2"
+  local actual
+  actual=$(sha256sum "$file" | cut -d' ' -f1)
+  if [ "$actual" != "$expected" ]; then
+    error "Checksum mismatch for $file! Expected: $expected Actual: $actual This may indicate a compromised download."
+  fi
+  echo "Checksum verified for $file."
+}
+
 mkdir -p downloads
 (
   cd downloads
@@ -63,6 +86,9 @@ EOF
   else
     echo "Fetching tarball for tree-sitter-$version."
     curl -LO https://github.com/tree-sitter/tree-sitter/archive/refs/tags/v"$version".tar.gz
+
+    verify_checksum "v${version}.tar.gz" "$(expected_checksum "$version")"
+
     tar xf v"$version".tar.gz
     if [[ ! -d "$src_dir" ]]; then
       error "Archive didn't unpack into the expected folder '$src_dir'."
