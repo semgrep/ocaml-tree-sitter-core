@@ -3,5 +3,6 @@
   (libraries
     test_tree_sitter_gen
     test_tree_sitter_run
+    test_tree_sitter_bindings
   )
 )
