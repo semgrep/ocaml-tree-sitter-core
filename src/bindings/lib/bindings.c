@@ -306,7 +306,7 @@ CAMLprim value octs_node_is_extra(value vNode) {
   CAMLlocal1(v);
 
   TSNode *node = Data_custom_val(vNode);
-  int isExtra = ts_node_has_error(*node);
+  int isExtra = ts_node_is_extra(*node);
 
   CAMLreturn(Val_bool(isExtra));
 }
@@ -359,7 +359,7 @@ CAMLprim value octs_node_start_byte(value vNode) {
   CAMLparam1(vNode);
 
   TSNode *node = Data_custom_val(vNode);
-  uint32_t startByte = ts_node_end_byte(*node);
+  uint32_t startByte = ts_node_start_byte(*node);
 
   CAMLreturn(Val_int(startByte));
 };
