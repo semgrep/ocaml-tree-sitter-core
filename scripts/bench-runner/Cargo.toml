@@ -1,0 +1,17 @@
+[package]
+name = "bench-runner"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "lang-stat"
+path = "src/lang_stat.rs"
+
+[[bin]]
+name = "parse-examples"
+path = "src/parse_examples.rs"
+
+[dependencies]
+rayon = "1"
+indicatif = "0.17"
+walkdir = "2"

@@ -14,6 +14,11 @@ build:
 	ln -sf ../_build/install/default/bin/ocaml-tree-sitter \
 	  bin/ocaml-tree-sitter
 
+# Build the parallel bench-runner tools (lang-stat, parse-examples).
+.PHONY: build-bench
+build-bench:
+	cd scripts/bench-runner && cargo build --release
+
 # Full development setup.
 #
 .PHONY: setup
