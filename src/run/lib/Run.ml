@@ -171,6 +171,57 @@ let nothing capture =
   | Matcher.Capture.Nothing -> ()
   | _ -> assert false
 
+(* --- New helpers for direct child access (no regex matching) --- *)
+
+let children (node : node) : node list =
+  match node.children with
+  | None -> []
+  | Some l -> l
+
+let token src (node : node) : Loc.t * string =
+  (get_loc node, get_region src node)
+
+let single (children : node list) : node =
+  match children with
+  | [x] -> x
+  | _ ->
+      failwith (
+        sprintf "Run.single: expected exactly one child, got %d"
+          (List.length children)
+      )
+
+let nth_opt (children : node list) (i : int) : node option =
+  if i < List.length children then
+    Some (List.nth children i)
+  else
+    None
+
+let fail (node : node) (rule_name : string) : 'a =
+  failwith (
+    sprintf "Run.fail: unexpected children for rule %S at %d:%d"
+      rule_name node.start_pos.row node.start_pos.column
+  )
+
+let select (children : node list) (patterns : node_kind list list)
+    : int * node list =
+  let matches_pattern nodes pattern =
+    List.length nodes = List.length pattern
+    && List.for_all2 (fun (node : node) kind ->
+      match kind, node.kind with
+      | Name n1, Name n2 -> String.equal n1 n2
+      | Literal s1, Literal s2 -> String.equal s1 s2
+      | Error, Error -> true
+      | _ -> false
+    ) nodes pattern
+  in
+  let rec try_patterns i = function
+    | [] -> (-1, children)
+    | pat :: rest ->
+        if matches_pattern children pat then (i, children)
+        else try_patterns (i + 1) rest
+  in
+  try_patterns 0 patterns
+
 type error_kind = Error_node | Missing_node
 
 (*

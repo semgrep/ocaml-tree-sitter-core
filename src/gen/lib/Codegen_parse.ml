@@ -72,8 +72,7 @@ let constant_header = "\
 
 open Tree_sitter_bindings
 open Tree_sitter_run
-
-type mt = Run.matcher_token
+open Tree_sitter_output_t
 "
 
 let declare_externals lang = sprintf "\
@@ -109,124 +108,36 @@ let preamble grammar =
     Line "";
   ]
 
-let rec fmt_regexp (x : rule_body) =
-  match x with
-  | Symbol name
-  | Alias (name, _) -> [Line (sprintf "Token (Name %S);" name)]
-  | Token token -> [Line (sprintf "Token (Literal %S);" token.name)]
-  | Blank -> [Line "Nothing;"]
-  | Repeat x ->
-      [
-        Line "Repeat (";
-        Block (fmt_regexp x);
-        Line ");";
-      ]
-  | Repeat1 x ->
-      [
-        Line "Repeat1 (";
-        Block (fmt_regexp x);
-        Line ");";
-      ]
-  | Optional x ->
-      [
-        Line "Opt (";
-        Block (fmt_regexp x);
-        Line ");";
-      ]
-
-  | Choice cases ->
-      [
-        Line "Alt [|";
-        Block (List.map (fun (_name, x) -> Inline (fmt_regexp x)) cases);
-        Line "|];"
-      ]
-
+(*
+   Compute the number of flat children a rule_body element consumes.
+   Returns None if variable (Optional, Repeat, etc.).
+*)
+let rec fixed_span = function
+  | Symbol _ | Token _ | Alias _ -> Some 1
+  | Blank -> Some 0
   | Seq l ->
-      [
-        Line "Seq [";
-        Block (List.map (fun x -> Inline (fmt_regexp x)) l);
-        Line "];";
-      ]
-
-let gen_regexps grammar =
-  let list_elements =
-    List.flatten grammar.rules
-    |> List.map (fun rule ->
-      let opt_regexp =
-        match rule.body with
-        | Token _ ->
-            [Line "None;"]
-        | body ->
-            [
-              Line "Some (";
-              Block (fmt_regexp body);
-              Line ");";
-            ]
-      in
-      Group [
-        Line (sprintf "%S," rule.name);
-        Space;
-        Inline opt_regexp;
-      ]
-    )
-  in
-  [
-    Line "let children_regexps : (string * Run.exp option) list = [";
-    Block list_elements;
-    Line "]";
-  ]
-
-let gen_trans_token () =
-  [
-    Line "match body with";
-    Line "| Leaf v -> v";
-    Line "| Children _ -> assert false";
-  ]
+      List.fold_left (fun acc x ->
+        match acc, fixed_span x with
+        | Some n, Some m -> Some (n + m)
+        | _ -> None
+      ) (Some 0) l
+  | Choice _ | Optional _ | Repeat _ | Repeat1 _ -> None
 
 (*
-   Mini DSL that allows simplifications of the generated code such as
-
-     trans_expression (Run.matcher_token v2)
-
-   instead of
-
-     (fun v -> trans_expression (Run.matcher_token v)) v2
+   Compute the flat children kind pattern for a rule_body.
+   Returns None if the pattern is not statically determinable.
 *)
-type exp =
-  | Code of Indent.t
-  (* opaque code *)
-  | Fun of (string -> exp)
-  (* parametrized function body *)
-  | App of exp * string
-  (* application of a function to a precomputed value,
-     such as a variable *)
-
-let rec compile_exp exp : Indent.t =
-  match exp with
-  | Code code -> code
-  | Fun f ->
-      [
-        Group [
-          Line "(fun v ->";
-          Space;
-          Block (compile_exp (f "v"));
-          Line ")"
-        ]
-      ]
-  | App (Fun f, arg) ->
-      compile_exp (f arg)
-  | App (e, arg) ->
-      [
-        Group [
-          Inline (compile_exp e);
-          Space;
-          Block [Line arg]
-        ]
-      ]
-
-let gen_seq_pat l =
-  List.mapi (fun i _ -> sprintf "v%i" i) l
-  |> String.concat "; "
+let rec kind_pattern body =
+  match body with
+  | Symbol name | Alias (name, _) -> Some [sprintf "Name %S" name]
+  | Token tok -> Some [sprintf "Literal %S" tok.name]
+  | Blank -> Some []
+  | Seq l ->
+      let patterns = List.map kind_pattern l in
+      if List.for_all Option.is_some patterns then
+        Some (List.concat_map Option.get patterns)
+      else None
+  | Choice _ | Optional _ | Repeat _ | Repeat1 _ -> None
 
 let wrap_seq elts =
   let n = List.length elts in
@@ -250,112 +161,427 @@ let wrap_seq elts =
     ]
   ]
 
-let rec gen_trans_capture rule_body : exp =
-  match rule_body with
-  | Symbol name
-  | Alias (name, _) ->
-      Fun (fun arg ->
-        Code [
-          Line (sprintf "trans_%s (Run.matcher_token %s)"
-                  (trans name) arg);
-        ]
-      )
+(*
+   Generate code to translate a child node at a known offset in the
+   children list.
+   `children_var` is the variable name holding the children list.
+*)
+let rec gen_child_at_offset children_var offset body =
+  match body with
+  | Symbol name | Alias (name, _) ->
+      [Line (sprintf "trans_%s src (List.nth %s %d)"
+               (trans name) children_var offset)]
   | Token _ ->
-      Fun (fun arg ->
-        Code [
-          Line (sprintf "Run.trans_token (Run.matcher_token %s)" arg);
-        ]
-      )
-  | Blank -> Code [Line "Run.nothing"]
-  | Repeat x ->
-      Fun (fun arg ->
-        Code [
-          Line "Run.repeat";
-          Block [
-            Inline (compile_exp (gen_trans_capture x));
-            Line arg;
-          ];
-        ]
-      )
-  | Repeat1 x ->
-      Fun (fun arg ->
-        Code [
-          Line "Run.repeat1";
-          Block [
-            Inline (compile_exp (gen_trans_capture x));
-            Line arg;
-          ];
-        ]
-      )
-  | Optional x ->
-      Fun (fun arg ->
-        Code [
-          Line "Run.opt";
-          Block [
-            Inline (compile_exp (gen_trans_capture x));
-            Line arg;
-          ];
-        ]
-      )
+      [Line (sprintf "Run.token src (List.nth %s %d)" children_var offset)]
+  | Blank ->
+      [Line "()"]
+  | Seq l ->
+      (* Nested seq: generate a tuple from consecutive children *)
+      let cur_offset = ref offset in
+      let elts = List.map (fun elem ->
+        let o = !cur_offset in
+        let code = gen_child_at_offset children_var o elem in
+        cur_offset :=
+          o + (match fixed_span elem with Some n -> n | None -> 1);
+        Inline code
+      ) l in
+      wrap_seq elts
   | Choice cases ->
-      Fun (fun arg ->
-        Code [
-          Line (sprintf "(match %s with" arg);
-          Inline (List.mapi gen_case cases);
-          Line "| _ -> assert false";
+      gen_inline_choice children_var offset cases
+  | Optional inner ->
+      gen_inline_optional children_var offset inner
+  | Repeat _ | Repeat1 _ ->
+      (* Should not appear at a fixed offset in a simple seq *)
+      [Line (sprintf "failwith \"unexpected repeat at offset %d\"" offset)]
+
+and gen_inline_choice children_var offset cases =
+  let child_var = sprintf "(List.nth %s %d)" children_var offset in
+  let match_cases = List.map (fun (cons, body) ->
+    let kind_str = match body with
+      | Symbol name | Alias (name, _) -> sprintf "Name %S" name
+      | Token tok -> sprintf "Literal %S" tok.name
+      | _ -> "_ (* complex *)"
+    in
+    let trans_code = match body with
+      | Symbol name | Alias (name, _) ->
+          [Line (sprintf "trans_%s src %s" (trans name) child_var)]
+      | Token _ ->
+          [Line (sprintf "Run.token src %s" child_var)]
+      | _ ->
+          [Line (sprintf "failwith \"complex inline choice\"")]
+    in
+    Inline [
+      Line (sprintf "| %s ->" kind_str);
+      Block [
+        Block [
+          Line (sprintf "`%s (" cons);
+          Block trans_code;
           Line ")";
         ]
-      )
-  | Seq l ->
-      Fun (fun arg ->
-        Code [
-          Line (sprintf "(match %s with" arg);
-          Line (sprintf "| Seq [%s] ->" (gen_seq_pat l));
-          Block [Block (wrap_seq (List.mapi gen_seq_elt l))];
-          Line "| _ -> assert false";
-          Line ")"
-        ]
-      )
-
-and gen_case i (cons, x) =
-  Inline [
-    Line (sprintf "| Alt (%i, v) ->" i);
-    Block [
-      Block [
-        Line (sprintf "`%s (" cons);
-        Block (compile_exp (App (gen_trans_capture x, "v")));
-        Line ")";
       ]
     ]
+  ) cases in
+  [
+    Line (sprintf "(match %s.kind with" child_var);
+    Inline match_cases;
+    Line "| _ -> failwith \"unexpected child kind\")";
   ]
 
-and gen_seq_elt i x =
-  Inline (
-    App (gen_trans_capture x, sprintf "v%i" i)
-    |> compile_exp
-  )
-
-let gen_trans_body rule_body =
-  let res =
-    App (gen_trans_capture rule_body, "v")
-    |> compile_exp
+and gen_inline_optional children_var offset body =
+  let kind_str = match body with
+    | Symbol name | Alias (name, _) -> sprintf "Name %S" name
+    | Token tok -> sprintf "Literal %S" tok.name
+    | _ -> "_ (* complex *)"
+  in
+  let trans_code child_var = match body with
+    | Symbol name | Alias (name, _) ->
+        sprintf "trans_%s src %s" (trans name) child_var
+    | Token _ ->
+        sprintf "Run.token src %s" child_var
+    | _ -> sprintf "failwith \"complex inline optional\""
   in
   [
-    Line "match body with";
-    Line "| Children v ->";
-    Block [Block res];
-    Line "| Leaf _ -> assert false";
+    Line (sprintf
+            "(match Run.nth_opt %s %d with" children_var offset);
+    Line (sprintf "| Some v when v.kind = %s -> Some (%s)"
+            kind_str (trans_code "v"));
+    Line "| _ -> None)";
   ]
+
+(*
+   Generate the body of a trans_* function for a Seq rule body.
+   Uses fixed indexing when all elements have known span,
+   otherwise uses a cursor-based approach.
+*)
+let gen_seq_body rule_name l =
+  let all_fixed = List.for_all (fun x -> fixed_span x <> None) l in
+  if all_fixed then begin
+    let cur_offset = ref 0 in
+    let elts = List.map (fun elem ->
+      let o = !cur_offset in
+      let code = gen_child_at_offset "children" o elem in
+      cur_offset :=
+        o + (match fixed_span elem with Some n -> n | None -> 0);
+      Inline code
+    ) l in
+    [
+      Line "let children = Run.children node in";
+      Inline (wrap_seq elts);
+    ]
+  end
+  else begin
+    (* Cursor-based approach for sequences with Optional/Repeat *)
+    let bindings = List.mapi (fun i elem ->
+      match elem with
+      | Symbol name | Alias (name, _) ->
+          Inline [
+            Line (sprintf
+                    "let v%d, rest = match rest with \
+                     | h :: t -> (trans_%s src h, t) \
+                     | [] -> Run.fail node %S in"
+                    i (trans name) rule_name);
+          ]
+      | Token _ ->
+          Inline [
+            Line (sprintf
+                    "let v%d, rest = match rest with \
+                     | h :: t -> (Run.token src h, t) \
+                     | [] -> Run.fail node %S in"
+                    i rule_name);
+          ]
+      | Blank ->
+          Inline [Line (sprintf "let v%d = () in" i)]
+      | Optional inner ->
+          let kind_str = match inner with
+            | Symbol name | Alias (name, _) -> sprintf "Name %S" name
+            | Token tok -> sprintf "Literal %S" tok.name
+            | _ -> "Error (* complex *)"
+          in
+          let trans_expr = match inner with
+            | Symbol name | Alias (name, _) ->
+                sprintf "trans_%s src h" (trans name)
+            | Token _ -> "Run.token src h"
+            | _ -> "failwith \"complex optional in seq\""
+          in
+          Inline [
+            Line (sprintf
+                    "let v%d, rest = match rest with \
+                     | h :: t when h.kind = %s -> (Some (%s), t) \
+                     | _ -> (None, rest) in"
+                    i kind_str trans_expr);
+          ]
+      | Repeat inner | Repeat1 inner ->
+          let kind_str = match inner with
+            | Symbol name | Alias (name, _) -> sprintf "Name %S" name
+            | Token tok -> sprintf "Literal %S" tok.name
+            | _ -> "Error (* complex *)"
+          in
+          let trans_expr = match inner with
+            | Symbol name | Alias (name, _) ->
+                sprintf "trans_%s src" (trans name)
+            | Token _ -> "Run.token src"
+            | _ -> "failwith \"complex repeat in seq\""
+          in
+          Inline [
+            Line (sprintf
+                    "let v%d, rest = \
+                     let rec consume acc rest = \
+                     match rest with \
+                     | h :: t when h.kind = %s -> \
+                     consume ((%s h) :: acc) t \
+                     | _ -> (List.rev acc, rest) in \
+                     consume [] rest in"
+                    i kind_str trans_expr);
+          ]
+      | Seq _ ->
+          (* Nested Seq within a complex Seq: flatten *)
+          Inline [
+            Line (sprintf "let v%d = failwith \"TODO: nested seq in \
+                           complex seq\" in" i);
+          ]
+      | Choice _ ->
+          Inline [
+            Line (sprintf "let v%d = failwith \"TODO: choice in \
+                           complex seq\" in" i);
+          ]
+    ) l in
+    let var_names = List.mapi (fun i _ -> sprintf "v%d" i) l in
+    let result_tuple =
+      if List.length var_names = 1 then
+        [Line (List.hd var_names)]
+      else
+        wrap_seq (List.map (fun v -> Inline [Line v]) var_names)
+    in
+    [
+      Line "let rest = Run.children node in";
+      Inline bindings;
+      Inline result_tuple;
+    ]
+  end
+
+(*
+   Generate the body of a trans_* function for a Choice rule body.
+*)
+let gen_choice_body rule_name cases =
+  (* Check if all alternatives are single-child types *)
+  let all_single = List.for_all (fun (_cons, body) ->
+    match body with
+    | Symbol _ | Token _ | Alias _ -> true
+    | _ -> false
+  ) cases in
+  if all_single then begin
+    let match_cases = List.map (fun (cons, body) ->
+      let kind_str, trans_code = match body with
+        | Symbol name | Alias (name, _) ->
+            sprintf "Name %S" name,
+            sprintf "trans_%s src child" (trans name)
+        | Token tok ->
+            sprintf "Literal %S" tok.name,
+            "Run.token src child"
+        | _ -> assert false
+      in
+      Inline [
+        Line (sprintf "| %s ->" kind_str);
+        Block [
+          Block [
+            Line (sprintf "`%s (" cons);
+            Block [Line trans_code];
+            Line ")";
+          ]
+        ]
+      ]
+    ) cases in
+    [
+      Line "let children = Run.children node in";
+      Line "let child = Run.single children in";
+      Line "match child.kind with";
+      Inline match_cases;
+      Line (sprintf "| _ -> Run.fail node %S" rule_name);
+    ]
+  end
+  else begin
+    (* General case: use Run.select with kind patterns *)
+    let pattern_strs = List.map (fun (_cons, body) ->
+      match kind_pattern body with
+      | Some pattern ->
+          sprintf "[%s]" (String.concat "; " pattern)
+      | None ->
+          "[] (* variable pattern *)"
+    ) cases in
+    let select_list =
+      List.map (fun p -> Line (sprintf "%s;" p)) pattern_strs
+    in
+    let match_cases = List.mapi (fun i (cons, body) ->
+      let trans_code = match body with
+        | Symbol name | Alias (name, _) ->
+            [Line (sprintf "trans_%s src (List.nth children 0)"
+                     (trans name))]
+        | Token _ ->
+            [Line "Run.token src (List.nth children 0)"]
+        | Blank ->
+            [Line "()"]
+        | Seq l ->
+            let cur_offset = ref 0 in
+            let elts = List.map (fun elem ->
+              let o = !cur_offset in
+              let code = gen_child_at_offset "children" o elem in
+              cur_offset :=
+                o + (match fixed_span elem with
+                     | Some n -> n | None -> 1);
+              Inline code
+            ) l in
+            wrap_seq elts
+        | Optional inner ->
+            let trans = match inner with
+              | Symbol name | Alias (name, _) ->
+                  sprintf "trans_%s src (List.nth children 0)"
+                    (trans name)
+              | Token _ -> "Run.token src (List.nth children 0)"
+              | _ -> "failwith \"complex optional in choice\""
+            in
+            [
+              Line "match children with";
+              Line (sprintf "| [child] -> Some (%s)" trans);
+              Line "| [] -> None";
+              Line (sprintf "| _ -> Run.fail node %S" rule_name);
+            ]
+        | Repeat inner | Repeat1 inner ->
+            let trans_fn = match inner with
+              | Symbol name | Alias (name, _) ->
+                  sprintf "(trans_%s src)" (trans name)
+              | Token _ -> "(Run.token src)"
+              | _ -> "(fun _ -> failwith \"complex repeat in choice\")"
+            in
+            [Line (sprintf "List.map %s children" trans_fn)]
+        | Choice _ ->
+            [Line "failwith \"nested choice\""]
+      in
+      Inline [
+        Line (sprintf "| %d, _ ->" i);
+        Block [
+          Block [
+            Line (sprintf "`%s (" cons);
+            Block trans_code;
+            Line ")";
+          ]
+        ]
+      ]
+    ) cases in
+    [
+      Line "let children = Run.children node in";
+      Line "match Run.select children [";
+      Block select_list;
+      Line "] with";
+      Inline match_cases;
+      Line (sprintf "| _ -> Run.fail node %S" rule_name);
+    ]
+  end
+
+(*
+   Generate the body of a trans_* function for a Repeat/Repeat1 rule body.
+*)
+let gen_repeat_body rule_name x =
+  match x with
+  | Symbol name | Alias (name, _) ->
+      [Line (sprintf "List.map (trans_%s src) (Run.children node)"
+               (trans name))]
+  | Token _ ->
+      [Line "List.map (Run.token src) (Run.children node)"]
+  | Blank ->
+      [Line "List.map (fun _ -> ()) (Run.children node)"]
+  | Choice cases ->
+      (* Each child could be any of the alternatives; dispatch on kind *)
+      let match_cases = List.map (fun (cons, body) ->
+        let kind_str, trans_code = match body with
+          | Symbol name | Alias (name, _) ->
+              sprintf "Name %S" name,
+              sprintf "trans_%s src child" (trans name)
+          | Token tok ->
+              sprintf "Literal %S" tok.name,
+              "Run.token src child"
+          | _ ->
+              "_ (* complex *)",
+              "failwith \"complex choice in repeat\""
+        in
+        Inline [
+          Line (sprintf "| %s ->" kind_str);
+          Block [
+            Block [
+              Line (sprintf "`%s (" cons);
+              Block [Line trans_code];
+              Line ")";
+            ]
+          ]
+        ]
+      ) cases in
+      [
+        Line "List.map (fun child ->";
+        Block [
+          Line "match child.kind with";
+          Inline match_cases;
+          Line (sprintf "| _ -> Run.fail child %S" rule_name);
+        ];
+        Line ") (Run.children node)";
+      ]
+  | Optional inner ->
+      (* Repeat of Optional: each child is optionally present *)
+      let trans_fn = match inner with
+        | Symbol name | Alias (name, _) ->
+            sprintf "(fun child -> Some (trans_%s src child))" (trans name)
+        | Token _ ->
+            "(fun child -> Some (Run.token src child))"
+        | _ ->
+            "(fun _ -> failwith \"complex optional in repeat\")"
+      in
+      [Line (sprintf "List.map %s (Run.children node)" trans_fn)]
+  | _ ->
+      [Line (sprintf "List.map (fun child -> \
+                       failwith \"complex repeat element\") \
+                       (Run.children node)")]
+
+(*
+   Generate the body of a trans_* function for an Optional rule body.
+*)
+let gen_optional_body rule_name x =
+  let trans_code = match x with
+    | Symbol name | Alias (name, _) ->
+        sprintf "trans_%s src child" (trans name)
+    | Token _ -> "Run.token src child"
+    | _ -> "failwith \"complex optional element\""
+  in
+  [
+    Line "match Run.children node with";
+    Line (sprintf "| [child] -> Some (%s)" trans_code);
+    Line "| [] -> None";
+    Line (sprintf "| _ -> Run.fail node %S" rule_name);
+  ]
+
+(*
+   Generate the full body of a trans_* function.
+*)
+let gen_rule_body rule_name body =
+  match body with
+  | Token _ ->
+      [Line "Run.token src node"]
+  | Symbol name | Alias (name, _) ->
+      [Line (sprintf "trans_%s src node" (trans name))]
+  | Blank ->
+      [Line "()"]
+  | Repeat x | Repeat1 x ->
+      gen_repeat_body rule_name x
+  | Optional x ->
+      gen_optional_body rule_name x
+  | Choice cases ->
+      gen_choice_body rule_name cases
+  | Seq l ->
+      gen_seq_body rule_name l
 
 let gen_translator ~cst_module_name (rule : rule) =
   let name = rule.name in
-  let body =
-    match rule.body with
-    | Token _token -> gen_trans_token ()
-    | body -> gen_trans_body body
-  in
+  let body = gen_rule_body name rule.body in
   [
-    Line (sprintf "trans_%s ((kind, body) : mt) : %s.%s ="
+    Line (sprintf
+            "trans_%s (src : Src_file.t) (node : node) : %s.%s ="
             (trans name) cst_module_name (trans name));
     Block body;
   ]
@@ -379,23 +605,19 @@ let gen_translators ~cst_module_name grammar =
 
 let trans_tree =
   {|(*
-   Costly operation that translates a whole tree or subtree.
-
-   The first pass translates it into a generic tree structure suitable
-   to guess which node corresponds to each grammar rule.
-   The second pass is a translation into a typed tree where each grammar
-   node has its own type.
+   Translate a whole tree or subtree to a typed CST.
 
    This function is called:
    - once on the root of the program after removing extras
      (comments and other nodes that occur anywhere independently from
      the grammar);
-   - once of each extra node, resulting in its own independent tree of type
+   - once on each extra node, resulting in its own independent tree of type
      'extra'.
 *)
 let translate_tree src node trans_x =
-  let matched_tree = Run.match_tree children_regexps src node in
-  Option.map trans_x matched_tree
+  match node.kind with
+  | Error -> None
+  | _ -> Some (trans_x src node)
 |}
 
 let gen_trans_extras grammar =
@@ -434,12 +656,9 @@ let gen_trans_extras grammar =
   ]
 
 let gen ~cst_module_name grammar =
-  let regexps = gen_regexps grammar in
   let translators = gen_translators ~cst_module_name grammar in
   let trans_extras = gen_trans_extras grammar in
   [
-    Inline regexps;
-    Line "";
     Inline translators;
     Line "";
     Line trans_tree;

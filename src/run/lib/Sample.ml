@@ -27,16 +27,14 @@ module CST = struct
   type program = statement list (* zero or more *)
   type comment = (Loc.t * string)
   type extra = [
-    | `Comment of comment
+    | `Comment of (Loc.t * comment)
   ]
 end
 
 module Parse = struct
-  (* open Tree_sitter_run *)
+  open Tree_sitter_bindings.Tree_sitter_output_t
 
   let debug = ref false
-
-  type mt = Run.matcher_token
 
   (*
   external create_parser :
@@ -62,98 +60,57 @@ module Parse = struct
   ]
 
   (* generated *)
-  let children_regexps : (string * Run.exp option) list = [
-    (
-      "variable",
-      None
-    );
-    (
-      "number",
-      None
-    );
-    (
-      "expression",
-      Some (
-        Alt [|
-          Token (Name "variable");
-          Token (Name "number");
-          Seq [
-            Token (Name "expression");
-            Token (Literal "+");
-            Token (Name "expression");
-          ];
-        |];
-      )
-    );
-    (
-      "comment",
-      None
-    );
-  ]
+  let trans_variable (src : Src_file.t) (node : node)
+      : CST.variable =
+    Run.token src node
 
   (* generated *)
-  let trans_variable ((kind, body) : mt) : CST.variable =
-    match body with
-    | Leaf v -> v
-    | _ -> assert false
+  let trans_number (src : Src_file.t) (node : node)
+      : CST.number =
+    Run.token src node
 
   (* generated *)
-  let trans_number ((kind, body) : mt) : CST.number =
-    match body with
-    | Leaf v -> v
-    | Children _ -> assert false
-
-  (* generated *)
-  let rec trans_expression ((kind, body) : mt) : CST.expression =
-    match body with
-    | Children v ->
-        (match v with
-         | Alt (0, v) ->
-             `Var (trans_variable (Run.matcher_token v))
-         | Alt (1, v) ->
-             `Num (trans_number (Run.matcher_token v))
-         | Alt (2, v) ->
-             `Exp_PLUS_exp (
-               match v with
-               | Seq [v1; v2; v3] ->
-                   let v1 = trans_expression (Run.matcher_token v1) in
-                   let v2 = Run.trans_token (Run.matcher_token v2) in
-                   let v3 = trans_expression (Run.matcher_token v3) in
-                   (v1, v2, v3)
-               | _ -> assert false
-             )
-         | _ -> assert false
+  let rec trans_expression (src : Src_file.t) (node : node)
+      : CST.expression =
+    let children = Run.children node in
+    match Run.select children [
+      [Name "variable"];
+      [Name "number"];
+      [Name "expression"; Literal "+"; Name "expression"];
+    ] with
+    | 0, _ ->
+        `Var (
+          trans_variable src (List.nth children 0)
         )
-    | Leaf _ -> assert false
+    | 1, _ ->
+        `Num (
+          trans_number src (List.nth children 0)
+        )
+    | 2, _ ->
+        `Exp_PLUS_exp (
+          trans_expression src (List.nth children 0),
+          Run.token src (List.nth children 1),
+          trans_expression src (List.nth children 2))
+    | _ -> Run.fail node "expression"
 
   (* generated *)
-  let trans_statement ((kind, body) : mt) =
-    match body with
-    | Children v ->
-        (match v with
-         | Seq [v1; v2] ->
-             (trans_expression (Run.matcher_token v1),
-              Run.trans_token (Run.matcher_token v2))
-         | _ -> assert false
-        )
-    | _ -> assert false
+  let trans_statement (src : Src_file.t) (node : node) =
+    let children = Run.children node in
+    (trans_expression src (List.nth children 0),
+     Run.token src (List.nth children 1))
 
   (* generated - entrypoint *)
-  let trans_program ((kind, body) : mt) =
-    match body with
-    | Children v ->
-        Run.repeat (fun v -> trans_statement (Run.matcher_token v)) v
-    | _ -> assert false
+  let trans_program (src : Src_file.t) (node : node) =
+    List.map (trans_statement src) (Run.children node)
 
   (* generated - extra *)
-  let trans_comment ((kind, body) : mt) : CST.variable =
-    match body with
-    | Leaf v -> v
-    | _ -> assert false
+  let trans_comment (src : Src_file.t) (node : node) : CST.comment =
+    Run.token src node
 
   let translate_tree src node trans_x =
-    let matched_tree = Run.match_tree children_regexps src node in
-    Option.map trans_x matched_tree
+    match node.kind with
+    | Error -> None
+    | _ -> Some (trans_x src node)
 
   (* generated *)
   let translate_extra src
@@ -163,7 +120,7 @@ module Parse = struct
     | "comment" ->
         (match translate_tree src node trans_comment with
          | None -> None
-         | Some x -> Some (`Comment x))
+         | Some x -> Some (`Comment (Run.get_loc node, x)))
     | _ -> None
 
   (* generated *)
