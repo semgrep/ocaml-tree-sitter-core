@@ -15,7 +15,7 @@ depends: [
   "alcotest"
   "ANSITerminal"
   "atdgen"
-  "cmdliner" { < "2.0.0" }
+  "cmdliner" { >= "2.0.0" }
   "conf-pkg-config"
   "dune" {>= "2.1"}
   "dune-configurator" {>= "3.10.0"}

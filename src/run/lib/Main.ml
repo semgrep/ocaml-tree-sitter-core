@@ -116,15 +116,15 @@ of the full CST by ocaml-tree-sitter."
 
 let parse_command_line ~lang =
   let info =
-    Term.info
+    Cmd.info
       ~doc:(doc ~lang)
       ~man:(man ~lang)
       ("parse-" ^ lang)
   in
-  match Term.eval (cmdline_term, info) with
-  | `Error _ -> exit Exit.bad_command_line
-  | `Version | `Help -> exit 0
-  | `Ok config -> config
+  match Cmd.eval_value (Cmd.v info cmdline_term) with
+  | Ok (`Ok config) -> config
+  | Ok (`Version | `Help) -> exit 0
+  | Error _ -> exit Exit.bad_command_line
 
 let safe_run f =
   Printexc.record_backtrace true;
