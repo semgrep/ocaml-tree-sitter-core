@@ -40,7 +40,10 @@ let load_json_file ~src_file ~json_file =
   let src = Src_file.load_file src_file in
   { src; root }
 
-let parse_source_string ?src_file ts_parser src_data =
+let parse_source_string ?timeout_micros ?src_file ts_parser src_data =
+  (match timeout_micros with
+   | Some t -> Tree_sitter_API.Parser.set_timeout_micros ts_parser (Int64.of_int t)
+   | None -> ());
   let src = Src_file.load_string ?src_file src_data in
   let root =
     Tree_sitter_API.Parser.parse_string ts_parser src_data
@@ -48,9 +51,9 @@ let parse_source_string ?src_file ts_parser src_data =
   in
   { src; root }
 
-let parse_source_file ts_parser src_file =
+let parse_source_file ?timeout_micros ts_parser src_file =
   let src_data = Util_file.read_file src_file in
-  parse_source_string ~src_file ts_parser src_data
+  parse_source_string ?timeout_micros ~src_file ts_parser src_data
 
 let print src =
   Tree_sitter_dump.to_stdout [src.root]
