@@ -80,9 +80,8 @@ const char *octs_read(void *payload, uint32_t byte_offset, TSPoint position,
   if (Is_block(result)) {
     value strVal = Field(result, 0);
 
-    const char *str = String_val(strVal);
-    *bytes_read = strlen(str);
-    return str;
+    *bytes_read = caml_string_length(strVal);
+    return String_val(strVal);
   }
   else
     return NULL;
