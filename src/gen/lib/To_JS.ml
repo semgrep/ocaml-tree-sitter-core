@@ -18,8 +18,8 @@ let comma is_last s =
 let str s =
   Yojson.Safe.to_string (`String s)
 
-let pattern s =
-  sprintf "/%s/" s
+let pattern ?flags s =
+  sprintf "/%s/%s" s (Option.value ~default:"" flags)
 
 let rule s =
   sprintf "$.%s" s
@@ -102,7 +102,7 @@ let pp_body ~sort_choices ?prefix ?is_last (body : Rule_body.t) =
       match body with
       | Symbol s -> rule s, None
       | Literal s -> str s, None
-      | Pattern s -> pattern s, None
+      | Pattern { value; flags } -> pattern ?flags value, None
       | Blank -> "\"\" /* blank */", None
       | Repeat x -> "repeat", Some (pp_body x)
       | Repeat1 x -> "repeat1", Some (pp_body x)
