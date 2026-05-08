@@ -61,17 +61,12 @@ let name_of_num_prec n =
   if n >= 0 then sprintf "p%d" n
   else sprintf "n%d" (abs n)
 
-let name_of_prec_value (p : Tree_sitter_t.prec_value) =
+let name_of_prec_value (p : Tree_sitter_grammar.prec_value) =
   match p with
-  | Num_prec n ->
+  | Num n ->
       name_of_num_prec n
-  | Named_prec name ->
+  | Named name ->
       sprintf "x%s" (encode_prec_name name)
-
-let name_of_opt_prec_value p =
-  match p with
-  | None -> "0"
-  | Some p -> "x" ^ name_of_prec_value p
 
 let name_pattern pat =
   match Pattern_name.infer pat with
@@ -84,34 +79,34 @@ let name_pattern pat =
    for patterns that don't have a name during the simplify-grammar pass.
    See the Missing_node module.
 *)
-let name_ts_rule_body (body : Tree_sitter_t.rule_body) =
-  let open Tree_sitter_t in
-  let rec name_rule_body body =
+let name_ts_rule_body (body : Tree_sitter_grammar.Rule_body.t) =
+  let open Tree_sitter_grammar in
+  let rec name_rule_body (body : Rule_body.t) =
     match body with
-    | SYMBOL ident -> ident
-    | STRING s -> Punct.to_alphanum s
-    | BLANK -> "blank"
-    | PATTERN pat -> "pat_" ^ name_pattern pat
-    | REPEAT x -> "rep_" ^ name_rule_body x
-    | REPEAT1 x -> "rep1_" ^ name_rule_body x
-    | CHOICE (x :: _) -> "choice_" ^ name_rule_body x
-    | CHOICE [] -> "choice"
-    | SEQ xs ->
+    | Symbol ident -> ident
+    | Literal s -> Punct.to_alphanum s
+    | Blank -> "blank"
+    | Pattern pat -> "pat_" ^ name_pattern pat
+    | Repeat x -> "rep_" ^ name_rule_body x
+    | Repeat1 x -> "rep1_" ^ name_rule_body x
+    | Choice (x :: _) -> "choice_" ^ name_rule_body x
+    | Choice [] -> "choice"
+    | Seq xs ->
         List.map name_rule_body xs
         |> String.concat "_"
-    | PREC (p, x) ->
+    | Prec (Default, p, x) ->
         sprintf "prec_%s_" (name_of_prec_value p) ^ name_rule_body x
-    | PREC_DYNAMIC (n, x) ->
-        sprintf "pdyn_%s_" (name_of_num_prec n) ^ name_rule_body x
-    | PREC_LEFT (p, x) ->
-        sprintf "pleft_%s_" (name_of_opt_prec_value p) ^ name_rule_body x
-    | PREC_RIGHT (p, x) ->
-        sprintf "pright_%s_" (name_of_opt_prec_value p) ^ name_rule_body x
-    | ALIAS alias -> name_rule_body alias.content
-    | FIELD (field_name, _x) -> field_name
-    | IMMEDIATE_TOKEN x -> "imm_tok_" ^ name_rule_body x
-    | TOKEN x -> "tok_" ^ name_rule_body x
-    | RESERVED reserved -> "reserved_" ^ name_rule_body reserved.reserved_content
+    | Prec (Dynamic, p, x) ->
+        sprintf "pdyn_%s_" (name_of_prec_value p) ^ name_rule_body x
+    | Prec(Left, p, x) ->
+        sprintf "pleft_%s_" (name_of_prec_value p) ^ name_rule_body x
+    | Prec (Right, p, x) ->
+        sprintf "pright_%s_" (name_of_prec_value p) ^ name_rule_body x
+    | Alias alias -> name_rule_body alias.content
+    | Field (field_name, _x) -> field_name
+    | Immediate_token x -> "imm_tok_" ^ name_rule_body x
+    | Token x -> "tok_" ^ name_rule_body x
+    | Reserved reserved -> "reserved_" ^ name_rule_body reserved.content
   in
   let full_name = name_rule_body body in
   Abbrev.words full_name

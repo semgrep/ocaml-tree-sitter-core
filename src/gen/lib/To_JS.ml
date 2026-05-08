@@ -4,7 +4,7 @@
 *)
 
 open Printf
-open Tree_sitter_t
+open Tree_sitter_grammar
 open Indent.Types
 
 let flatten nested_list =
@@ -45,10 +45,29 @@ let compare_rule_name a b =
 (*
    This is for sorting choice() elements
 *)
-let compare_rule_body (a : rule_body) (b : rule_body) =
+let rule_body_rank : Rule_body.t -> int = function
+  | Blank -> 0
+  | Literal _ -> 1
+  | Pattern _ -> 2
+  | Symbol _ -> 3
+  | Seq _ -> 4
+  | Choice _ -> 5
+  | Repeat _ -> 6
+  | Repeat1 _ -> 7
+  | Prec (Default, _, _) -> 8
+  | Prec (Dynamic, _, _) -> 9
+  | Prec (Left, _, _)  -> 10
+  | Prec (Right, _, _) -> 11
+  | Alias _ -> 12
+  | Field _ -> 13
+  | Immediate_token _ -> 14
+  | Token _ -> 15
+  | Reserved _ -> 16
+
+let compare_rule_body (a : Rule_body.t) (b : Rule_body.t) =
   match a, b with
-  | SYMBOL a, SYMBOL b -> compare_rule_name a b
-  | _ -> compare a b
+  | Symbol a, Symbol b -> compare_rule_name a b
+  | _ -> Int.compare (rule_body_rank a) (rule_body_rank b)
 
 let pp_conflict ?prefix:_ ?(is_last = true) rule_list =
   let rules = List.map rule rule_list |> String.concat ", " in
@@ -63,8 +82,8 @@ let rec map
 
 let string_of_prec_value (x : prec_value) =
   match x with
-  | Num_prec n -> string_of_int n
-  | Named_prec name -> str name
+  | Num  n -> string_of_int n
+  | Named  name -> str name
 
 let pp_value ~is_last (s : string) =
   [ Line (s |> comma is_last) ]
@@ -77,18 +96,18 @@ let pp_prec_value ~is_last x =
    The 'sort_choices' setting is the same for all recursive calls
    unlike the other options 'prefix' and 'is_last'.
 *)
-let pp_body ~sort_choices ?prefix ?is_last body =
-  let rec pp_body ?(prefix = "") ?(is_last = true) body =
+let pp_body ~sort_choices ?prefix ?is_last (body : Rule_body.t) =
+  let rec pp_body ?(prefix = "") ?(is_last = true) (body : Rule_body.t) =
     let cons, args =
       match body with
-      | SYMBOL s -> rule s, None
-      | STRING s -> str s, None
-      | PATTERN s -> pattern s, None
-      | BLANK -> "\"\" /* blank */", None
-      | REPEAT x -> "repeat", Some (pp_body x)
-      | REPEAT1 x -> "repeat1", Some (pp_body x)
-      | CHOICE [x; BLANK] -> "optional", Some (pp_body x)
-      | CHOICE xs ->
+      | Symbol s -> rule s, None
+      | Literal s -> str s, None
+      | Pattern s -> pattern s, None
+      | Blank -> "\"\" /* blank */", None
+      | Repeat x -> "repeat", Some (pp_body x)
+      | Repeat1 x -> "repeat1", Some (pp_body x)
+      | Choice [x; Blank] -> "optional", Some (pp_body x)
+      | Choice xs ->
           let xs =
             if sort_choices then
               List.sort compare_rule_body xs
@@ -96,26 +115,17 @@ let pp_body ~sort_choices ?prefix ?is_last body =
               xs
           in
           "choice", Some (map pp_body xs |> flatten)
-      | SEQ xs -> "seq", Some (map pp_body xs |> flatten)
-      | PREC (prec_value, x) ->
-          "prec", Some [
+      | Seq xs -> "seq", Some (map pp_body xs |> flatten)
+      | Prec (type_, prec_value, x) ->
+          (match type_ with Default -> "prec" | Left -> "prec.left" | Right -> "prec.right" | Dynamic -> "prec.dynamic"), Some [
             Inline (pp_prec_value ~is_last:false prec_value);
             Inline (pp_body ~is_last:true x);
           ]
-      | PREC_DYNAMIC (n, x) ->
-          "prec.dynamic", Some [
-            Inline (pp_value ~is_last:false (string_of_int n));
-            Inline (pp_body ~is_last:true x)
-          ]
-      | PREC_LEFT (opt_prec_value, x) ->
-          "prec.left", Some (pp_opt_prec opt_prec_value x)
-      | PREC_RIGHT (opt_prec_value, x) ->
-          "prec.right", Some (pp_opt_prec opt_prec_value x)
-      | ALIAS x -> "alias", Some (pp_alias x)
-      | FIELD (name, x) -> "field", Some (pp_field name x)
-      | IMMEDIATE_TOKEN x -> "token.immediate", Some (pp_body x)
-      | TOKEN x -> "token", Some (pp_body x)
-      | RESERVED reserved -> "reserved", Some (pp_reserved reserved)
+      | Alias x -> "alias", Some (pp_alias x)
+      | Field (name, x) -> "field", Some (pp_field name x)
+      | Immediate_token x -> "token.immediate", Some (pp_body x)
+      | Token x -> "token", Some (pp_body x)
+      | Reserved reserved -> "reserved", Some (pp_reserved reserved)
     in
     match args with
     | None ->
@@ -125,16 +135,6 @@ let pp_body ~sort_choices ?prefix ?is_last body =
           Line (sprintf "%s%s(" prefix cons);
           Block args;
           Line (")" |> comma is_last)
-        ]
-
-  and pp_opt_prec opt_prec_value x =
-    let body = pp_body ~is_last:true x in
-    match opt_prec_value with
-    | None -> body
-    | Some prec_value ->
-        [
-          Inline (pp_prec_value ~is_last:false prec_value);
-          Inline body;
         ]
 
   and pp_alias x =
@@ -156,7 +156,7 @@ let pp_body ~sort_choices ?prefix ?is_last body =
   and pp_reserved reserved =
     [
       Line (str reserved.context_name ^ ",");
-      Inline (pp_body ~is_last:true reserved.reserved_content);
+      Inline (pp_body ~is_last:true reserved.content);
     ]
   in
   pp_body ?prefix ?is_last body
@@ -230,25 +230,22 @@ let pp_grammar ~sort_choices ~sort_rules (x : grammar) : Indent.t =
     Line "});";
   ]
 
-let rec strip (body : rule_body) =
+let rec strip (body : Rule_body.t) =
   match body with
-  | SYMBOL _
-  | STRING _
-  | PATTERN _
-  | BLANK -> body
-  | REPEAT x -> REPEAT (strip x)
-  | REPEAT1 x -> REPEAT1 (strip x)
-  | CHOICE xs -> CHOICE (List.map strip xs)
-  | SEQ xs -> SEQ (List.map strip xs)
-  | PREC (_prec_value, x) -> strip x
-  | PREC_DYNAMIC (_n, x) -> strip x
-  | PREC_LEFT (_opt_prec_value, x) -> strip x
-  | PREC_RIGHT (_opt_prec_value, x) -> strip x
-  | ALIAS x -> strip x.content
-  | FIELD (_name, x) -> strip x
-  | IMMEDIATE_TOKEN x -> strip x
-  | TOKEN x -> strip x
-  | RESERVED reserved -> strip reserved.reserved_content
+  | Symbol _
+  | Literal _
+  | Pattern _
+  | Blank -> body
+  | Repeat x -> Repeat (strip x)
+  | Repeat1 x -> Repeat1 (strip x)
+  | Choice xs -> Choice (List.map strip xs)
+  | Seq xs -> Seq (List.map strip xs)
+  | Prec (_, _prec_value, x) -> strip x
+  | Alias x -> strip x.content
+  | Field (_name, x) -> strip x
+  | Immediate_token x -> strip x
+  | Token x -> strip x
+  | Reserved reserved -> strip reserved.content
 
 (*
    Eliminate all the constructs that don't affect the structure of the
@@ -270,9 +267,13 @@ let run ~sort_choices ~sort_rules ~strip input_path output_path =
   let grammar =
     match input_path with
     | None ->
-        Atdgen_runtime.Util.Json.from_channel Tree_sitter_j.read_grammar stdin
+        (match Yojson.Safe.from_channel stdin |> grammar_of_yojson with
+         | Ok g -> g
+         | Error e -> failwith (sprintf "Failed to parse stdin: %s" e))
     | Some file ->
-        Atdgen_runtime.Util.Json.from_file Tree_sitter_j.read_grammar file
+        (match Yojson.Safe.from_file file |> grammar_of_yojson with
+         | Ok g -> g
+         | Error e -> failwith (sprintf "Failed to parse %s: %s" file e))
   in
   let grammar = if strip then strip_grammar grammar else grammar in
   let tree = pp_grammar ~sort_choices ~sort_rules grammar in

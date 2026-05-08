@@ -10,11 +10,11 @@
 
    This is applied to some token() constructs as well.
 *)
-val work_around_missing_nodes : Tree_sitter_t.grammar -> Tree_sitter_t.grammar
+val work_around_missing_nodes : Tree_sitter_grammar.grammar -> Tree_sitter_grammar.grammar
 
 type token_node_name =
   | Literal of string
   | Name of string
 
 (* Get the name of the token node as it will appear in the CST. *)
-val get_token_node_name : Tree_sitter_t.rule_body -> token_node_name option
+val get_token_node_name : Tree_sitter_grammar.Rule_body.t -> token_node_name option

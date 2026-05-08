@@ -20,30 +20,27 @@ let detect_used ~entrypoints rules =
   let visited = Hashtbl.create 100 in
   let mark_visited name = Hashtbl.replace visited name () in
   let was_visited name = Hashtbl.mem visited name in
-  let rec scan x =
-    match (x : Tree_sitter_t.rule_body) with
-    | SYMBOL name ->
+  let rec scan (x : Tree_sitter_grammar.Rule_body.t) =
+    match x with
+    | Symbol name ->
         if not (was_visited name) then
           visit name
-    | STRING _
-    | PATTERN _
-    | BLANK -> ()
-    | IMMEDIATE_TOKEN x
-    | TOKEN x
-    | REPEAT x
-    | REPEAT1 x -> scan x
-    | CHOICE l
-    | SEQ l -> List.iter scan l
-    | PREC (_, x)
-    | PREC_DYNAMIC (_, x)
-    | PREC_LEFT (_, x)
-    | PREC_RIGHT (_, x)
-    | FIELD (_, x) -> scan x
-    | ALIAS { value = name; content; _ } ->
+    | Literal _
+    | Pattern _
+    | Blank -> ()
+    | Immediate_token x
+    | Token x
+    | Repeat x
+    | Repeat1 x -> scan x
+    | Choice l
+    | Seq l -> List.iter scan l
+    | Prec (_, _, x)
+    | Field (_, x) -> scan x
+    | Alias { value = name; content; _ } ->
         if not (was_visited name) then
           visit name;
         scan content
-    | RESERVED reserved -> scan reserved.reserved_content
+    | Reserved reserved -> scan reserved.content
   and visit name =
     mark_visited name;
     match get_rule name with
@@ -53,13 +50,13 @@ let detect_used ~entrypoints rules =
   List.iter visit entrypoints;
   was_visited
 
-let name_of_body opt_rule_name body =
+let name_of_body opt_rule_name (body : Tree_sitter_grammar.Rule_body.t) =
   match opt_rule_name with
   | Some rule_name -> Some rule_name
   | None ->
-      match (body : Tree_sitter_t.rule_body) with
-      | STRING cst -> Some cst
-      | PATTERN pat -> Some pat
+      match body with
+      | Literal cst -> Some cst
+      | Pattern pat -> Some pat
       | _ -> None
 
 (*
@@ -112,25 +109,22 @@ let translate_token opt_rule_name token_contents =
 (*
    Remove constructs that are not relevant to us, such as precedence levels.
 *)
-let rec strip (x : Tree_sitter_t.rule_body) : Tree_sitter_t.rule_body =
+let rec strip (x : Tree_sitter_grammar.Rule_body.t) : Tree_sitter_grammar.Rule_body.t =
   match x with
-  | SYMBOL _
-  | STRING _
-  | PATTERN _
-  | BLANK as x -> x
-  | IMMEDIATE_TOKEN body -> IMMEDIATE_TOKEN (strip body)
-  | TOKEN body -> TOKEN (strip body)
-  | REPEAT x -> REPEAT (strip x)
-  | REPEAT1 x -> REPEAT1 (strip x)
-  | CHOICE l -> CHOICE (List.map strip l)
-  | SEQ l -> SEQ (List.map strip l)
-  | PREC (_, x)
-  | PREC_DYNAMIC (_, x)
-  | PREC_LEFT (_, x)
-  | PREC_RIGHT (_, x) -> strip x
-  | FIELD (_, x) -> strip x
-  | ALIAS alias -> ALIAS { alias with content = strip alias.content }
-  | RESERVED reserved -> RESERVED { reserved with reserved_content = strip reserved.reserved_content }
+  | Symbol _
+  | Literal _
+  | Pattern _
+  | Blank as x -> x
+  | Immediate_token body -> Immediate_token (strip body)
+  | Token body -> Token (strip body)
+  | Repeat x -> Repeat (strip x)
+  | Repeat1 x -> Repeat1 (strip x)
+  | Choice l -> Choice (List.map strip l)
+  | Seq l -> Seq (List.map strip l)
+  | Prec (_, _, x) -> strip x
+  | Field (_, x) -> strip x
+  | Alias alias -> Alias { alias with content = strip alias.content }
+  | Reserved reserved -> Reserved { reserved with content = strip reserved.content }
 
 (*
    Simple translation without normalization. Get rid of PREC_*
@@ -145,36 +139,33 @@ let rec strip (x : Tree_sitter_t.rule_body) : Tree_sitter_t.rule_body =
 
    For the above, we'd call:
 
-     translate ~rule_name:"number" (PATTERN "[0-9]+")
+     translate ~rule_name:"number" (Pattern "[0-9]+")
 
    The parsing result would be a node with field type:"number" instead of
    type:"[0-9]+" in an anonymous context.
 *)
-let translate ~rule_name (x : Tree_sitter_t.rule_body) =
-  let rec translate ?rule_name x =
-    match (x : Tree_sitter_t.rule_body) with
-    | SYMBOL ident -> Symbol ident
-    | STRING cst
-    | IMMEDIATE_TOKEN (STRING cst) -> translate_constant rule_name cst
-    | PATTERN pat
-    | IMMEDIATE_TOKEN (PATTERN pat) -> translate_pattern rule_name pat
-    | IMMEDIATE_TOKEN body
-    | TOKEN body -> translate_token rule_name body
-    | BLANK -> Blank
-    | REPEAT x -> Repeat (translate x)
-    | REPEAT1 x -> Repeat1 (translate x)
-    | CHOICE [x; BLANK] -> Optional (translate x)
-    | CHOICE l -> Choice (translate_choice rule_name l)
-    | SEQ l -> Seq (List.map translate l)
-    | ALIAS x ->
+let translate ~rule_name (x : Tree_sitter_grammar.Rule_body.t) =
+  let rec translate ?rule_name (x : Tree_sitter_grammar.Rule_body.t) =
+    match x with
+    | Symbol ident -> Symbol ident
+    | Literal cst
+    | Immediate_token (Literal cst) -> translate_constant rule_name cst
+    | Pattern pat
+    | Immediate_token (Pattern pat) -> translate_pattern rule_name pat
+    | Immediate_token body
+    | Token body -> translate_token rule_name body
+    | Blank -> Blank
+    | Repeat x -> Repeat (translate x)
+    | Repeat1 x -> Repeat1 (translate x)
+    | Choice [x; Blank] -> Optional (translate x)
+    | Choice l -> Choice (translate_choice rule_name l)
+    | Seq l -> Seq (List.map translate l)
+    | Alias x ->
         assert x.must_be_preserved;
         Alias (x.value, translate x.content)
-    | PREC _ -> assert false
-    | PREC_DYNAMIC _ -> assert false
-    | PREC_LEFT _ -> assert false
-    | PREC_RIGHT _ -> assert false
-    | FIELD _ -> assert false
-    | RESERVED reserved -> translate reserved.reserved_content
+    | Prec _ -> assert false
+    | Field _ -> assert false
+    | Reserved reserved -> translate reserved.content
 
   and translate_choice opt_rule_name cases =
     let translated_cases = List.map translate cases |> Util_list.deduplicate in
@@ -212,16 +203,16 @@ and flatten_seq normalized_list =
   |> List.flatten
 
 let make_external_rules externals =
-  List.filter_map (fun rule_body ->
-    match (rule_body : Tree_sitter_t.rule_body) with
-    | SYMBOL name ->
+  List.filter_map (fun (rule_body : Tree_sitter_grammar.Rule_body.t) ->
+    match rule_body with
+    | Symbol name ->
         let body =
           Token { name; is_inlined = false; description = External }
         in
         Some (name, body)
-    | PATTERN _
-    | STRING _ -> None (* no need for a rule *)
-    | _ -> failwith "found member of 'externals' that's not a SYMBOL or STRING"
+    | Pattern _
+    | Literal _ -> None (* no need for a rule *)
+    | _ -> failwith "found member of 'externals' that's not a Symbol or Literal"
   ) externals
 
 let translate_rules rules =
@@ -251,14 +242,14 @@ let tsort_rules rules =
    are extras and should be handled independently from the grammar.
 *)
 let filter_extras bodies =
-  List.filter_map (fun (x : Tree_sitter_t.rule_body) ->
+  List.filter_map (fun (x : Tree_sitter_grammar.Rule_body.t) ->
     match x with
-    | SYMBOL name -> Some name
-    | STRING _ -> None
+    | Symbol name -> Some name
+    | Literal _ -> None
     | _ -> None
   ) bodies
 
-let of_tree_sitter (x : Tree_sitter_t.grammar) : t =
+let of_tree_sitter (x : Tree_sitter_grammar.grammar) : t =
   let entrypoint =
     (* assuming the grammar's entrypoint is the first rule in grammar.json *)
     match x.rules with
