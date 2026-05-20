@@ -28,11 +28,12 @@ tree_sitter_generate() {
     if tree-sitter --version \
       | sed "s/^tree-sitter \\([0-9.]*\\).*$/0.24.0\\n\\1/" \
       | sort -V -C 2>/dev/null; then
-      # Use ABI 14.
-      # `tree-sitter.json` is required to generate with ABI 15, but we haven't
-      # switched to using this. See also
-      # <https://tree-sitter.github.io/tree-sitter/cli/init>
-      tree-sitter generate --abi=14 $*
+      # Use ABI 15 if tree-sitter.json exists in this directory (it is required
+      # by tree-sitter to generate ABI 15, so its presence is the natural
+      # signal). Otherwise default to ABI 14.
+      local abi
+      if [[ -f tree-sitter.json ]]; then abi=15; else abi=14; fi
+      tree-sitter generate --abi="$abi" $*
     else
       tree-sitter generate --no-bindings $*
     fi
