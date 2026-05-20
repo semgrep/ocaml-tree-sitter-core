@@ -21,22 +21,45 @@ EOF
   exit 1
 }
 
+# Returns 0 if the installed tree-sitter version >= $1, 1 otherwise.
+ts_version_at_least() {
+  tree-sitter --version \
+    | sed "s/^tree-sitter \\([0-9.]*\\).*$/$1\\n\\1/" \
+    | sort -V -C 2>/dev/null
+}
+
+# Determine the ABI to use for all tree-sitter generate calls.
+# ABI 15 requires >= 0.25.0 and is signalled by a tree-sitter.json file.
+# ABI 14 requires >= 0.24.0 (the release that introduced the --abi flag).
+# Older versions use --no-bindings instead.
+if [[ -f tree-sitter.json ]]; then
+  if ! ts_version_at_least 0.25.0; then
+    _s="${BASH_SOURCE[0]}"
+    [[ -L "$_s" ]] && _s="$(dirname "$_s")/$(readlink "$_s")"
+    script_dir=$(cd "$(dirname "$_s")" && pwd)
+    unset _s
+    cat >&2 <<EOF
+Error: $name uses ABI 15 (tree-sitter.json present) and requires tree-sitter >= 0.25.0.
+The currently installed version is too old. Switch with:
+  $script_dir/switch-tree-sitter-version 0.26.3
+EOF
+    exit 1
+  fi
+  ts_abi=15
+elif ts_version_at_least 0.24.0; then
+  ts_abi=14
+else
+  ts_abi=""
+fi
+
 tree_sitter_generate() {
-    # Switch on tree sitter version (before/after 0.24.0) due to some
-    # configuration changes. See
-    # <https://github.com/tree-sitter/tree-sitter/commit/b2359e402070445181482f2e351400276d94c968>.
-    if tree-sitter --version \
-      | sed "s/^tree-sitter \\([0-9.]*\\).*$/0.24.0\\n\\1/" \
-      | sort -V -C 2>/dev/null; then
-      # Use ABI 15 if tree-sitter.json exists in this directory (it is required
-      # by tree-sitter to generate ABI 15, so its presence is the natural
-      # signal). Otherwise default to ABI 14.
-      local abi
-      if [[ -f tree-sitter.json ]]; then abi=15; else abi=14; fi
-      tree-sitter generate --abi="$abi" $*
-    else
-      tree-sitter generate --no-bindings $*
-    fi
+  local abi="$1"
+  shift
+  if [[ -n "$abi" ]]; then
+    tree-sitter generate --abi="$abi" "$@"
+  else
+    tree-sitter generate --no-bindings "$@"
+  fi
 }
 
 # Generate C source code for the grammar, in two passes:
@@ -51,7 +74,7 @@ if [[ -e grammar.js ]]; then
   # consist of a local 'grammar.json' file.
 
   echo "$name: Generating initial 'grammar.json' from 'grammar.js'."
-  tree_sitter_generate
+  tree_sitter_generate "$ts_abi"
   mkdir -p src
   if [[ -e orig/LICENSE ]]; then cp -L orig/LICENSE src; fi
   if [[ -e orig/scanner.c ]]; then cp -L orig/scanner.c src; fi
@@ -94,7 +117,7 @@ ocaml-tree-sitter to-js src/grammar.json.orig grammar-rev.js.orig
 ocaml-tree-sitter to-js src/grammar.json grammar-rev.js
 
 echo "$name: Generating definitive 'parser.c'."
-tree_sitter_generate src/grammar.json
+tree_sitter_generate "$ts_abi" src/grammar.json
 
 # Make sure we get an error in case of OOM leading to no src/parser.c
 test -f src/parser.c || error \
