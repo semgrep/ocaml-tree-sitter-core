@@ -6,8 +6,15 @@ set -eu -o pipefail
 
 prog_name=$(basename "$0")
 
-# Installation root for the tree-sitter executable and runtime library
-default_prefix=$(pwd)/tree-sitter
+# Installation root for the tree-sitter executable and runtime library.
+# The default is the versioned directory rather than the 'tree-sitter'
+# symlink so that the dylib's install_name is stamped with the version
+# dir, letting multiple versions coexist (each parser binary loads its
+# own version's libtree-sitter).
+dir_name=$(dirname "$BASH_SOURCE")
+"$dir_name"/update-version-symlinks
+version=$(cat tree-sitter-version)
+default_prefix=$(pwd)/tree-sitter-"$version"
 
 error() {
   echo "Current directory: $(pwd)" >&2
@@ -48,8 +55,6 @@ done
 
 libdir="$prefix"/lib
 
-dir_name=$(dirname "$BASH_SOURCE")
-"$dir_name"/update-version-symlinks
 "$dir_name"/download-tree-sitter --lazy
 
 # We use tree-sitter's Makefile to build the tree-sitter library. It
