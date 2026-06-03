@@ -83,6 +83,25 @@ fi
   make install PREFIX="$prefix" ${CC:+CC=$CC}
 )
 
+# On macOS, re-stamp the installed dylib's install_name so it points at
+# this versioned lib directory (e.g. tree-sitter-0.22.6/lib) rather than
+# the shared 'tree-sitter/' symlink. Otherwise a parser linked against one
+# version loads "tree-sitter/lib/libtree-sitter.<v>.dylib", which dyld
+# resolves through the symlink to whatever version is *currently* selected
+# and fails. This makes the install self-contained and idempotent: each
+# version's parsers always find their own runtime regardless of which
+# version switch-tree-sitter-version currently points at.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  for dylib in "$libdir"/libtree-sitter.*.dylib; do
+    # Skip the symlinks (e.g. libtree-sitter.0.dylib); only re-stamp real files.
+    [[ -f "$dylib" && ! -L "$dylib" ]] || continue
+    install_name_tool -id "$dylib" "$dylib"
+    # The signature is invalidated by the edit; re-sign ad-hoc.
+    codesign --remove-signature "$dylib" 2>/dev/null || true
+    codesign -s - "$dylib" 2>/dev/null || true
+  done
+fi
+
 cat <<EOF
 tree-sitter libraries were installed in:
   $prefix/lib/
