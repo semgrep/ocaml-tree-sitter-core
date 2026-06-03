@@ -83,6 +83,42 @@ fi
   make install PREFIX="$prefix" ${CC:+CC=$CC}
 )
 
+# On macOS a parser records the dylib's install_name as its load path. The
+# build bakes that install_name from $(LIBDIR) at link time, so a fresh build
+# into this versioned prefix is already correct. But if a libtree-sitter built
+# earlier under a different prefix (e.g. the shared 'tree-sitter/' symlink) is
+# reused without relinking, its install_name still points there -- and a parser
+# linked against it then fails to load once the symlink moves to another
+# version. Detect that stale state and stop, rather than installing a library
+# that crashes parsers at runtime.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  for dylib in "$libdir"/libtree-sitter.*.dylib; do
+    # Only check real files, not the version symlinks (e.g. libtree-sitter.0.dylib).
+    [[ -f "$dylib" && ! -L "$dylib" ]] || continue
+    install_name=$(otool -D "$dylib" | sed -n '2p')
+    case "$install_name" in
+      "$libdir"/*) ;;  # good: points inside this versioned lib dir
+      *)
+        cat >&2 <<EOF
+
+Error: libtree-sitter was installed with a stale install_name:
+  $install_name
+Expected it to point inside:
+  $libdir
+
+This happens when a previously-built tree-sitter library is reused without
+relinking, and a parser linked against it would fail to load once the
+'tree-sitter' symlink points at another version.
+
+Remove the stale build and reinstall by running, in $(pwd):
+  make distclean && make setup
+EOF
+        exit 1
+        ;;
+    esac
+  done
+fi
+
 cat <<EOF
 tree-sitter libraries were installed in:
   $prefix/lib/
