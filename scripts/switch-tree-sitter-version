@@ -2,12 +2,7 @@
 #
 # Change the tree-sitter version that THIS repository builds its own
 # OCaml runtime against, and that gets installed into tree-sitter-<version>/.
-#
-# This does NOT affect which tree-sitter version downstream grammars are
-# built with. In ocaml-tree-sitter-semgrep, each grammar is pinned via the
-# lang/languages-<version> lists and built directly against
-# core/tree-sitter-<version>/, independently of this selection. See the
-# "tree-sitter version" section of README.md.
+# See the "tree-sitter version" section of README.md.
 #
 set -eu
 
