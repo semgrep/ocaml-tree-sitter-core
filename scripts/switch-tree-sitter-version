@@ -8,7 +8,7 @@ set -eu
 error() {
   (
     echo "[$0] Error: $*"
-    echo "Supported versions: 0.20.6 0.22.6 0.26.3"
+    echo "Supported versions: 0.20.8 0.22.6 0.26.3"
   )
   exit 1
 }
@@ -19,8 +19,8 @@ fi
 
 version=''
 case "$1" in
-  0.20.6)
-    version=0.20.6
+  0.20.8)
+    version=0.20.8
     ;;
   0.22.6)
     version=0.22.6
