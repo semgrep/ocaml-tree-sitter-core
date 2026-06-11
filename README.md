@@ -73,20 +73,16 @@ the version being actually used is stored in the file
 is installed into its own `tree-sitter-<version>/` directory, and the
 `tree-sitter` symlink points at the currently selected one.
 
-**Scope: this selection affects only this repository's own build** —
-i.e. the tree-sitter runtime that the `ocaml-tree-sitter` code generator
+**IMPORTANT** Note that the selection in `tree-sitter-version` affects
+the tree-sitter runtime that the `ocaml-tree-sitter` code generator
 and its OCaml bindings are compiled against. It is also used to install a
 given version's CLI and runtime library into `tree-sitter-<version>/`.
 
-It does **not** determine which tree-sitter version any downstream
-grammar is built with. In `ocaml-tree-sitter-semgrep`, every grammar is
-pinned to a tree-sitter version by the `lang/languages-<version>` lists
-and built directly against `core/tree-sitter-<version>/`, regardless of
-what `switch-tree-sitter-version` currently points at. Switching versions
-here therefore does not rebuild or invalidate those grammars; it only
-changes core's own runtime and provides a convenient way to install an
-additional version. See the "tree-sitter versions (per language)"
-section of the `ocaml-tree-sitter-semgrep` README.
+It does **not** determine which tree-sitter version grammars are built with.
+In `ocaml-tree-sitter-semgrep`, every grammar is build by the tree-sitter version
+specified by the `lang/languages-<version>` lists.
+See the "tree-sitter versions (per language)" section of the
+`ocaml-tree-sitter-semgrep` README.
 
 Because the C API surface we rely on is stable across these versions, a
 single build of the `ocaml-tree-sitter` generator works with grammars
