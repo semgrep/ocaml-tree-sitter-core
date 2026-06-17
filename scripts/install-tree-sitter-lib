@@ -6,8 +6,15 @@ set -eu -o pipefail
 
 prog_name=$(basename "$0")
 
-# Installation root for the tree-sitter executable and runtime library
-default_prefix=$(pwd)/tree-sitter
+# Installation root for the tree-sitter executable and runtime library.
+# The default is the versioned directory rather than the 'tree-sitter'
+# symlink so that the dylib's install_name is stamped with the version
+# dir, letting multiple versions coexist (each parser binary loads its
+# own version's libtree-sitter).
+dir_name=$(dirname "$BASH_SOURCE")
+"$dir_name"/update-version-symlinks
+version=$(cat tree-sitter-version)
+default_prefix=$(pwd)/tree-sitter-"$version"
 
 error() {
   echo "Current directory: $(pwd)" >&2
@@ -48,8 +55,6 @@ done
 
 libdir="$prefix"/lib
 
-dir_name=$(dirname "$BASH_SOURCE")
-"$dir_name"/update-version-symlinks
 "$dir_name"/download-tree-sitter --lazy
 
 # We use tree-sitter's Makefile to build the tree-sitter library. It
@@ -72,11 +77,65 @@ fi
 : ${AR:=${CC:+$(printf "%s" "$CC" | sed -E 's/(-?)[^-]*$/\1ar/')}}
 : ${STRIP:=${CC:+$(printf "%s" "$CC" | sed -E 's/(-?)[^-]*$/\1strip/')}}
 
+# On macOS the system 'strip' cannot fully strip a shared library: it errors
+# on symbols referenced by the indirect symbol table. Use 'strip -x' (remove
+# local symbols only), which yields the same size reduction a plain 'strip'
+# gives on other platforms for this library. Only adjust the strip tool we
+# derived ourselves -- leave an explicit $STRIP or a cross-compilation prefix
+# (e.g. x86_64-w64-mingw32-strip) untouched.
+if [[ "$(uname -s)" == "Darwin" && "$STRIP" == "strip" ]]; then
+  STRIP="strip -x"
+fi
+
+# Collect the tool overrides in an array so a value containing a space (e.g.
+# 'strip -x') is passed as a single Make variable assignment rather than being
+# split into separate words.
+make_vars=()
+[[ -n "${CC:-}" ]] && make_vars+=("CC=$CC")
+[[ -n "${AR:-}" ]] && make_vars+=("AR=$AR")
+[[ -n "${STRIP:-}" ]] && make_vars+=("STRIP=$STRIP")
+
 (
   cd downloads/tree-sitter
-  make PREFIX="$prefix" ${CC:+CC=$CC} ${AR:+AR=$AR} ${STRIP:+STRIP=$STRIP}
+  make PREFIX="$prefix" ${make_vars[@]+"${make_vars[@]}"}
   make install PREFIX="$prefix" ${CC:+CC=$CC}
 )
+
+# On macOS a parser records the dylib's install_name as its load path. The
+# build bakes that install_name from $(LIBDIR) at link time, so a fresh build
+# into this versioned prefix is already correct. But if a libtree-sitter built
+# earlier under a different prefix (e.g. the shared 'tree-sitter/' symlink) is
+# reused without relinking, its install_name still points there -- and a parser
+# linked against it then fails to load once the symlink moves to another
+# version. Detect that stale state and stop, rather than installing a library
+# that crashes parsers at runtime.
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  for dylib in "$libdir"/libtree-sitter.*.dylib; do
+    # Only check real files, not the version symlinks (e.g. libtree-sitter.0.dylib).
+    [[ -f "$dylib" && ! -L "$dylib" ]] || continue
+    install_name=$(otool -D "$dylib" | sed -n '2p')
+    case "$install_name" in
+      "$libdir"/*) ;;  # good: points inside this versioned lib dir
+      *)
+        cat >&2 <<EOF
+
+Error: libtree-sitter was installed with a stale install_name:
+  $install_name
+Expected it to point inside:
+  $libdir
+
+This happens when a previously-built tree-sitter library is reused without
+relinking, and a parser linked against it would fail to load once the
+'tree-sitter' symlink points at another version.
+
+Remove the stale build and reinstall by running, in $(pwd):
+  make distclean && make setup
+EOF
+        exit 1
+        ;;
+    esac
+  done
+fi
 
 cat <<EOF
 tree-sitter libraries were installed in:

@@ -6,8 +6,12 @@ set -eu -o pipefail
 
 prog_name=$(basename "$0")
 
-# Installation root for the tree-sitter executable and runtime library
-default_prefix=$(pwd)/tree-sitter
+# Installation root for the tree-sitter executable. Default is the
+# versioned directory so different versions can coexist.
+dir_name=$(dirname "$BASH_SOURCE")
+"$dir_name"/update-version-symlinks
+version=$(cat tree-sitter-version)
+default_prefix=$(pwd)/tree-sitter-"$version"
 
 error() {
   echo "Current directory: $(pwd)" >&2
@@ -47,10 +51,6 @@ while [[ $# -gt 0 ]]; do
 done
 
 bindir="$prefix"/bin
-
-dir_name=$(dirname "$BASH_SOURCE")
-"$dir_name"/update-version-symlinks
-version=$(cat tree-sitter-version)
 
 # Determine platform and architecture for pre-built binary download.
 os=$(uname -s | tr '[:upper:]' '[:lower:]')

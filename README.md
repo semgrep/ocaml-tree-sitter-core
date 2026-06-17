@@ -69,11 +69,24 @@ The default tree-sitter version to use is in the
 Under the default configuration used for local development purposes,
 the version being actually used is stored in the file
 `tree-sitter-version`. This can be changed by invoking
-`./scripts/switch-tree-sitter-version` before `make setup`.
-We made this available to facilitate the transition from tree-sitter 0.20.6 to
-0.22.6 in ocaml-tree-sitter-semgrep where the integration of some
-grammars needs to be updated. The latest version of these grammars are
-compatible with 0.22.6 but their OCaml integration in Semgrep needs work.
+`./scripts/switch-tree-sitter-version` before `make setup`. Each version
+is installed into its own `tree-sitter-<version>/` directory, and the
+`tree-sitter` symlink points at the currently selected one.
+
+**IMPORTANT** Note that the selection in `tree-sitter-version` affects
+the tree-sitter runtime that the `ocaml-tree-sitter` code generator
+and its OCaml bindings are compiled against. It is also used to install a
+given version's CLI and runtime library into `tree-sitter-<version>/`.
+
+It does **not** determine which tree-sitter version grammars are built with.
+In `ocaml-tree-sitter-semgrep`, every grammar is build by the tree-sitter version
+specified by the `lang/languages-<version>` lists.
+See the "tree-sitter versions (per language)" section of the
+`ocaml-tree-sitter-semgrep` README.
+
+Because the C API surface we rely on is stable across these versions, a
+single build of the `ocaml-tree-sitter` generator works with grammars
+generated for any of the supported versions.
 
 Documentation
 --
