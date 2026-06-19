@@ -26,7 +26,8 @@ mkdir -p downloads
 (
   cd downloads
   rm -f tree-sitter
-  ln -s tree-sitter-"$version" tree-sitter
+  mkdir -p tree-sitter-"$version"
+  ln -snf tree-sitter-"$version" tree-sitter
 )
 
 if [[ -d tree-sitter ]] && [[ ! -L tree-sitter ]]; then
@@ -41,5 +42,5 @@ fi
 # It allows us to use this script to switch tree-sitter versions without
 # rebuilding everything.
 rm -f tree-sitter
-ln -s tree-sitter-"$version" tree-sitter
 mkdir -p tree-sitter-"$version"
+ln -snf tree-sitter-"$version" tree-sitter
