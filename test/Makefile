@@ -25,7 +25,8 @@ TESTS = \
   inline \
   pattern-name \
   externals \
-  pattern-flags
+  pattern-flags \
+  abi-mismatch
 
 # Build and run all the tests.
 .PHONY: test
