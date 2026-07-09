@@ -24,6 +24,7 @@
 #include <tree_sitter/api.h>
 
 #include <caml/alloc.h>
+#include <caml/fail.h>
 #include <caml/bigarray.h>
 #include <caml/callback.h>
 #include <caml/custom.h>
@@ -109,6 +110,9 @@ CAMLprim value octs_parser_parse(value vParser, value vTree, value vRead) {
 
   TSTree *tree = ts_parser_parse(tsparser, oldTree, input);
 
+  if (tree == NULL)
+    caml_failwith("ts_parser_parse returned NULL (no language set, or parse was cancelled)");
+
   tree_W treeWrapper;
   treeWrapper.tree = tree;
   ret = caml_alloc_custom(&tree_custom_ops, sizeof(tree_W), 0, 1);
@@ -127,6 +131,9 @@ CAMLprim value octs_parser_parse_string(value vParser, value vSource) {
   const char *source_code = String_val(vSource);
   TSTree *tree =
       ts_parser_parse_string(tsparser, NULL, source_code, caml_string_length(vSource));
+
+  if (tree == NULL)
+    caml_failwith("ts_parser_parse_string returned NULL (no language set, or parse was cancelled)");
 
   tree_W treeWrapper;
   treeWrapper.tree = tree;

@@ -50,7 +50,8 @@ test: build
 # Run unit tests only (takes a few seconds).
 .PHONY: unit
 unit: build
-	./_build/default/src/test/test.exe
+	LD_LIBRARY_PATH=$(TREESITTER_LIBDIR):$(LD_LIBRARY_PATH) \
+	  ./_build/default/src/test/test.exe
 
 # Run end-to-end tests (takes a few minutes).
 .PHONY: e2e

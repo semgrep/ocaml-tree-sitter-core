@@ -1,0 +1,12 @@
+(library
+  (name test_tree_sitter_bindings)
+  (libraries tree_sitter_bindings alcotest)
+  (foreign_stubs
+    (language c)
+    (names null_tree_stubs)
+    (flags
+      :standard
+      -I %{env:TREESITTER_INCDIR=/usr/local/include}
+    )
+  )
+)
