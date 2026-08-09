@@ -29,23 +29,30 @@ let mli_contents grammar : string =
     The resulting CST is [None] if parsing failed completely, otherwise
     some tree is returned even if some parsing errors occurred, in which
     case the error list is not empty.
+    The optional [timeout_micros] argument sets a timeout in microseconds.
 *)
 val string :
-  ?src_file:string -> string ->
+  ?timeout_micros:int -> ?src_file:string -> string ->
   (CST.%s, CST.extra) Tree_sitter_run.Parsing_result.t
 
 (** Parse a %s program from a file into a typed OCaml CST.
-    See the [string] function above for details. *)
+    See the [string] function above for details.
+    The optional [timeout_micros] argument sets a timeout in microseconds.
+*)
 val file :
-  string ->
+  ?timeout_micros:int -> string ->
   (CST.%s, CST.extra) Tree_sitter_run.Parsing_result.t
 
-(** Parse a program into a tree-sitter CST. *)
+(** Parse a program into a tree-sitter CST.
+    The optional [timeout_micros] argument sets a timeout in microseconds.
+*)
 val parse_source_string :
-   ?src_file:string -> string -> Tree_sitter_run.Tree_sitter_parsing.t
+   ?timeout_micros:int -> ?src_file:string -> string -> Tree_sitter_run.Tree_sitter_parsing.t
 
-(** Parse a source file into a tree-sitter CST. *)
-val parse_source_file : string -> Tree_sitter_run.Tree_sitter_parsing.t
+(** Parse a source file into a tree-sitter CST.
+    The optional [timeout_micros] argument sets a timeout in microseconds.
+*)
+val parse_source_file : ?timeout_micros:int -> string -> Tree_sitter_run.Tree_sitter_parsing.t
 
 (** Parse a tree-sitter CST into an OCaml typed CST. *)
 val parse_input_tree :
@@ -80,13 +87,13 @@ let declare_externals lang = sprintf "\
 external create_parser :
   unit -> Tree_sitter_API.ts_parser = \"octs_create_parser_%s\"
 
-let parse_source_string ?src_file contents =
+let parse_source_string ?timeout_micros ?src_file contents =
   let ts_parser = create_parser () in
-  Tree_sitter_parsing.parse_source_string ?src_file ts_parser contents
+  Tree_sitter_parsing.parse_source_string ?timeout_micros ?src_file ts_parser contents
 
-let parse_source_file src_file =
+let parse_source_file ?timeout_micros src_file =
   let ts_parser = create_parser () in
-  Tree_sitter_parsing.parse_source_file ts_parser src_file
+  Tree_sitter_parsing.parse_source_file ?timeout_micros ts_parser src_file
 "
     lang
 
@@ -464,12 +471,12 @@ let parse_input_tree input_tree =
   in
   Parsing_result.create src opt_program extras errors
 
-let string ?src_file contents =
-  let input_tree = parse_source_string ?src_file contents in
+let string ?timeout_micros ?src_file contents =
+  let input_tree = parse_source_string ?timeout_micros ?src_file contents in
   parse_input_tree input_tree
 
-let file src_file =
-  let input_tree = parse_source_file src_file in
+let file ?timeout_micros src_file =
+  let input_tree = parse_source_file ?timeout_micros src_file in
   parse_input_tree input_tree
 |}
     (trans grammar.entrypoint)

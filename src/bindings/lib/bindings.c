@@ -502,3 +502,15 @@ CAMLprim value octs_node_named_child(value vNode, value vX) {
   memcpy(Data_custom_val(v), &child, sizeof(TSNode));
   CAMLreturn(v);
 };
+
+CAMLprim value octs_parser_set_timeout_micros(value vParser, value vTimeout) {
+  CAMLparam2(vParser, vTimeout);
+
+  parser_W *p = Data_custom_val(vParser);
+  TSParser *tsparser = p->parser;
+  uint64_t timeout = Int64_val(vTimeout);
+
+  ts_parser_set_timeout_micros(tsparser, timeout);
+
+  CAMLreturn(Val_unit);
+}
